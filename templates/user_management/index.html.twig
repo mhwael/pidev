@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Management | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+</head>
+<body class="nxl-container">
+    <div class="nxl-content p-4">
+        <div class="page-header mb-4">
+            <div class="page-header-left d-flex align-items-center">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">User Management</h5>
+                </div>
+                <ul class="breadcrumb ms-3 mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item">User Management</li>
+                </ul>
+            </div>
+            <div class="page-header-right ms-auto">
+                <a href="/dashboard" class="btn btn-light-brand"><i class="feather-arrow-left me-2"></i>Back to Dashboard</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Roles</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.firstName }}</td>
+                                <td>{{ user.lastName }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.phone ?? '-' }}</td>
+                                <td>{{ user.address ?? '-' }}</td>
+                                <td>{{ user.roles|join(', ') }}</td>
+                                <td>{{ user.createdAt ? user.createdAt|date('Y-m-d') : '-' }}</td>
+                                <td class="text-nowrap">
+                                    <a href="{{ path('app_user_edit', {id: user.id}) }}" class="btn btn-sm btn-primary me-1"><i class="feather-edit-2"></i> Edit</a>
+                                    <form method="post" action="{{ path('app_user_delete', {id: user.id}) }}" class="d-inline" onsubmit="return confirm('Delete this user?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="feather-trash-2"></i> Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No users found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
