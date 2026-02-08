@@ -1,0 +1,34 @@
+{% extends 'back.html.twig' %}
+
+{% block title %}GuideRating{% endblock %}
+
+{% block body %}
+    <h1>GuideRating</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ guide_rating.id }}</td>
+            </tr>
+            <tr>
+                <th>RatingValue</th>
+                <td>{{ guide_rating.ratingValue }}</td>
+            </tr>
+            <tr>
+                <th>Comment</th>
+                <td>{{ guide_rating.comment }}</td>
+            </tr>
+            <tr>
+                <th>CreatedAt</th>
+                <td>{{ guide_rating.createdAt ? guide_rating.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_guide_rating_index') }}">back to list</a>
+
+    <a href="{{ path('app_guide_rating_edit', {'id': guide_rating.id}) }}">edit</a>
+
+    {{ include('guide_rating/_delete_form.html.twig') }}
+{% endblock %}
