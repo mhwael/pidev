@@ -1,0 +1,113 @@
+{{ form_start(form) }}
+    <div class="row">
+        {# LEFT COLUMN: Guide Info #}
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Guide Details</h5>
+                    <div class="mb-3">
+                        {{ form_label(form.title) }}
+                        {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.title) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '4'}}) }}
+                        {{ form_errors(form.description) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# RIGHT COLUMN: Settings #}
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Settings</h5>
+                    
+                    <div class="mb-3">
+                        {{ form_label(form.game) }}
+                        {{ form_widget(form.game, {'attr': {'class': 'form-select'}}) }}
+                    </div>
+
+                    {# ✨ NEW: Author Dropdown #}
+                    <div class="mb-3">
+                        {{ form_label(form.author) }}
+                        {{ form_widget(form.author, {'attr': {'class': 'form-select'}}) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.difficulty) }}
+                        {{ form_widget(form.difficulty, {'attr': {'class': 'form-select'}}) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-primary">
+        <div class="card-header bg-soft-primary d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-primary">Guide Steps</h5>
+            <button type="button" class="btn btn-sm btn-primary add-step-btn">
+                <i class="feather-plus"></i> Add New Step
+            </button>
+        </div>
+        <div class="card-body bg-light">
+            <div class="steps-wrapper" 
+                 data-index="{{ form.guideSteps|length > 0 ? form.guideSteps|last.vars.name + 1 : 0 }}"
+                 data-prototype="{{ form_widget(form.guideSteps.vars.prototype)|e('html_attr') }}">
+                
+                {% for step in form.guideSteps %}
+                    <div class="card mb-3 step-item">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h5>Step</h5>
+                                <button type="button" class="btn btn-sm btn-danger remove-step-btn"><i class="feather-trash"></i></button>
+                            </div>
+                            {{ form_widget(step) }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-end">
+        <a href="{{ path('app_guide_index') }}" class="btn btn-secondary me-2">Cancel</a>
+        <button class="btn btn-success px-4">{{ button_label|default('Save Guide') }}</button>
+    </div>
+{{ form_end(form) }}
+
+{# 🪄 JAVASCRIPT #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const wrapper = document.querySelector('.steps-wrapper');
+        
+        document.querySelector('.add-step-btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            let prototype = wrapper.dataset.prototype;
+            let index = wrapper.dataset.index;
+            let newForm = prototype.replace(/__name__/g, index);
+            wrapper.dataset.index++;
+
+            const card = document.createElement('div');
+            card.classList.add('card', 'mb-3', 'step-item', 'shadow-sm');
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="text-primary fw-bold">New Step</h6>
+                        <button type="button" class="btn btn-sm btn-light-danger remove-step-btn"><i class="feather-trash-2"></i></button>
+                    </div>
+                    ${newForm}
+                </div>`;
+            wrapper.appendChild(card);
+        });
+
+        wrapper.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-step-btn')) {
+                e.preventDefault();
+                e.target.closest('.step-item').remove();
+            }
+        });
+    });
+</script>

@@ -24,5 +24,5 @@ security:
     access_control:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: ^/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/dashboard, roles: ROLE_ADMIN }
+        - { path: ^/dashboard, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: PUBLIC_ACCESS }
