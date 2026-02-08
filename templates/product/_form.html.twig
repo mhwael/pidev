@@ -1,0 +1,29 @@
+{{ form_start(form) }}
+<div class="row g-3">
+    <div class="col-md-6">
+        {{ form_row(form.name) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(form.category) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(form.price) }}
+    </div>
+    <div class="col-md-6">
+        {{ form_row(form.stock) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.image) }}
+    </div>
+    <div class="col-12">
+        {{ form_row(form.description) }}
+    </div>
+</div>
+
+<div class="mt-4 d-flex gap-2">
+    <button type="submit" class="btn btn-primary">
+        <i class="feather-save me-2"></i>{{ button_label|default('Save') }}
+    </button>
+    <a href="{{ path('product_index') }}" class="btn btn-light-brand">Cancel</a>
+</div>
+{{ form_end(form) }}

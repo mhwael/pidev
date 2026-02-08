@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product Management | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+
+    <style>
+        .pieWrap { display:flex; gap:16px; align-items:center; }
+        .pie {
+            width:150px;
+            height:150px;
+            border-radius:50%;
+            border:10px solid #fff;
+            box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+            background: conic-gradient(#ddd 0deg 360deg);
+        }
+        .legendItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .legendColor { width:14px; height:14px; border-radius:3px; }
+        .mutedSmall { font-size:12px; color:#6c757d; }
+
+        .rowDot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:10px; vertical-align:middle; }
+        .dotRed { background:#dc3545; }
+        .dotYellow { background:#ffc107; }
+        .dotGreen { background:#198754; }
+    </style>
+</head>
+<body class="nxl-container">
+<div class="nxl-content p-4">
+
+    <div class="page-header mb-4">
+        <div class="page-header-left d-flex align-items-center">
+            <div class="page-header-title">
+                <h5 class="m-b-10">Product Management</h5>
+            </div>
+            <ul class="breadcrumb ms-3 mb-0">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item">Product Management</li>
+            </ul>
+        </div>
+        <div class="page-header-right ms-auto d-flex gap-2">
+            <a href="{{ path('product_new') }}" class="btn btn-primary">
+                <i class="feather-plus me-2"></i>New Product
+            </a>
+
+            {# ✅ Link to Orders Dashboard #}
+            <a href="{{ path('orders_index') }}" class="btn btn-light-brand">
+                <i class="feather-shopping-cart me-2"></i>Orders Dashboard
+            </a>
+
+            <a href="/dashboard" class="btn btn-light-brand">
+                <i class="feather-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {# TOP STATS #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                         style="width:64px;height:64px;font-weight:800;">
+                        {{ stockStats.totalProducts }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">Products</div>
+                        <small class="text-muted">Total products</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                         style="width:64px;height:64px;font-weight:800;">
+                        {{ stockStats.totalStock }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">Stock</div>
+                        <small class="text-muted">Total units</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                         style="width:64px;height:64px;font-weight:800;">
+                        {{ stockStats.outOfStock }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">Out of stock</div>
+                        <small class="text-muted">Stock = 0</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                         style="width:64px;height:64px;font-weight:800;">
+                        {{ stockStats.lowStock }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">Low stock</div>
+                        <small class="text-muted">≤ {{ stockStats.lowStockThreshold }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# LEFT PIE + RIGHT TABLE #}
+    <div class="row g-3">
+        <div class="col-lg-3">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold">Categories (Pie)</div>
+                        <small class="text-muted">{{ categoryTotal }} products</small>
+                    </div>
+
+                    {# Build conic-gradient stops in Twig #}
+                    {% set colors = ['#f5c400','#1e88e5','#43a047','#e53935','#8e24aa','#fb8c00','#00acc1','#6d4c41','#3949ab','#00897b'] %}
+                    {% set deg = 0 %}
+                    {% set gradientParts = [] %}
+
+                    {% for c in categoryChart %}
+                        {% set color = colors[loop.index0 % (colors|length)] %}
+                        {% set slice = (c.percentage * 3.6) %}
+                        {% set start = deg %}
+                        {% set end = deg + slice %}
+                        {% set gradientParts = gradientParts|merge([color ~ ' ' ~ start ~ 'deg ' ~ end ~ 'deg']) %}
+                        {% set deg = end %}
+                    {% endfor %}
+
+                    {% if gradientParts|length == 0 %}
+                        {% set gradient = '#ddd 0deg 360deg' %}
+                    {% else %}
+                        {% set gradient = gradientParts|join(', ') %}
+                    {% endif %}
+
+                    <div class="pieWrap mt-3">
+                        <div class="pie" style="background: conic-gradient({{ gradient }});"></div>
+
+                        <div style="flex:1; min-width:0;">
+                            {% for c in categoryChart %}
+                                {% set color = colors[loop.index0 % (colors|length)] %}
+                                <div class="legendItem">
+                                    <div class="legendColor" style="background: {{ color }}"></div>
+                                    <div style="min-width:0;">
+                                        <div class="text-truncate" style="font-weight:600;">{{ c.category }}</div>
+                                        <div class="mutedSmall">{{ c.productCount }} products • {{ c.percentage }}%</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-muted">No categories found.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Optional: list style circles too #}
+            <div class="card">
+                <div class="card-body">
+                    <div class="fw-bold mb-3">Category counts</div>
+                    <div class="d-flex flex-column gap-3">
+                        {% for c in categoryCounts %}
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                                     style="width:54px;height:54px;font-weight:800;">
+                                    {{ c.productCount }}
+                                </div>
+                                <div style="min-width:0;">
+                                    <div class="fw-bold text-truncate">{{ c.category }}</div>
+                                    <small class="text-muted">products in this category</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-muted">No categories found.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Orders</th>
+                                <th>Image</th>
+                                <th class="text-nowrap">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in productsWithCounts %}
+                                {% set p = row[0] %}
+                                {% set ordersCount = row.ordersCount|default(0) %}
+
+                                {# stock dot: 0 = red, <=5 = yellow, else green #}
+                                {% set dotClass = 'dotGreen' %}
+                                {% if p.stock <= 0 %}
+                                    {% set dotClass = 'dotRed' %}
+                                {% elseif p.stock <= stockStats.lowStockThreshold %}
+                                    {% set dotClass = 'dotYellow' %}
+                                {% endif %}
+
+                                <tr>
+                                    <td>{{ p.id }}</td>
+                                    <td>
+                                        <span class="rowDot {{ dotClass }}"></span>
+                                        {{ p.name }}
+                                    </td>
+                                    <td>{{ p.category ?? '-' }}</td>
+                                    <td>{{ p.price }}</td>
+                                    <td>{{ p.stock }}</td>
+                                    <td><strong>{{ ordersCount }}</strong></td>
+                                    <td>{{ p.image ?? '-' }}</td>
+                                    <td class="text-nowrap">
+                                        <a href="{{ path('product_show', {id: p.id}) }}" class="btn btn-sm btn-light me-1">
+                                            <i class="feather-eye"></i> Show
+                                        </a>
+                                        <a href="{{ path('product_edit', {id: p.id}) }}" class="btn btn-sm btn-primary me-1">
+                                            <i class="feather-edit-2"></i> Edit
+                                        </a>
+                                        <form method="post"
+                                              action="{{ path('product_delete', {id: p.id}) }}"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Delete this product?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_product_' ~ p.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="feather-trash-2"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No products found.</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

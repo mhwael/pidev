@@ -1,0 +1,17 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Nouveau sujet{% endblock %}
+{% block banner_title %}Nouveau sujet{% endblock %}
+{% block banner_subtitle %}Créez une nouvelle discussion.{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="about_us_text">
+                <h3 class="mb-4">Créer un sujet</h3>
+                {{ include('sujets_forum/_form.html.twig') }}
+                <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 mt-3">Retour à la liste</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

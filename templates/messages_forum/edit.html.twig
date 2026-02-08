@@ -1,0 +1,21 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Modifier le message{% endblock %}
+{% block banner_title %}Modifier le message{% endblock %}
+{% block banner_subtitle %}{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="about_us_text">
+                <h3 class="mb-4">Modifier le message</h3>
+                {{ include('messages_forum/_form.html.twig', {'button_label': 'Enregistrer'}) }}
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ path('app_messages_forum_show', {'id': messages_forum.id}) }}" class="btn_2">Voir le message</a>
+                    <a href="{{ path('app_messages_forum_index') }}" class="btn_2">Retour à la liste</a>
+                    {{ include('messages_forum/_delete_form.html.twig') }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

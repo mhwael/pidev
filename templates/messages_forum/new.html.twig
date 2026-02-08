@@ -1,0 +1,17 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Nouveau message{% endblock %}
+{% block banner_title %}Nouveau message{% endblock %}
+{% block banner_subtitle %}Répondre ou créer un message.{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="about_us_text">
+                <h3 class="mb-4">Nouveau message</h3>
+                {{ include('messages_forum/_form.html.twig') }}
+                <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 mt-3">Retour aux sujets</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
