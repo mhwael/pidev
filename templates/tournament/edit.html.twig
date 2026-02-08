@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Tournament | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+</head>
+<body class="nxl-container">
+    <div class="nxl-content p-4">
+        <div class="page-header mb-4">
+            <div class="page-header-left d-flex align-items-center">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Edit Tournament</h5>
+                </div>
+                <ul class="breadcrumb ms-3 mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_tournament_index') }}">Tournaments</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ul>
+            </div>
+            <div class="page-header-right ms-auto">
+                <form method="post" action="{{ path('app_tournament_delete', {'id': tournament.id}) }}" onsubmit="return confirm('Are you sure you want to delete this tournament?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tournament.id) }}">
+                    <button class="btn btn-danger">
+                        <i class="feather-trash-2 me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xxl-8 col-xl-10">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-soft-primary">
+                        <h5 class="card-title mb-0">Update: {{ tournament.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                            <div class="row g-3">
+                                <div class="col-md-6">{{ form_row(form.name) }}</div>
+                                <div class="col-md-6">{{ form_row(form.game) }}</div>
+                                <div class="col-12">{{ form_row(form.description) }}</div>
+                                <div class="col-md-6">{{ form_row(form.format) }}</div>
+                                <div class="col-md-6">{{ form_row(form.maxTeams) }}</div>
+                                <div class="col-md-4">{{ form_row(form.startDate) }}</div>
+                                <div class="col-md-4">{{ form_row(form.endDate) }}</div>
+                                <div class="col-md-4">{{ form_row(form.registrationDeadline) }}</div>
+                                
+                                {# --- AJOUT DES CHAMPS MANQUANTS ICI --- #}
+                                <div class="col-12">{{ form_row(form.prize) }}</div>
+                                <div class="col-12">{{ form_row(form.rules) }}</div>
+                                {# --------------------------------------- #}
+                            </div>
+
+                            {# Les boutons sont maintenant placés APRÈS tous les champs #}
+                            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                                <a href="{{ path('app_tournament_index') }}" class="btn btn-light-brand">
+                                    <i class="feather-arrow-left me-2"></i>Back to list
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="feather-check-circle me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

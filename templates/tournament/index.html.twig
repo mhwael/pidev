@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tournament Management | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+</head>
+<body class="nxl-container">
+    <div class="nxl-content p-4">
+        {# Header de la page #}
+        <div class="page-header mb-4">
+            <div class="page-header-left d-flex align-items-center">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Tournament Management</h5>
+                </div>
+                <ul class="breadcrumb ms-3 mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item">Tournaments</li>
+                </ul>
+            </div>
+            <div class="page-header-right ms-auto">
+                <a href="{{ path('app_tournament_new') }}" class="btn btn-primary">
+                    <i class="feather-plus me-2"></i>Create New Tournament
+                </a>
+            </div>
+        </div>
+
+        {# Carte contenant le tableau #}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Game</th>
+                                <th>Format</th>
+                                <th>Max Teams</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tournament in tournaments %}
+                            <tr>
+                                <td>{{ tournament.id }}</td>
+                                <td class="fw-bold text-dark">{{ tournament.name }}</td>
+                                <td><span class="badge bg-soft-primary text-primary">{{ tournament.game }}</span></td>
+                                <td>{{ tournament.format }}</td>
+                                <td>{{ tournament.maxTeams }}</td>
+                                <td>
+                                    {% if tournament.status == 'open' %}
+                                        <span class="badge bg-success">Open</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ tournament.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ tournament.startDate ? tournament.startDate|date('Y-m-d H:i') : '-' }}</td>
+                                <td class="text-nowrap">
+                                    <a href="{{ path('app_tournament_edit', {id: tournament.id}) }}" class="btn btn-sm btn-primary me-1">
+                                        <i class="feather-edit-2"></i> Edit
+                                    </a>
+                                    <form method="post" action="{{ path('app_tournament_delete', {id: tournament.id}) }}" class="d-inline" onsubmit="return confirm('Delete this tournament?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tournament.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="feather-trash-2"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No tournaments found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
