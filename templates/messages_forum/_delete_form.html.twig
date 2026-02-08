@@ -1,0 +1,4 @@
+<form method="post" action="{{ path('app_messages_forum_delete', {'id': messages_forum.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer ce message ?');">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ messages_forum.id) }}">
+    <button type="submit" class="btn_2 btn-sm" style="background:#dc3545;border-color:#dc3545;color:#fff;">Supprimer</button>
+</form>

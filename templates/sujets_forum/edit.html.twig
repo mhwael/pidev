@@ -1,0 +1,21 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Modifier le sujet{% endblock %}
+{% block banner_title %}Modifier le sujet{% endblock %}
+{% block banner_subtitle %}{{ sujets_forum.titre }}{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="about_us_text">
+                <h3 class="mb-4">Modifier le sujet</h3>
+                {{ include('sujets_forum/_form.html.twig', {'button_label': 'Enregistrer'}) }}
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ path('app_sujets_forum_show', {'id': sujets_forum.id}) }}" class="btn_2">Voir le sujet</a>
+                    <a href="{{ path('app_sujets_forum_index') }}" class="btn_2">Retour à la liste</a>
+                    {{ include('sujets_forum/_delete_form.html.twig') }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

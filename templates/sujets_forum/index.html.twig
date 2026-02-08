@@ -1,0 +1,135 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Sujets du forum{% endblock %}
+{% block banner_title %}Sujets du forum{% endblock %}
+{% block banner_subtitle %}Parcourir et participer aux discussions.{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <h2 class="mb-0">Tous les sujets</h2>
+                <a href="{{ path('app_sujets_forum_new') }}" class="btn_1">Nouveau sujet</a>
+            </div>
+
+            {# Barre de recherche et filtre catégorie #}
+            <form method="get" action="{{ path('app_sujets_forum_index') }}" class="mb-4 p-3 rounded" style="background: rgba(255,255,255,0.08);">
+                <div class="row align-items-end">
+                    <div class="col-md-5 mb-2">
+                        <label class="text-white mb-1">Rechercher</label>
+                        <input type="text" name="search" class="form-control" placeholder="Titre, auteur, catégorie..." value="{{ search|default('') }}">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="text-white mb-1">Catégorie</label>
+                        <select name="categorie" class="form-control">
+                            <option value="">Toutes</option>
+                            {% for key, cat in categories %}
+                                <option value="{{ cat }}" {{ (categorie_filter|default('')) == cat ? 'selected' : '' }}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="submit" class="btn_1 w-100">Filtrer</button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 w-100 d-block text-center">Réinitialiser</a>
+                    </div>
+                </div>
+            </form>
+
+            {# Boutons de tri #}
+            <div class="mb-3 d-flex flex-wrap align-items-center">
+                <span class="text-white mr-2">Trier par :</span>
+                {% set ord = order|default('desc') %}
+                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'titre', order: (sort|default('')) == 'titre' ? (ord == 'desc' ? 'asc' : 'desc') : 'asc' }) }}" class="btn_2 btn-sm mr-2 {{ (sort|default('')) == 'titre' ? 'active' : '' }}">Titre {{ (sort|default('')) == 'titre' and ord == 'asc' ? '↑' : '↓' }}</a>
+                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'date_creation', order: (sort|default('')) == 'date_creation' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc' }) }}" class="btn_2 btn-sm mr-2 {{ (sort|default('date_creation')) == 'date_creation' ? 'active' : '' }}">Date {{ (sort|default('')) == 'date_creation' and ord == 'asc' ? '↑' : '↓' }}</a>
+                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'nb_messages', order: (sort|default('')) == 'nb_messages' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc' }) }}" class="btn_2 btn-sm {{ (sort|default('')) == 'nb_messages' ? 'active' : '' }}">Nb messages {{ (sort|default('')) == 'nb_messages' and ord == 'asc' ? '↑' : '↓' }}</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-dark" id="table-sujets">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Créé par</th>
+                            <th>Catégorie</th>
+                            <th>Date</th>
+                            <th>Verrouillé</th>
+                            <th>Voir messages</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sujets_forum in sujets_forums %}
+                            <tr>
+                                <td>{{ sujets_forum.titre }}</td>
+                                <td>{{ sujets_forum.creePar }}</td>
+                                <td>{{ sujets_forum.categorie }}</td>
+                                <td>{{ sujets_forum.dateCreation ? sujets_forum.dateCreation|date('d/m/Y H:i') : '' }}</td>
+                                <td>{{ sujets_forum.estVerrouille ? 'Oui' : 'Non' }}</td>
+                                <td>
+                                    <a href="{{ path('app_sujets_forum_show', {'id': sujets_forum.id}) }}" class="btn_1 btn-sm">
+                                        Voir messages ({{ sujets_forum.messagesForum|length }})
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ path('app_sujets_forum_show', {'id': sujets_forum.id}) }}" class="btn_1 btn-sm">Voir</a>
+                                    <a href="{{ path('app_sujets_forum_edit', {'id': sujets_forum.id}) }}" class="btn_2 btn-sm">Modifier</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Aucun sujet pour le moment. <a href="{{ path('app_sujets_forum_new') }}">Créer un sujet</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Graphique circulaire (cercle) sous la liste : nombre de messages par sujet #}
+            {% if sujets_forums|length > 0 %}
+            <div class="mt-4 mb-4 p-3 rounded d-flex justify-content-center" style="background: rgba(255,255,255,0.08);">
+                <div style="max-width: 400px; width: 100%;">
+                    <h5 class="text-white mb-3 text-center">Nombre de messages par sujet</h5>
+                    <canvas id="chartSujetsMessages"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
+            <a href="{{ path('front_index') }}" class="btn_2 mt-3">Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+    (function() {
+        var chartLabels = [{% for s in sujets_forums %}"{{ s.titre|e('js') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+        var chartCounts = [{% for s in sujets_forums %}{{ s.messagesForum|length }}{% if not loop.last %},{% endif %}{% endfor %}];
+        var ctx = document.getElementById('chartSujetsMessages');
+        if (ctx && chartLabels.length > 0) {
+            var shortLabels = chartLabels.map(function(l) { return l.length > 20 ? l.substring(0, 20) + '…' : l; });
+            var colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E74C3C', '#1ABC9C'];
+            var bgColors = chartCounts.map(function(_, i) { return colors[i % colors.length]; });
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: shortLabels,
+                    datasets: [{
+                        data: chartCounts,
+                        backgroundColor: bgColors,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+    })();
+    </script>
+{% endblock %}

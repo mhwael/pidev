@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orders | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+</head>
+
+<body class="nxl-container">
+<div class="nxl-content p-4">
+
+    <div class="page-header mb-4">
+        <div class="page-header-left d-flex align-items-center">
+            <div class="page-header-title">
+                <h5 class="m-b-10">Orders</h5>
+            </div>
+            <ul class="breadcrumb ms-3 mb-0">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item">Orders</li>
+            </ul>
+        </div>
+
+        <div class="page-header-right ms-auto d-flex gap-2">
+            {# ✅ Link to Products Dashboard #}
+            <a href="{{ path('product_index') }}" class="btn btn-light-brand">
+                <i class="feather-box me-2"></i>Products Dashboard
+            </a>
+
+            <a href="/dashboard" class="btn btn-light-brand">
+                <i class="feather-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Created</th>
+                        <th>Customer</th>
+                        <th>Products</th>
+                        <th class="text-nowrap">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for o in orders %}
+                        <tr>
+                            <td>{{ o.id }}</td>
+                            <td>{{ o.reference }}</td>
+                            <td>{{ o.status }}</td>
+                            <td>{{ o.totalAmount }}</td>
+                            <td>{{ o.createdAt ? o.createdAt|date('Y-m-d H:i') : '-' }}</td>
+
+                            <td>
+                                <div><strong>{{ o.customerFirstName ?? '-' }}</strong> <strong>{{ o.customerLastName ?? '' }}</strong></div>
+                                <div class="text-muted small">{{ o.customerPhone ?? '-' }}</div>
+                                <div class="text-muted small">{{ o.customerEmail ?? '-' }}</div>
+                            </td>
+
+                            <td style="min-width:320px;">
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for p in o.products %}
+                                        <div class="border rounded p-2" style="width:150px;">
+                                            {% if p.image %}
+                                                <img src="{{ p.image }}" alt="{{ p.name }}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;">
+                                            {% else %}
+                                                <div style="width:100%;height:80px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;">No image</div>
+                                            {% endif %}
+                                            <div class="mt-2 fw-semibold">{{ p.name }}</div>
+                                            <div class="small text-muted">Price: {{ p.price }}</div>
+                                            <div class="small text-muted">
+                                                {% if p.description %}{{ p.description|slice(0, 50) }}{% if p.description|length > 50 %}...{% endif %}{% else %}-{% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endfor %}
+                                </div>
+                            </td>
+
+                            <td class="text-nowrap">
+                                <a href="{{ path('orders_edit', {id: o.id}) }}" class="btn btn-sm btn-primary me-1">
+                                    <i class="feather-edit-2"></i> Edit
+                                </a>
+
+                                <form method="post"
+                                      action="{{ path('orders_delete', {id: o.id}) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this order?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_order_' ~ o.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="feather-trash-2"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No orders found.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

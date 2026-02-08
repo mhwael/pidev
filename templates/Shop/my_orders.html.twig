@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zxx">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>My Orders</title>
+
+    <base href="/front_template/">
+
+    <link rel="icon" href="img/favicon.png">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
+        .wrap-card { background: #fff; border-radius: 10px; padding: 20px; }
+        table td, table th { vertical-align: middle !important; }
+    </style>
+</head>
+
+<body>
+<div class="body_bg">
+
+    <header class="main_menu single_page_menu">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <a class="navbar-brand" href="/">
+                    <img src="img/levelup_logo.png" alt="LevelUp">
+                </a>
+
+                <div class="collapse navbar-collapse main-menu-item">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ path('my_orders') }}">My Orders</a></li>
+                    </ul>
+                </div>
+
+                <a href="{{ path('shop_products') }}" class="btn_1 d-none d-sm-block">Back To Shop</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="section_padding">
+        <div class="container">
+            <div class="wrap-card">
+                <h3 class="mb-4">My Orders</h3>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Created</th>
+                            <th>Customer</th>
+                            <th>Products</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for o in orders %}
+                            <tr>
+                                <td>{{ o.id }}</td>
+                                <td>{{ o.reference }}</td>
+                                <td>{{ o.status }}</td>
+                                <td>{{ (o.totalAmount ?? 0)|number_format(2, '.', '') }} TND</td>
+                                <td>{{ o.createdAt ? o.createdAt|date('Y-m-d H:i') : '-' }}</td>
+
+                                <td>
+                                    <div><strong>{{ o.customerFirstName ?? '-' }} {{ o.customerLastName ?? '' }}</strong></div>
+                                    <div class="text-muted small">{{ o.customerPhone ?? '-' }}</div>
+                                    <div class="text-muted small">{{ o.customerEmail ?? '-' }}</div>
+                                </td>
+
+                                <td>
+                                    {% if o.products is defined and o.products|length > 0 %}
+                                        {% for p in o.products %}
+                                            <div>{{ p.name }}</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No orders yet.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

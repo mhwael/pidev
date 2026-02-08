@@ -1,0 +1,30 @@
+{{ form_start(form, {'attr': {'class': 'mb-4'}}) }}
+    <div class="form-group mb-3">
+        {{ form_label(form.titre) }}
+        {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.titre) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.cree_par) }}
+        {{ form_widget(form.cree_par, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.cree_par) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.categorie) }}
+        {{ form_widget(form.categorie, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.categorie) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.date_creation) }}
+        {{ form_widget(form.date_creation, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.date_creation) }}
+    </div>
+    <div class="form-group mb-3">
+        <div class="form-check">
+            {{ form_widget(form.est_verrouille, {'attr': {'class': 'form-check-input'}}) }}
+            {{ form_label(form.est_verrouille, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        </div>
+        {{ form_errors(form.est_verrouille) }}
+    </div>
+    <button type="submit" class="btn_1">{{ button_label|default('Créer') }}</button>
+{{ form_end(form) }}

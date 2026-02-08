@@ -1,0 +1,50 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Messages du forum{% endblock %}
+{% block banner_title %}Messages du forum{% endblock %}
+{% block banner_subtitle %}Tous les messages.{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Tous les messages</h2>
+                <a href="{{ path('app_messages_forum_new') }}" class="btn_1">Nouveau message</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-dark">
+                    <thead>
+                        <tr>
+                            <th>Sujet</th>
+                            <th>Auteur</th>
+                            <th>Contenu</th>
+                            <th>Date</th>
+                            <th>Likes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for messages_forum in messages_forums %}
+                            <tr>
+                                <td>{{ messages_forum.sujetsForum ? messages_forum.sujetsForum.titre : '-' }}</td>
+                                <td>#{{ messages_forum.auteurId }}</td>
+                                <td>{{ messages_forum.contenu|length > 50 ? messages_forum.contenu|slice(0, 50) ~ '...' : messages_forum.contenu }}</td>
+                                <td>{{ messages_forum.dateCreation ? messages_forum.dateCreation|date('d/m/Y H:i') : '' }}</td>
+                                <td>{{ messages_forum.nombreLikes }}</td>
+                                <td>
+                                    <a href="{{ path('app_messages_forum_show', {'id': messages_forum.id}) }}" class="btn_1 btn-sm">Voir</a>
+                                    <a href="{{ path('app_messages_forum_edit', {'id': messages_forum.id}) }}" class="btn_2 btn-sm">Modifier</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Aucun message. <a href="{{ path('app_messages_forum_new') }}">Créer un message</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 mt-3">Voir les sujets</a>
+        </div>
+    </div>
+{% endblock %}
