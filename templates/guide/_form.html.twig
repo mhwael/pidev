@@ -1,4 +1,5 @@
-{{ form_start(form) }}
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
     <div class="row">
         {# LEFT COLUMN: Guide Info #}
         <div class="col-md-8">
@@ -30,7 +31,6 @@
                         {{ form_widget(form.game, {'attr': {'class': 'form-select'}}) }}
                     </div>
 
-                    {# ✨ NEW: Author Dropdown #}
                     <div class="mb-3">
                         {{ form_label(form.author) }}
                         {{ form_widget(form.author, {'attr': {'class': 'form-select'}}) }}

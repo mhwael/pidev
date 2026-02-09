@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert; // ✨ This enables the validation rules
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -17,32 +18,53 @@ class Game
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The game name is required.")]
+    #[Assert\Length(
+        min: 2, 
+        max: 255, 
+        minMessage: "The game name must be at least {{ limit }} characters long.",
+        maxMessage: "The game name cannot be longer than {{ limit }} characters."
+    )]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The slug is required.")]
+    #[Assert\Regex(
+        pattern: '/^[a-z0-9-]+$/',
+        message: "The slug can only contain lowercase letters, numbers, and dashes (e.g., 'elden-ring')."
+    )]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(
+        min: 10, 
+        minMessage: "The description is too short. Please write at least {{ limit }} characters."
+    )]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $coverImage = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
     private ?bool $hasRanking = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
     private ?\DateTimeImmutable $createdAt = null;
 
     /**
      * @var Collection<int, Guide>
      */
-    #[ORM\OneToMany(mappedBy: 'game', targetEntity: Guide::class)]
+    #[ORM\OneToMany(mappedBy: 'game', targetEntity: Guide::class, orphanRemoval: true)]
     private Collection $guides;
 
     public function __construct()
     {
         $this->guides = new ArrayCollection();
+        // ✨ Set defaults here to prevent "null" errors
+        $this->createdAt = new \DateTimeImmutable();
+        $this->hasRanking = false; 
     }
 
     public function getId(): ?int
@@ -151,9 +173,10 @@ class Game
 
         return $this;
     }
+
     public function __toString(): string
-{
-    // This tells Symfony to use the Game's name in dropdown menus
-    return $this->name; 
-}
+    {
+        // This tells Symfony to use the Game's name in dropdown menus
+        return $this->name; 
+    }
 }
