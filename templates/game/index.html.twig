@@ -1,45 +1,153 @@
 {% extends 'back.html.twig' %}
 
-{% block title %}Game index{% endblock %}
+{% block title %}Game Management{% endblock %}
 
 {% block body %}
-    <h1>Game index</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Game Management</h1>
+            <p class="text-muted mb-0">Manage supported games and their settings.</p>
+        </div>
+        <a href="{{ path('app_game_new') }}" class="btn btn-primary">
+            <i class="feather-plus"></i> Create new
+        </a>
+    </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Slug</th>
-                <th>Description</th>
-                <th>CoverImage</th>
-                <th>HasRanking</th>
-                <th>CreatedAt</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for game in games %}
-            <tr>
-                <td>{{ game.id }}</td>
-                <td>{{ game.name }}</td>
-                <td>{{ game.slug }}</td>
-                <td>{{ game.description }}</td>
-                <td>{{ game.coverImage }}</td>
-                <td>{{ game.hasRanking ? 'Yes' : 'No' }}</td>
-                <td>{{ game.createdAt ? game.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_game_show', {'id': game.id}) }}">show</a>
-                    <a href="{{ path('app_game_edit', {'id': game.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    {# 📊 STATISTICS SECTION #}
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-primary text-white">
+                <div class="card-body text-center">
+                    <h2 class="fw-bold mb-0">{{ stats.total }}</h2>
+                    <p class="mb-0 opacity-75">Total Games</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-success text-white">
+                <div class="card-body text-center">
+                    <h2 class="fw-bold mb-0">{{ stats.ranked }}</h2>
+                    <p class="mb-0 opacity-75">Competitive (Ranked)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h2 class="fw-bold mb-0">{{ stats.unranked }}</h2>
+                    <p class="mb-0 opacity-75">Casual (No Ranking)</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <a href="{{ path('app_game_new') }}">Create new</a>
+    {# 🔍 DYNAMIC SEARCH BAR #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="feather-search text-muted"></i></span>
+                <input type="text" id="liveSearch" class="form-control border-start-0 ps-0" placeholder="Type to search games by name or slug..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    {# 🎮 GAMES TABLE #}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="gameTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Name</th>
+                            <th>Slug</th>
+                            <th>Ranking Support</th>
+                            <th>Created At</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for game in games %}
+                        <tr class="game-row">
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark search-name">{{ game.name }}</span>
+                            </td>
+                            <td><code class="search-slug">{{ game.slug }}</code></td>
+                            <td>
+                                {% if game.hasRanking %}
+                                    <span class="badge bg-light-success text-success">
+                                        <i class="feather-check-circle me-1"></i>Yes
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light-secondary text-muted">
+                                        <i class="feather-x-circle me-1"></i>No
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                {{ game.createdAt ? game.createdAt|date('Y-m-d') : 'N/A' }}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{{ path('app_game_show', {'id': game.id}) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="feather-eye"></i>
+                                    </a>
+                                    <a href="{{ path('app_game_edit', {'id': game.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="feather-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="feather-box d-block mb-2 fs-2"></i>
+                                No records found
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {# Hidden "No Results" Message #}
+                <div id="noResults" class="text-center py-5 d-none">
+                    <i class="feather-frown text-muted fs-1 mb-3"></i>
+                    <h6 class="text-muted">No matching games found.</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ⚡ JAVASCRIPT FOR SEARCH #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('liveSearch');
+            const tableRows = document.querySelectorAll('.game-row');
+            const noResultsMsg = document.getElementById('noResults');
+
+            searchInput.addEventListener('keyup', function() {
+                const query = this.value.toLowerCase();
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    // Search by Name or Slug
+                    const name = row.querySelector('.search-name').textContent.toLowerCase();
+                    const slug = row.querySelector('.search-slug').textContent.toLowerCase();
+
+                    if (name.includes(query) || slug.includes(query)) {
+                        row.style.display = ''; // Show
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none'; // Hide
+                    }
+                });
+
+                // Show "No Results" message if everything is hidden
+                if (visibleCount === 0) {
+                    noResultsMsg.classList.remove('d-none');
+                } else {
+                    noResultsMsg.classList.add('d-none');
+                }
+            });
+        });
+    </script>
 {% endblock %}

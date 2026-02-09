@@ -17,8 +17,21 @@ final class GuideController extends AbstractController
     #[Route(name: 'app_guide_index', methods: ['GET'])]
     public function index(GuideRepository $guideRepository): Response
     {
+        // ✨ NEW: Calculate Statistics for Guide Management
+        $total = $guideRepository->count([]);
+        $easy = $guideRepository->count(['difficulty' => 'Easy']);
+        $medium = $guideRepository->count(['difficulty' => 'Medium']);
+        $hard = $guideRepository->count(['difficulty' => 'Hard']);
+
         return $this->render('guide/index.html.twig', [
             'guides' => $guideRepository->findAll(),
+            // ✨ NEW: Pass stats to the template
+            'stats' => [
+                'total' => $total,
+                'easy' => $easy,
+                'medium' => $medium,
+                'hard' => $hard
+            ]
         ]);
     }
 

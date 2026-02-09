@@ -17,8 +17,19 @@ final class GameController extends AbstractController
     #[Route(name: 'app_game_index', methods: ['GET'])]
     public function index(GameRepository $gameRepository): Response
     {
+        // ✨ NEW: Calculate Statistics for Game Management
+        $total = $gameRepository->count([]);
+        $ranked = $gameRepository->count(['hasRanking' => true]);
+        $unranked = $total - $ranked;
+
         return $this->render('game/index.html.twig', [
             'games' => $gameRepository->findAll(),
+            // ✨ NEW: Pass the stats array to the template
+            'stats' => [
+                'total' => $total,
+                'ranked' => $ranked,
+                'unranked' => $unranked
+            ]
         ]);
     }
 
@@ -80,14 +91,13 @@ final class GameController extends AbstractController
     }
 
     #[Route('/game/search/ajax', name: 'app_game_search_ajax', methods: ['GET'])]
-public function searchAjax(Request $request, GameRepository $gameRepository): Response
-{
-    $term = $request->query->get('q', '');
-    $games = $gameRepository->searchGames($term);
+    public function searchAjax(Request $request, GameRepository $gameRepository): Response
+    {
+        $term = $request->query->get('q', '');
+        $games = $gameRepository->searchGames($term);
 
-    // This renders only the table rows
-    return $this->render('game/_game_rows.html.twig', [
-        'games' => $games,
-    ]);
-}
+        return $this->render('game/_game_rows.html.twig', [
+            'games' => $games,
+        ]);
+    }
 }

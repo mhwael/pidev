@@ -19,7 +19,7 @@
         <div class="navbar-wrapper">
             <div class="m-header">
                 <a href="/dashboard" class="b-brand">
-                    <h4 class="fw-bold mt-2">DURALUX</h4>
+                    <h4 class="fw-bold mt-2">LVLUP</h4>
                 </a>
             </div>
             <div class="navbar-content">
@@ -30,6 +30,18 @@
                             <span class="nxl-mtext">User Management</span>
                         </a>
                     </li>
+                    <li class="nxl-item nxl-hasmenu">
+    <a href="{{ path('product_index') }}" class="nxl-link">
+        <span class="nxl-micon"><i class="feather-shopping-bag"></i></span>
+        <span class="nxl-mtext">Product Management</span>
+    </a>
+</li>
+<li class="nxl-item nxl-hasmenu">
+    <a href="{{ path('orders_index') }}" class="nxl-link">
+        <span class="nxl-micon"><i class="feather-shopping-cart"></i></span>
+        <span class="nxl-mtext">Orders Management</span>
+    </a>
+</li>
                     <li class="nxl-item nxl-hasmenu">
                         <a href="{{ path('app_game_index') }}" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-package"></i></span>
@@ -49,24 +61,24 @@
                              <span class="nxl-mtext">Reviews</span>
                         </a>
                     </li>
-<li class="nxl-item">
-    <a href="{{ path('app_guide_step_index') }}" class="nxl-link">
-        <span class="nxl-micon"><i class="feather-list"></i></span>
-        <span class="nxl-mtext">Guide Steps</span>
-    </a>
-</li>
-<li class="nxl-item">
+                <li class="nxl-item">
+                      <a href="{{ path('app_guide_step_index') }}" class="nxl-link">
+                             <span class="nxl-micon"><i class="feather-list"></i></span>
+                            <span class="nxl-mtext">Guide Steps</span>
+                         </a>
+                    </li>
+                <li class="nxl-item">
                         <a href="/dashboard/team" class="nxl-link">
                             <span class="nxl-micon"><i class="fas fa-users"></i></span>
                             <span class="nxl-mtext">Team Management</span>
                         </a>
                     </li>
-                    <li class="nxl-item">
+                <li class="nxl-item">
                         <a href="/dashboard/tournament" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-award"></i></span>
                             <span class="nxl-mtext">Tournament Management</span>
                         </a>
-                    </li>
+                </li>
             </div>
         </div>
     </nav>

@@ -13,7 +13,8 @@
         </a>
     </div>
 
-    <div class="card mb-4 border-top border-4 border-primary">
+    {# 🟢 EXISTING: SERVER-SIDE FILTER (Keep this, it's good!) #}
+    <div class="card mb-3 border-top border-4 border-primary">
         <div class="card-body py-3">
             <form method="get" class="row align-items-center">
                 <div class="col-md-5">
@@ -36,6 +37,16 @@
         </div>
     </div>
 
+    {# 🔍 NEW: DYNAMIC SEARCH BAR #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="feather-search text-muted"></i></span>
+                <input type="text" id="liveSearch" class="form-control border-start-0 ps-0" placeholder="Type to find a specific step (e.g. 'Jump', 'Buy Utility')..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -48,14 +59,14 @@
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="stepsContainer">
                         {% set current_guide_id = null %}
 
                         {% for guide_step in guide_steps %}
                             
-                            {# ✨ GROUPING MAGIC: If this step belongs to a new guide, print a Header Row #}
+                            {# GROUP HEADER: I added a class 'guide-header' to identify these rows #}
                             {% if current_guide_id != guide_step.guide.id %}
-                                <tr class="table-secondary">
+                                <tr class="table-secondary guide-header">
                                     <td colspan="4" class="fw-bold text-dark py-2 px-3">
                                         <i class="feather-book me-2"></i>Guide: {{ guide_step.guide.title }} 
                                         <span class="badge bg-light text-dark ms-2 small">{{ guide_step.guide.game.name }}</span>
@@ -64,17 +75,17 @@
                                 {% set current_guide_id = guide_step.guide.id %}
                             {% endif %}
 
-                            {# Normal Step Row #}
-                            <tr>
+                            {# STEP ROW: Added classes for the search script to find #}
+                            <tr class="step-row">
                                 <td class="text-center">
                                     <span class="badge rounded-pill bg-soft-primary text-primary">
                                         Step {{ guide_step.stepOrder }}
                                     </span>
                                 </td>
                                 <td>
-                                    <strong>{{ guide_step.title }}</strong>
+                                    <strong class="search-title">{{ guide_step.title }}</strong>
                                 </td>
-                                <td class="text-muted">
+                                <td class="text-muted search-content">
                                     {{ guide_step.content|striptags|slice(0, 60) }}...
                                 </td>
                                 <td class="text-end">
@@ -96,7 +107,47 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                {# Hidden "No Results" Message #}
+                <div id="noResults" class="text-center py-5 d-none">
+                    <i class="feather-frown text-muted fs-1 mb-3"></i>
+                    <h6 class="text-muted">No matching steps found.</h6>
+                </div>
             </div>
         </div>
     </div>
+
+    {# ⚡ JAVASCRIPT FOR SEARCH #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('liveSearch');
+            const stepRows = document.querySelectorAll('.step-row');
+            const noResultsMsg = document.getElementById('noResults');
+
+            searchInput.addEventListener('keyup', function() {
+                const query = this.value.toLowerCase();
+                let visibleCount = 0;
+
+                stepRows.forEach(row => {
+                    // Search in Title and Content
+                    const title = row.querySelector('.search-title').textContent.toLowerCase();
+                    const content = row.querySelector('.search-content').textContent.toLowerCase();
+
+                    if (title.includes(query) || content.includes(query)) {
+                        row.style.display = ''; // Show
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none'; // Hide
+                    }
+                });
+
+                // Show "No Results" if nothing found
+                if (visibleCount === 0 && stepRows.length > 0) {
+                    noResultsMsg.classList.remove('d-none');
+                } else {
+                    noResultsMsg.classList.add('d-none');
+                }
+            });
+        });
+    </script>
 {% endblock %}
