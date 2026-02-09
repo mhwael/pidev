@@ -1,0 +1,102 @@
+{% extends 'back.html.twig' %}
+
+{% block title %}Manage Guide Steps{% endblock %}
+
+{% block body %}
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="m-b-10">Guide Steps</h5>
+            <p class="text-muted mb-0">Organize and edit steps for your guides.</p>
+        </div>
+        <a href="{{ path('app_guide_step_new') }}" class="btn btn-primary">
+            <i class="feather-plus me-2"></i>New Step
+        </a>
+    </div>
+
+    <div class="card mb-4 border-top border-4 border-primary">
+        <div class="card-body py-3">
+            <form method="get" class="row align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light fw-bold">Filter by Game:</span>
+                        <select name="game" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Show All --</option>
+                            {% for game in games %}
+                                <option value="{{ game.id }}" {{ selected_game == game.id ? 'selected' : '' }}>
+                                    {{ game.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-7 text-end text-muted small">
+                    Showing steps for <strong class="text-dark">{{ selected_game ? 'Selected Game' : 'All Games' }}</strong>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="bg-light">
+                            <th style="width: 100px;">Order</th>
+                            <th>Title</th>
+                            <th>Content Preview</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set current_guide_id = null %}
+
+                        {% for guide_step in guide_steps %}
+                            
+                            {# ✨ GROUPING MAGIC: If this step belongs to a new guide, print a Header Row #}
+                            {% if current_guide_id != guide_step.guide.id %}
+                                <tr class="table-secondary">
+                                    <td colspan="4" class="fw-bold text-dark py-2 px-3">
+                                        <i class="feather-book me-2"></i>Guide: {{ guide_step.guide.title }} 
+                                        <span class="badge bg-light text-dark ms-2 small">{{ guide_step.guide.game.name }}</span>
+                                    </td>
+                                </tr>
+                                {% set current_guide_id = guide_step.guide.id %}
+                            {% endif %}
+
+                            {# Normal Step Row #}
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill bg-soft-primary text-primary">
+                                        Step {{ guide_step.stepOrder }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ guide_step.title }}</strong>
+                                </td>
+                                <td class="text-muted">
+                                    {{ guide_step.content|striptags|slice(0, 60) }}...
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ path('app_guide_step_show', {'id': guide_step.id}) }}" class="btn btn-sm btn-light-secondary me-1"><i class="feather-eye"></i></a>
+                                    <a href="{{ path('app_guide_step_edit', {'id': guide_step.id}) }}" class="btn btn-sm btn-light-primary"><i class="feather-edit"></i></a>
+                                </td>
+                            </tr>
+
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="feather-folder-minus fs-1 d-block mb-3"></i>
+                                        <h6>No steps found.</h6>
+                                        <p class="small">Try selecting a different game or create a new step.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

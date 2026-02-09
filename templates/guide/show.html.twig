@@ -1,0 +1,87 @@
+{% extends 'back.html.twig' %}
+
+{% block title %}Guide Details{% endblock %}
+
+{% block body %}
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="mb-0">Guide Details</h5>
+            <p class="text-muted mb-0">Viewing guide: <strong>{{ guide.title }}</strong></p>
+        </div>
+        <div>
+            <a href="{{ path('app_guide_index') }}" class="btn btn-secondary btn-sm">Back to List</a>
+            <a href="{{ path('app_guide_edit', {'id': guide.id}) }}" class="btn btn-primary btn-sm">Edit Guide</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Game</small>
+                        <span class="badge bg-primary">{{ guide.game.name }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Difficulty</small>
+                        <span class="badge bg-{{ guide.difficulty == 'Hard' ? 'danger' : (guide.difficulty == 'Medium' ? 'warning' : 'success') }}">
+                            {{ guide.difficulty }}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Author</small>
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="avtar avtar-xs bg-light-primary text-primary me-2">
+                                <i class="feather-user"></i>
+                            </div>
+                            <span>{{ guide.author ? guide.author.email : 'No Author' }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Description</small>
+                        <p class="mt-1">{{ guide.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header border-bottom">
+                    <h5 class="mb-0">Step-by-Step Walkthrough</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if guide.guideSteps|length > 0 %}
+                        <div class="list-group list-group-flush">
+                            {# Sort steps just in case they aren't in order #}
+                            {% for step in guide.guideSteps|sort((a, b) => a.stepOrder <=> b.stepOrder) %}
+                                <div class="list-group-item p-4">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="avtar avtar-s bg-light-info text-info rounded-circle">
+                                                <span class="fw-bold">{{ step.stepOrder }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-2">{{ step.title }}</h5>
+                                            <p class="text-muted mb-0">{{ step.content|nl2br }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="feather-layers text-muted fs-1 mb-3"></i>
+                            <h6 class="text-muted">No steps defined yet.</h6>
+                            <a href="{{ path('app_guide_edit', {'id': guide.id}) }}" class="btn btn-sm btn-outline-primary mt-2">Add Steps Now</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

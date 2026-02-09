@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Duralux || Esports Management{% endblock %}</title>
+    
+    {# Using asset() ensures Symfony finds the files in the public/ folder #}
+    <link rel="stylesheet" href="{{ asset('back_template/assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('back_template/assets/vendors/css/vendors.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('back_template/assets/css/theme.min.css') }}">
+    
+    {% block stylesheets %}{% endblock %}
+</head>
+
+
+<body class="nxl-container">
+    <nav class="nxl-navigation">
+        <div class="navbar-wrapper">
+            <div class="m-header">
+                <a href="/dashboard" class="b-brand">
+                    <h4 class="fw-bold mt-2">DURALUX</h4>
+                </a>
+            </div>
+            <div class="navbar-content">
+                <ul class="nxl-navbar">
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="{{ path('app_user_management') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">User Management</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="{{ path('app_game_index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-package"></i></span>
+                            <span class="nxl-mtext">Game Management</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="{{ path('app_guide_index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-book"></i></span>
+                            <span class="nxl-mtext">Guide Management</span>
+                        </a>
+                    </li>
+                </ul>
+                <li class="nxl-item nxl-hasmenu">
+                    <a href="{{ path('app_guide_rating_index') }}" class="nxl-link">
+                             <span class="nxl-micon"><i class="feather-star"></i></span>
+                             <span class="nxl-mtext">Reviews</span>
+                        </a>
+                    </li>
+<li class="nxl-item">
+    <a href="{{ path('app_guide_step_index') }}" class="nxl-link">
+        <span class="nxl-micon"><i class="feather-list"></i></span>
+        <span class="nxl-mtext">Guide Steps</span>
+    </a>
+</li>
+<li class="nxl-item">
+                        <a href="/dashboard/team" class="nxl-link">
+                            <span class="nxl-micon"><i class="fas fa-users"></i></span>
+                            <span class="nxl-mtext">Team Management</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item">
+                        <a href="/dashboard/tournament" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-award"></i></span>
+                            <span class="nxl-mtext">Tournament Management</span>
+                        </a>
+                    </li>
+            </div>
+        </div>
+    </nav>
+    <main class="nxl-container">
+        <div class="nxl-content p-4">
+            {% block body %}{% endblock %}
+        </div>
+    </main>
+    {# Standard JS files needed for the sidebar to toggle and dropdowns to work #}
+    <script src="{{ asset('back_template/assets/vendors/js/vendors.min.js') }}"></script>
+    <script src="{{ asset('back_template/assets/js/common-init.min.js') }}"></script>
+    <script src="{{ asset('back_template/assets/js/theme-custom.min.js') }}"></script>
+    
+    {% block javascripts %}{% endblock %}
+</body>
+</html>

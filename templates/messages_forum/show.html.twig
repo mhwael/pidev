@@ -1,0 +1,33 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Message{% endblock %}
+{% block banner_title %}Message{% endblock %}
+{% block banner_subtitle %}{{ messages_forum.dateCreation ? messages_forum.dateCreation|date('d/m/Y H:i') : '' }}{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="about_us_text mb-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        {% if messages_forum.sujetsForum %}
+                            <span class="badge bg-secondary">Sujet : {{ messages_forum.sujetsForum.titre }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{{ path('app_messages_forum_edit', {'id': messages_forum.id}) }}" class="btn_2 btn-sm me-2">Modifier</a>
+                        {{ include('messages_forum/_delete_form.html.twig') }}
+                    </div>
+                </div>
+                <p class="text-muted mb-2">Auteur #{{ messages_forum.auteurId }} · {{ messages_forum.nombreLikes }} like(s)</p>
+                <p class="mb-0">{{ messages_forum.contenu }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                {% if messages_forum.sujetsForum %}
+                    <a href="{{ path('app_sujets_forum_show', {'id': messages_forum.sujetsForum.id}) }}" class="btn_1">Retour au sujet</a>
+                {% endif %}
+                <a href="{{ path('app_messages_forum_index') }}" class="btn_2">Liste des messages</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'back.html.twig' %}
+
+{% block title %}GuideRating index{% endblock %}
+
+{% block body %}
+    <h1>GuideRating index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>RatingValue</th>
+                <th>Comment</th>
+                <th>CreatedAt</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for guide_rating in guide_ratings %}
+            <tr>
+                <td>{{ guide_rating.id }}</td>
+                <td>{{ guide_rating.ratingValue }}</td>
+                <td>{{ guide_rating.comment }}</td>
+                <td>{{ guide_rating.createdAt ? guide_rating.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_guide_rating_show', {'id': guide_rating.id}) }}">show</a>
+                    <a href="{{ path('app_guide_rating_edit', {'id': guide_rating.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_guide_rating_new') }}">Create new</a>
+{% endblock %}
