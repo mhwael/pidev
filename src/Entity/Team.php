@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TeamRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -18,12 +19,16 @@ class Team
     private ?int $id = null;
 
     #[ORM\Column(length: 100, unique: true)]
+    #[Assert\NotBlank(message: "Team name is required")]
+    #[Assert\Length(min: 3, max: 100)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 1000)]
     private ?string $description = null;
 
     #[ORM\Column]
@@ -32,17 +37,15 @@ class Team
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
-    // Relation ManyToOne avec User (capitaine)
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Team captain is required")]
     private ?User $captain = null;
 
-    // Relation ManyToMany avec User (membres)
     #[ORM\ManyToMany(targetEntity: User::class)]
     #[ORM\JoinTable(name: 'team_members')]
     private Collection $members;
 
-    // Relation ManyToMany avec Tournament
     #[ORM\ManyToMany(targetEntity: Tournament::class, mappedBy: 'teams')]
     private Collection $tournaments;
 

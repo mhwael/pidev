@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TournamentRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -18,36 +19,66 @@ class Tournament
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Assert\NotBlank(message: "Tournament name is required")]
+    #[Assert\Length(min: 3, max: 150)]
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: "Game is required")]
+    #[Assert\Length(max: 100)]
     private ?string $game = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 1000)]
     private ?string $description = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $format = null; // single_elimination, double_elimination, league, swiss
+    #[Assert\NotBlank]
+    #[Assert\Choice(
+        choices: ['single_elimination', 'double_elimination', 'league', 'swiss'],
+        message: "Invalid tournament format"
+    )]
+    private ?string $format = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
+    #[Assert\Positive]
+    #[Assert\LessThanOrEqual(128)]
     private ?int $maxTeams = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "Start date is required")]
     private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "End date is required")]
+    #[Assert\GreaterThan(
+        propertyPath: "startDate",
+        message: "End date must be after start date"
+    )]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull]
+    #[Assert\LessThan(
+        propertyPath: "startDate",
+        message: "Registration deadline must be before start date"
+    )]
     private ?\DateTimeInterface $registrationDeadline = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $status = null; // draft, open, ongoing, completed, cancelled
+    #[Assert\Choice(
+        choices: ['draft', 'open', 'ongoing', 'completed', 'cancelled'],
+        message: "Invalid tournament status"
+    )]
+    private ?string $status = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
     private ?string $prize = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 2000)]
     private ?string $rules = null;
 
     #[ORM\Column]
@@ -56,12 +87,11 @@ class Tournament
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
-    // Relation ManyToOne avec User (organisateur)
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Organizer is required")]
     private ?User $organizer = null;
 
-    // Relation ManyToMany avec Team
     #[ORM\ManyToMany(targetEntity: Team::class, inversedBy: 'tournaments')]
     #[ORM\JoinTable(name: 'tournament_teams')]
     private Collection $teams;
