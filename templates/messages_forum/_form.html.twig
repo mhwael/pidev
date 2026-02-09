@@ -1,0 +1,28 @@
+{{ form_start(form, {'attr': {'class': 'mb-4'}}) }}
+    <div class="form-group mb-3">
+        {{ form_label(form.sujetsForum) }}
+        {{ form_widget(form.sujetsForum, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.sujetsForum) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.auteur_id) }}
+        {{ form_widget(form.auteur_id, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.auteur_id) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.contenu) }}
+        {{ form_widget(form.contenu, {'attr': {'class': 'form-control', 'rows': 5}}) }}
+        {{ form_errors(form.contenu) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.date_creation) }}
+        {{ form_widget(form.date_creation, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.date_creation) }}
+    </div>
+    <div class="form-group mb-3">
+        {{ form_label(form.nombre_likes) }}
+        {{ form_widget(form.nombre_likes, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.nombre_likes) }}
+    </div>
+    <button type="submit" class="btn_1">{{ button_label|default('Publier') }}</button>
+{{ form_end(form) }}

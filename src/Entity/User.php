@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -39,6 +41,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
+
+    /**
+     * @var Collection<int, Guide>
+     */
+    #[ORM\OneToMany(mappedBy: 'author', targetEntity: Guide::class)]
+    private Collection $guides;
+
+    /**
+     * @var Collection<int, GuideRating>
+     */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: GuideRating::class)]
+    private Collection $guideRatings;
+
+    public function __construct()
+    {
+        $this->guides = new ArrayCollection();
+        $this->guideRatings = new ArrayCollection();
+    }
 
     #[ORM\PrePersist]
     public function setCreatedAtValue(): void
@@ -156,5 +176,65 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials()
     {
         // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    /**
+     * @return Collection<int, Guide>
+     */
+    public function getGuides(): Collection
+    {
+        return $this->guides;
+    }
+
+    public function addGuide(Guide $guide): static
+    {
+        if (!$this->guides->contains($guide)) {
+            $this->guides->add($guide);
+            $guide->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGuide(Guide $guide): static
+    {
+        if ($this->guides->removeElement($guide)) {
+            // set the owning side to null (unless already changed)
+            if ($guide->getAuthor() === $this) {
+                $guide->setAuthor(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GuideRating>
+     */
+    public function getGuideRatings(): Collection
+    {
+        return $this->guideRatings;
+    }
+
+    public function addGuideRating(GuideRating $guideRating): static
+    {
+        if (!$this->guideRatings->contains($guideRating)) {
+            $this->guideRatings->add($guideRating);
+            $guideRating->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGuideRating(GuideRating $guideRating): static
+    {
+        if ($this->guideRatings->removeElement($guideRating)) {
+            // set the owning side to null (unless already changed)
+            if ($guideRating->getUser() === $this) {
+                $guideRating->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

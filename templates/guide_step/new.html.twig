@@ -1,0 +1,11 @@
+{% extends 'back.html.twig' %}
+
+{% block title %}New GuideStep{% endblock %}
+
+{% block body %}
+    <h1>Create new GuideStep</h1>
+
+    {{ include('guide_step/_form.html.twig') }}
+
+    <a href="{{ path('app_guide_step_index') }}">back to list</a>
+{% endblock %}

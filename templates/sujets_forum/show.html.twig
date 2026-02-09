@@ -1,0 +1,51 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}{{ sujets_forum.titre }}{% endblock %}
+{% block banner_title %}{{ sujets_forum.titre }}{% endblock %}
+{% block banner_subtitle %}Sujet créé par {{ sujets_forum.creePar }} · {{ sujets_forum.dateCreation ? sujets_forum.dateCreation|date('d/m/Y H:i') : '' }}{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="about_us_text mb-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="badge bg-secondary me-2">{{ sujets_forum.categorie }}</span>
+                        {% if sujets_forum.estVerrouille %}
+                            <span class="badge bg-warning text-dark">Verrouillé</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{{ path('app_messages_forum_new', { sujet_id: sujets_forum.id }) }}" class="btn_1 btn-sm me-2">Répondre</a>
+                        <a href="{{ path('app_sujets_forum_edit', {'id': sujets_forum.id}) }}" class="btn_2 btn-sm me-2">Modifier</a>
+                        {{ include('sujets_forum/_delete_form.html.twig') }}
+                    </div>
+                </div>
+                <p class="text-muted mb-0">Créé par <strong>{{ sujets_forum.creePar }}</strong> le {{ sujets_forum.dateCreation ? sujets_forum.dateCreation|date('d/m/Y à H:i') : '' }}</p>
+            </div>
+
+            {% if sujets_forum.messagesForum|length > 0 %}
+                <h5 class="mb-3">Réponses ({{ sujets_forum.messagesForum|length }})</h5>
+                <div class="list-group">
+                    {% for msg in sujets_forum.messagesForum %}
+                        <div class="list-group-item list-group-item-dark mb-2 rounded">
+                            <div class="d-flex justify-content-between">
+                                <strong>#{{ msg.auteurId }}</strong>
+                                <small>{{ msg.dateCreation ? msg.dateCreation|date('d/m/Y H:i') : '' }} · {{ msg.nombreLikes }} like(s)</small>
+                            </div>
+                            <p class="mb-0 mt-2">{{ msg.contenu }}</p>
+                            <div class="mt-2">
+                                <a href="{{ path('app_messages_forum_show', {'id': msg.id}) }}" class="btn_2 btn-sm">Voir</a>
+                                <a href="{{ path('app_messages_forum_edit', {'id': msg.id}) }}" class="btn_2 btn-sm">Modifier</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Aucune réponse pour le moment. <a href="{{ path('app_messages_forum_new', { sujet_id: sujets_forum.id }) }}">Répondre</a></p>
+            {% endif %}
+
+            <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 mt-4">Retour à la liste des sujets</a>
+        </div>
+    </div>
+{% endblock %}

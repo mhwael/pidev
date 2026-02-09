@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zxx">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Shop - Products</title>
+
+    <base href="/front_template/">
+
+    <link rel="icon" href="img/favicon.png">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/all.css">
+    <link rel="stylesheet" href="css/flaticon.css">
+    <link rel="stylesheet" href="css/themify-icons.css">
+    <link rel="stylesheet" href="css/magnific-popup.css">
+    <link rel="stylesheet" href="css/slick.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
+        .card { border: 0; }
+        .card-body { color: #111; }
+        .price-line { font-weight: 700; }
+    </style>
+</head>
+
+<body>
+<div class="body_bg">
+
+    <!-- Header -->
+    <header class="main_menu single_page_menu">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <nav class="navbar navbar-expand-lg navbar-light">
+                        <a class="navbar-brand" href="/">
+                            <img src="img/levelup_logo.png" alt="LevelUp">
+                        </a>
+
+                        <button class="navbar-toggler" type="button" data-toggle="collapse"
+                                data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                                aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="menu_icon"><i class="fas fa-bars"></i></span>
+                        </button>
+
+                        <div class="collapse navbar-collapse main-menu-item" id="navbarSupportedContent">
+                            <ul class="navbar-nav">
+                                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('orders_index') }}">Dashboard</a></li>
+
+                            </ul>
+                        </div>
+
+                        {# REMOVE the right-side My Orders button (you said you want only one) #}
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>Shop Products</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section_padding">
+        <div class="container">
+
+            <!-- Search -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <form method="get" action="{{ path('shop_products') }}" class="row g-2">
+                        <div class="col-md-6">
+                            <input class="form-control" name="q" placeholder="Search by name..." value="{{ q }}">
+                        </div>
+                        <div class="col-md-4">
+                            <input class="form-control" name="category" placeholder="Category..." value="{{ category }}">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search mr-1"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="row">
+                {% for p in products %}
+                    <div class="col-lg-4 col-sm-6 mb-4">
+                        <a href="{{ path('shop_product_show', {id: p.id}) }}" style="text-decoration:none;">
+                            <div class="card h-100">
+
+                                {% if p.image %}
+                                    <img class="card-img-top"
+                                         src="{{ p.image }}"
+                                         alt="{{ p.name }}"
+                                         style="height:220px;object-fit:cover;">
+                                {% else %}
+                                    <div style="height:220px;background:#222;display:flex;align-items:center;justify-content:center;color:#bbb;">
+                                        No image
+                                    </div>
+                                {% endif %}
+
+                                <div class="card-body">
+                                    <h5 class="card-title mb-2">{{ p.name }}</h5>
+
+                                    <p class="mb-2">
+                                        <span class="badge badge-secondary">{{ p.category ?? 'Uncategorized' }}</span>
+                                    </p>
+
+                                    {# PRICE FIX (use property, not dump, not getPrice if it caused issues) #}
+                                    <p class="mb-1 price-line">
+                                        Price: {{ (p.price ?? 0)|number_format(2, '.', '') }} TND
+                                    </p>
+
+                                    {% if p.description %}
+                                        <p class="small text-muted mt-2 mb-0">
+                                            {{ p.description|slice(0, 120) }}{% if p.description|length > 120 %}...{% endif %}
+                                        </p>
+                                    {% else %}
+                                        <p class="small text-muted mt-2 mb-0">No description.</p>
+                                    {% endif %}
+
+                                    <div class="mt-3">
+                                        <span class="btn_1 w-100 text-center">View & Order</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center text-white-50">
+                        <p>No products found.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer_part">
+        <div class="copygight_text">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <div class="copyright_text">
+                            <p>© {{ "now"|date("Y") }} All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+<script src="js/jquery-1.12.1.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/jquery.magnific-popup.js"></script>
+<script src="js/swiper.min.js"></script>
+<script src="js/masonry.pkgd.js"></script>
+<script src="js/owl.carousel.min.js"></script>
+<script src="js/jquery.nice-select.min.js"></script>
+<script src="js/slick.min.js"></script>
+<script src="js/jquery.counterup.min.js"></script>
+<script src="js/waypoints.min.js"></script>
+<script src="js/contact.js"></script>
+<script src="js/jquery.ajaxchimp.min.js"></script>
+<script src="js/jquery.form.js"></script>
+<script src="js/jquery.validate.min.js"></script>
+<script src="js/mail-script.js"></script>
+<script src="js/custom.js"></script>
+</body>
+</html>
