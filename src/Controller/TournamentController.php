@@ -63,13 +63,13 @@ class TournamentController extends AbstractController
         // Seul l'organisateur peut modifier
         if ($tournament->getOrganizer() !== $this->getUser()) {
             $this->addFlash('error', 'Seul l\'organisateur peut modifier ce tournoi.');
-            return $this->redirectToRoute('app_tournament_index');
+            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
         }
 
         // Impossible de modifier si déjà commencé
         if (in_array($tournament->getStatus(), ['ongoing', 'completed'])) {
             $this->addFlash('error', 'Impossible de modifier un tournoi déjà commencé.');
-            return $this->redirectToRoute('app_tournament_index');
+            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
         }
 
         $form = $this->createForm(TournamentType::class, $tournament);
@@ -94,13 +94,13 @@ class TournamentController extends AbstractController
         // Seul l'organisateur peut supprimer
         if ($tournament->getOrganizer() !== $this->getUser()) {
             $this->addFlash('error', 'Seul l\'organisateur peut supprimer ce tournoi.');
-            return $this->redirectToRoute('app_tournament_index');
+            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
         }
 
         // Impossible de supprimer si déjà commencé
         if (!in_array($tournament->getStatus(), ['draft', 'open'])) {
             $this->addFlash('error', 'Impossible de supprimer un tournoi déjà commencé.');
-            return $this->redirectToRoute('app_tournament_index');
+            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
         }
 
         if ($this->isCsrfTokenValid('delete'.$tournament->getId(), $request->request->get('_token'))) {

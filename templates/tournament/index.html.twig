@@ -1,3 +1,5 @@
+{% extends 'back.html.twig' %}
+{% block body %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,6 +65,9 @@
                                 </td>
                                 <td>{{ tournament.startDate ? tournament.startDate|date('Y-m-d H:i') : '-' }}</td>
                                 <td class="text-nowrap">
+                                    <a href="{{ path('app_tournament_show', {id: tournament.id}) }}" class="btn btn-sm btn-info me-1" title="View">
+                                        <i class="feather-eye"></i>
+                                    </a>
                                     <a href="{{ path('app_tournament_edit', {id: tournament.id}) }}" class="btn btn-sm btn-primary me-1">
                                         <i class="feather-edit-2"></i> Edit
                                     </a>
@@ -87,3 +92,4 @@
     </div>
 </body>
 </html>
+{% endblock %}

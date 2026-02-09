@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/team')]
+#[Route('/dashboard/team')]
 class TeamController extends AbstractController
 {
     #[Route('/', name: 'app_team_index', methods: ['GET'])]
@@ -22,7 +22,7 @@ class TeamController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_team_new', methods: ['GET', 'POST'])]
+    #[Route('/dashboard/new', name: 'app_team_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -52,7 +52,7 @@ class TeamController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_team_show', methods: ['GET'])]
+    #[Route('/dashboard/{id}', name: 'app_team_show', methods: ['GET'])]
     public function show(Team $team): Response
     {
         return $this->render('team/show.html.twig', [
@@ -60,7 +60,7 @@ class TeamController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_team_edit', methods: ['GET', 'POST'])]
+    #[Route('/dashboard/{id}/edit', name: 'app_team_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Team $team, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
@@ -86,7 +86,7 @@ class TeamController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_team_delete', methods: ['POST'])]
+    #[Route('/dashboard/{id}', name: 'app_team_delete', methods: ['POST'])]
     public function delete(Request $request, Team $team, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');

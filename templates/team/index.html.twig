@@ -1,20 +1,113 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Hello TeamController!{% endblock %}
-
+{% extends 'back.html.twig' %}
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Team Management | Dashboard</title>
+    <base href="/back_template/">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
+    <link rel="stylesheet" href="assets/css/theme.min.css">
+</head>
+<body class="nxl-container">
+    <div class="nxl-content p-4">
+        {# Header de la page #}
+        <div class="page-header mb-4">
+            <div class="page-header-left d-flex align-items-center">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Team Management</h5>
+                </div>
+                <ul class="breadcrumb ms-3 mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item">Teams</li>
+                </ul>
+            </div>
+            <div class="page-header-right ms-auto">
+                <a href="{{ path('app_team_new') }}" class="btn btn-primary">
+                    <i class="feather-plus me-2"></i>Create New Team
+                </a>
+            </div>
+        </div>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/oussa/Desktop/pidev/src/Controller/TeamController.php</code></li>
-        <li>Your template at <code>C:/Users/oussa/Desktop/pidev/templates/team/index.html.twig</code></li>
-    </ul>
-</div>
+        {# Carte contenant le tableau #}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Logo</th>
+                                <th>Name</th>
+                                <th>Captain</th>
+                                <th>Members</th>
+                                <th>Tournaments</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr>
+                                <td>{{ team.id }}</td>
+                                <td>
+                                    {% if team.logo %}
+                                        <img src="{{ team.logo }}" alt="{{ team.name }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="avatar-text avatar-md bg-soft-primary text-primary">
+                                            {{ team.name|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold text-dark">{{ team.name }}</td>
+                                <td>
+                                    {% if team.captain %}
+                                        <span class="badge bg-soft-warning text-warning">
+                                            {{ team.captain.firstName }} {{ team.captain.lastName }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">No captain</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-soft-info text-info">
+                                        {{ team.members|length }} member(s)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-soft-success text-success">
+                                        {{ team.tournaments|length }} tournament(s)
+                                    </span>
+                                </td>
+                                <td>{{ team.createdAt ? team.createdAt|date('Y-m-d H:i') : '-' }}</td>
+                                <td class="text-nowrap">
+                                    <a href="{{ path('app_team_show', {id: team.id}) }}" class="btn btn-sm btn-info me-1" title="View">
+                                        <i class="feather-eye"></i>
+                                    </a>
+                                    <a href="{{ path('app_team_edit', {id: team.id}) }}" class="btn btn-sm btn-primary me-1" title="Edit">
+                                        <i class="feather-edit-2"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('app_team_delete', {id: team.id}) }}" class="d-inline" onsubmit="return confirm('Delete this team?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ team.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="feather-trash-2"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No teams found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
 {% endblock %}
