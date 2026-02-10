@@ -1,4 +1,4 @@
-{% extends 'base_front.html.twig' %}
+{% extends 'back.html.twig' %}
 
 {% block title %}{{ sujets_forum.titre }}{% endblock %}
 {% block banner_title %}{{ sujets_forum.titre }}{% endblock %}
@@ -45,7 +45,7 @@
                 <p class="text-muted">Aucune réponse pour le moment. <a href="{{ path('app_messages_forum_new', { sujet_id: sujets_forum.id }) }}">Répondre</a></p>
             {% endif %}
 
-            <a href="{{ path('cards_forum') }}" class="btn_2 mt-4">Retour à la liste des sujets</a>
+            <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 mt-4">Retour à la liste des sujets</a>
         </div>
     </div>
 {% endblock %}

@@ -93,13 +93,21 @@ final class SujetsForumController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_sujets_forum_show', methods: ['GET'])]
-    public function show(SujetsForum $sujetsForum): Response
-    {
-        return $this->render('sujets_forum/show.html.twig', [
-            'sujets_forum' => $sujetsForum,
-        ]);
-    }
+ #[Route('/{id}', name: 'app_sujets_forum_show', methods: ['GET'])]
+public function show(SujetsForum $sujetsForum): Response
+{
+    return $this->render('sujets_forum/show.html.twig', [
+        'sujets_forum' => $sujetsForum,
+    ]);
+}
+
+#[Route('/{id}/messages', name: 'app_sujets_forum_showB', methods: ['GET'])]
+public function showB(SujetsForum $sujetsForum): Response
+{
+    return $this->render('sujets_forum/showB.html.twig', [
+        'sujets_forum' => $sujetsForum,
+    ]);
+}
 
     #[Route('/{id}/edit', name: 'app_sujets_forum_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, SujetsForum $sujetsForum, EntityManagerInterface $entityManager): Response
@@ -129,4 +137,9 @@ final class SujetsForumController extends AbstractController
 
         return $this->redirectToRoute('app_sujets_forum_index', [], Response::HTTP_SEE_OTHER);
     }
+
+
+
+
+
 }

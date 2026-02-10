@@ -1,135 +1,319 @@
-{% extends 'base_front.html.twig' %}
-
-{% block title %}Sujets du forum{% endblock %}
-{% block banner_title %}Sujets du forum{% endblock %}
-{% block banner_subtitle %}Parcourir et participer aux discussions.{% endblock %}
+{% extends 'back.html.twig' %}
 
 {% block body %}
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-                <h2 class="mb-0">Tous les sujets</h2>
-                <a href="{{ path('app_sujets_forum_new') }}" class="btn_1">Nouveau sujet</a>
-            </div>
 
-            {# Barre de recherche et filtre catégorie #}
-            <form method="get" action="{{ path('app_sujets_forum_index') }}" class="mb-4 p-3 rounded" style="background: rgba(255,255,255,0.08);">
-                <div class="row align-items-end">
-                    <div class="col-md-5 mb-2">
-                        <label class="text-white mb-1">Rechercher</label>
-                        <input type="text" name="search" class="form-control" placeholder="Titre, auteur, catégorie..." value="{{ search|default('') }}">
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <label class="text-white mb-1">Catégorie</label>
-                        <select name="categorie" class="form-control">
-                            <option value="">Toutes</option>
-                            {% for key, cat in categories %}
-                                <option value="{{ cat }}" {{ (categorie_filter|default('')) == cat ? 'selected' : '' }}>{{ cat }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button type="submit" class="btn_1 w-100">Filtrer</button>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <a href="{{ path('app_sujets_forum_index') }}" class="btn_2 w-100 d-block text-center">Réinitialiser</a>
-                    </div>
+<style>
+    .pieWrap { display:flex; gap:16px; align-items:center; }
+    .pie {
+        width:150px;
+        height:150px;
+        border-radius:50%;
+        border:10px solid #fff;
+        box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+        background: conic-gradient(#ddd 0deg 360deg);
+    }
+    .legendItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .legendColor { width:14px; height:14px; border-radius:3px; }
+    .mutedSmall { font-size:12px; color:#6c757d; }
+
+    .rowDot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:10px; vertical-align:middle; }
+    .dotRed { background:#dc3545; }
+    .dotGreen { background:#198754; }
+</style>
+
+{# ====== HEADER ====== #}
+<div class="page-header mb-4">
+    <div class="page-header-left d-flex align-items-center">
+        <div class="page-header-title">
+            <h5 class="m-b-10">Forum Management</h5>
+        </div>
+        <ul class="breadcrumb ms-3 mb-0">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item">Sujets du forum</li>
+        </ul>
+    </div>
+
+    <div class="page-header-right ms-auto d-flex gap-2">
+        <a href="{{ path('app_sujets_forum_new') }}" class="btn btn-primary">
+            <i class="feather-plus me-2"></i>Nouveau sujet
+        </a>
+        <a href="{{ path('front_index') }}" class="btn btn-light-brand">
+            <i class="feather-arrow-left me-2"></i>Retour accueil
+        </a>
+    </div>
+</div>
+
+{# ====== FILTERS (CARD) ====== #}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ path('app_sujets_forum_index') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Rechercher</label>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Titre, auteur, catégorie..."
+                           value="{{ search|default('') }}">
                 </div>
-            </form>
 
-            {# Boutons de tri #}
-            <div class="mb-3 d-flex flex-wrap align-items-center">
-                <span class="text-white mr-2">Trier par :</span>
-                {% set ord = order|default('desc') %}
-                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'titre', order: (sort|default('')) == 'titre' ? (ord == 'desc' ? 'asc' : 'desc') : 'asc' }) }}" class="btn_2 btn-sm mr-2 {{ (sort|default('')) == 'titre' ? 'active' : '' }}">Titre {{ (sort|default('')) == 'titre' and ord == 'asc' ? '↑' : '↓' }}</a>
-                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'date_creation', order: (sort|default('')) == 'date_creation' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc' }) }}" class="btn_2 btn-sm mr-2 {{ (sort|default('date_creation')) == 'date_creation' ? 'active' : '' }}">Date {{ (sort|default('')) == 'date_creation' and ord == 'asc' ? '↑' : '↓' }}</a>
-                <a href="{{ path('app_sujets_forum_index', { search: search|default(''), categorie: categorie_filter|default(''), sort: 'nb_messages', order: (sort|default('')) == 'nb_messages' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc' }) }}" class="btn_2 btn-sm {{ (sort|default('')) == 'nb_messages' ? 'active' : '' }}">Nb messages {{ (sort|default('')) == 'nb_messages' and ord == 'asc' ? '↑' : '↓' }}</a>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered table-dark" id="table-sujets">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Créé par</th>
-                            <th>Catégorie</th>
-                            <th>Date</th>
-                            <th>Verrouillé</th>
-                            <th>Voir messages</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sujets_forum in sujets_forums %}
-                            <tr>
-                                <td>{{ sujets_forum.titre }}</td>
-                                <td>{{ sujets_forum.creePar }}</td>
-                                <td>{{ sujets_forum.categorie }}</td>
-                                <td>{{ sujets_forum.dateCreation ? sujets_forum.dateCreation|date('d/m/Y H:i') : '' }}</td>
-                                <td>{{ sujets_forum.estVerrouille ? 'Oui' : 'Non' }}</td>
-                                <td>
-                                    <a href="{{ path('app_sujets_forum_show', {'id': sujets_forum.id}) }}" class="btn_1 btn-sm">
-                                        Voir messages ({{ sujets_forum.messagesForum|length }})
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{{ path('app_sujets_forum_show', {'id': sujets_forum.id}) }}" class="btn_1 btn-sm">Voir</a>
-                                    <a href="{{ path('app_sujets_forum_edit', {'id': sujets_forum.id}) }}" class="btn_2 btn-sm">Modifier</a>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Aucun sujet pour le moment. <a href="{{ path('app_sujets_forum_new') }}">Créer un sujet</a></td>
-                            </tr>
+                <div class="col-md-3">
+                    <label class="form-label">Catégorie</label>
+                    <select name="categorie" class="form-select">
+                        <option value="">Toutes</option>
+                        {% for key, cat in categories %}
+                            <option value="{{ cat }}" {{ (categorie_filter|default('')) == cat ? 'selected' : '' }}>
+                                {{ cat }}
+                            </option>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    </select>
+                </div>
 
-            {# Graphique circulaire (cercle) sous la liste : nombre de messages par sujet #}
-            {% if sujets_forums|length > 0 %}
-            <div class="mt-4 mb-4 p-3 rounded d-flex justify-content-center" style="background: rgba(255,255,255,0.08);">
-                <div style="max-width: 400px; width: 100%;">
-                    <h5 class="text-white mb-3 text-center">Nombre de messages par sujet</h5>
-                    <canvas id="chartSujetsMessages"></canvas>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="feather-filter me-2"></i>Filtrer
+                    </button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ path('app_sujets_forum_index') }}" class="btn btn-light w-100">
+                        Réinitialiser
+                    </a>
                 </div>
             </div>
-            {% endif %}
+        </form>
 
-            <a href="{{ path('front_index') }}" class="btn_2 mt-3">Retour à l'accueil</a>
+        {# TRI (chips style) #}
+        <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-muted">Trier par :</span>
+            {% set ord = order|default('desc') %}
+
+            <a href="{{ path('app_sujets_forum_index', {
+                search: search|default(''),
+                categorie: categorie_filter|default(''),
+                sort: 'titre',
+                order: (sort|default('')) == 'titre' ? (ord == 'desc' ? 'asc' : 'desc') : 'asc'
+            }) }}"
+               class="btn btn-sm {{ (sort|default('')) == 'titre' ? 'btn-primary' : 'btn-light' }}">
+                Titre {{ (sort|default('')) == 'titre' and ord == 'asc' ? '↑' : '↓' }}
+            </a>
+
+            <a href="{{ path('app_sujets_forum_index', {
+                search: search|default(''),
+                categorie: categorie_filter|default(''),
+                sort: 'date_creation',
+                order: (sort|default('')) == 'date_creation' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc'
+            }) }}"
+               class="btn btn-sm {{ (sort|default('date_creation')) == 'date_creation' ? 'btn-primary' : 'btn-light' }}">
+                Date {{ (sort|default('')) == 'date_creation' and ord == 'asc' ? '↑' : '↓' }}
+            </a>
+
+            <a href="{{ path('app_sujets_forum_index', {
+                search: search|default(''),
+                categorie: categorie_filter|default(''),
+                sort: 'nb_messages',
+                order: (sort|default('')) == 'nb_messages' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc'
+            }) }}"
+               class="btn btn-sm {{ (sort|default('')) == 'nb_messages' ? 'btn-primary' : 'btn-light' }}">
+                Nb messages {{ (sort|default('')) == 'nb_messages' and ord == 'asc' ? '↑' : '↓' }}
+            </a>
+        </div>
+    </div>
+</div>
+
+{# ====== TABLE (CARD) ====== #}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Titre</th>
+                    <th>Créé par</th>
+                    <th>Catégorie</th>
+                    <th>Date</th>
+                    <th>Verrouillé</th>
+                    <th>Messages</th>
+                    <th class="text-nowrap">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for s in sujets_forums %}
+                    {% set isLocked = s.estVerrouille %}
+                    {% set dotClass = isLocked ? 'dotRed' : 'dotGreen' %}
+
+                    <tr>
+                        <td>{{ s.id }}</td>
+                        <td>
+                            <span class="rowDot {{ dotClass }}"></span>
+                            {{ s.titre }}
+                        </td>
+                        <td>{{ s.creePar }}</td>
+                        <td>{{ s.categorie }}</td>
+                        <td>{{ s.dateCreation ? s.dateCreation|date('d/m/Y H:i') : '-' }}</td>
+                        <td>
+                            <span class="badge {{ isLocked ? 'bg-danger' : 'bg-success' }}">
+                                {{ isLocked ? 'Oui' : 'Non' }}
+                            </span>
+                        </td>
+                        <td><strong>{{ s.messagesForum|length }}</strong></td>
+                        <td class="text-nowrap">
+                            <a href="{{ path('app_sujets_forum_showB', {'id': s.id}) }}" class="btn btn-sm btn-light me-1">
+                                <i class="feather-eye"></i> Voir
+                            </a>
+                            <a href="{{ path('app_sujets_forum_edit', {'id': s.id}) }}" class="btn btn-sm btn-primary">
+                                <i class="feather-edit-2"></i> Modifier
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Aucun sujet pour le moment.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ====== STATS (UNDER TABLE) ====== #}
+{% set totalSujets = sujets_forums|length %}
+{% set totalMessages = 0 %}
+{% set totalLocked = 0 %}
+{% for s in sujets_forums %}
+    {% set totalMessages = totalMessages + (s.messagesForum|length) %}
+    {% if s.estVerrouille %}
+        {% set totalLocked = totalLocked + 1 %}
+    {% endif %}
+{% endfor %}
+{% set totalUnlocked = totalSujets - totalLocked %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                     style="width:64px;height:64px;font-weight:800;">
+                    {{ totalSujets }}
+                </div>
+                <div>
+                    <div class="fw-bold">Sujets</div>
+                    <small class="text-muted">Total sujets</small>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-    (function() {
-        var chartLabels = [{% for s in sujets_forums %}"{{ s.titre|e('js') }}"{% if not loop.last %},{% endif %}{% endfor %}];
-        var chartCounts = [{% for s in sujets_forums %}{{ s.messagesForum|length }}{% if not loop.last %},{% endif %}{% endfor %}];
-        var ctx = document.getElementById('chartSujetsMessages');
-        if (ctx && chartLabels.length > 0) {
-            var shortLabels = chartLabels.map(function(l) { return l.length > 20 ? l.substring(0, 20) + '…' : l; });
-            var colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E74C3C', '#1ABC9C'];
-            var bgColors = chartCounts.map(function(_, i) { return colors[i % colors.length]; });
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: shortLabels,
-                    datasets: [{
-                        data: chartCounts,
-                        backgroundColor: bgColors,
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-        }
-    })();
-    </script>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                     style="width:64px;height:64px;font-weight:800;">
+                    {{ totalMessages }}
+                </div>
+                <div>
+                    <div class="fw-bold">Messages</div>
+                    <small class="text-muted">Total messages</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                     style="width:64px;height:64px;font-weight:800;">
+                    {{ totalLocked }}
+                </div>
+                <div>
+                    <div class="fw-bold">Verrouillés</div>
+                    <small class="text-muted">Sujets verrouillés</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                     style="width:64px;height:64px;font-weight:800;">
+                    {{ totalUnlocked }}
+                </div>
+                <div>
+                    <div class="fw-bold">Ouverts</div>
+                    <small class="text-muted">Sujets non verrouillés</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ====== PIE (CSS conic-gradient) : Messages par sujet ====== #}
+<div class="row g-3">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="fw-bold">Messages par sujet (Pie)</div>
+                    <small class="text-muted">{{ totalMessages }} messages</small>
+                </div>
+
+                {% set colors = ['#f5c400','#1e88e5','#43a047','#e53935','#8e24aa','#fb8c00','#00acc1','#6d4c41','#3949ab','#00897b'] %}
+                {% set deg = 0 %}
+                {% set gradientParts = [] %}
+
+                {# Eviter division par 0 #}
+                {% set denom = totalMessages > 0 ? totalMessages : 1 %}
+
+                {% for s in sujets_forums %}
+                    {% set count = s.messagesForum|length %}
+                    {% set percentage = (count * 100 / denom)|round(2) %}
+                    {% set slice = (percentage * 3.6) %}
+                    {% set color = colors[loop.index0 % (colors|length)] %}
+
+                    {% set start = deg %}
+                    {% set end = deg + slice %}
+                    {% set gradientParts = gradientParts|merge([color ~ ' ' ~ start ~ 'deg ' ~ end ~ 'deg']) %}
+                    {% set deg = end %}
+                {% endfor %}
+
+                {% if gradientParts|length == 0 %}
+                    {% set gradient = '#ddd 0deg 360deg' %}
+                {% else %}
+                    {% set gradient = gradientParts|join(', ') %}
+                {% endif %}
+
+                <div class="pieWrap mt-3">
+                    <div class="pie" style="background: conic-gradient({{ gradient }});"></div>
+
+                    <div style="flex:1; min-width:0;">
+                        {% for s in sujets_forums %}
+                            {% set count = s.messagesForum|length %}
+                            {% set percentage = (count * 100 / denom)|round(2) %}
+                            {% set color = colors[loop.index0 % (colors|length)] %}
+
+                            <div class="legendItem">
+                                <div class="legendColor" style="background: {{ color }}"></div>
+                                <div style="min-width:0;">
+                                    <div class="text-truncate" style="font-weight:600;">
+                                        {{ s.titre }}
+                                    </div>
+                                    <div class="mutedSmall">
+                                        {{ count }} messages • {{ percentage }}%
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-muted">Aucun sujet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

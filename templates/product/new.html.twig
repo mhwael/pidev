@@ -1,39 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>New Product | Dashboard</title>
-    <base href="/back_template/">
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/vendors/css/vendors.min.css">
-    <link rel="stylesheet" href="assets/css/theme.min.css">
-</head>
-<body class="nxl-container">
-<div class="nxl-content p-4">
-    <div class="page-header mb-4">
-        <div class="page-header-left d-flex align-items-center">
-            <div class="page-header-title">
-                <h5 class="m-b-10">Add Product</h5>
-            </div>
-            <ul class="breadcrumb ms-3 mb-0">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('product_index') }}">Product Management</a></li>
-                <li class="breadcrumb-item">New</li>
-            </ul>
-        </div>
-        <div class="page-header-right ms-auto">
-            <a href="{{ path('product_index') }}" class="btn btn-light-brand">
-                <i class="feather-arrow-left me-2"></i>Back
-            </a>
-        </div>
-    </div>
+{% extends 'back.html.twig' %}
 
-    <div class="card">
-        <div class="card-body">
-            {% include 'product/_form.html.twig' with { form: form, button_label: 'Create' } %}
+{% block body %}
+<base href="/back_template/">
+
+<style>
+    .page-wrap {
+        max-width: 1050px;
+        margin: 0 auto;
+    }
+
+    .topbar {
+        background: #fff;
+        border: 1px solid rgba(16, 24, 40, .08);
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 10px 30px rgba(16, 24, 40, .06);
+        margin-bottom: 18px;
+    }
+
+    .topbar .title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .icon-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 253, .12);
+        border: 1px solid rgba(13, 110, 253, .15);
+    }
+
+    .title h4 {
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: .2px;
+    }
+
+    .subtitle {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #667085;
+    }
+
+    .breadcrumb-lite {
+        font-size: 12px;
+        color: #98a2b3;
+        margin-top: 6px;
+    }
+    .breadcrumb-lite a {
+        color: #98a2b3;
+        text-decoration: none;
+    }
+    .breadcrumb-lite a:hover {
+        text-decoration: underline;
+    }
+
+    .btn-pill {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 700;
+    }
+
+    .card-soft {
+        border: 1px solid rgba(16, 24, 40, .08);
+        border-radius: 16px;
+        box-shadow: 0 12px 34px rgba(16, 24, 40, .08);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .card-soft .card-header {
+        background: linear-gradient(180deg, rgba(13,110,253,.10), rgba(13,110,253,.02));
+        border-bottom: 1px solid rgba(16, 24, 40, .08);
+        padding: 16px 20px;
+    }
+
+    .card-soft .card-header .header-title {
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.1;
+    }
+
+    .card-soft .card-header .header-desc {
+        font-size: 12px;
+        color: #667085;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="nxl-content p-4">
+    <div class="page-wrap">
+
+        <div class="topbar d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <div class="title">
+                    <div class="icon-badge">
+                        <i class="feather-package text-primary"></i>
+                    </div>
+                    <div>
+                        <h4>Add Product</h4>
+                        <div class="subtitle">Create a new product with category, stock, and details.</div>
+                        <div class="breadcrumb-lite">
+                            <a href="/dashboard">Dashboard</a> &nbsp;›&nbsp;
+                            <a href="{{ path('product_index') }}">Product Management</a> &nbsp;›&nbsp;
+                            <span>New</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <a href="{{ path('product_index') }}" class="btn btn-outline-secondary btn-pill">
+                    <i class="feather-arrow-left me-2"></i>Back
+                </a>
+            </div>
         </div>
+
+        <div class="card card-soft">
+            <div class="card-header">
+                <div class="header-title">Product Details</div>
+                <div class="header-desc">Fill in the fields below then click Create.</div>
+            </div>
+
+            <div class="card-body p-4">
+                {% include 'product/_form.html.twig' with { form: form, button_label: 'Create' } %}
+            </div>
+        </div>
+
     </div>
 </div>
-</body>
-</html>
+{% endblock %}

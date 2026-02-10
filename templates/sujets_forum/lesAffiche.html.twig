@@ -1,0 +1,153 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Sujets du forum{% endblock %}
+{% block banner_title %}Sujets du forum{% endblock %}
+{% block banner_subtitle %}Parcourir et participer aux discussions.{% endblock %}
+
+{% block body %}
+
+{# ===== Breadcrumb comme Shop ===== #}
+<section class="breadcrumb breadcrumb_bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb_iner text-center">
+                    <div class="breadcrumb_iner_item">
+                        <h2>Sujets du forum</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section_padding">
+    <div class="container">
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-10 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h2 class="text-white mb-0">Tous les sujets</h2>
+                <a href="{{ path('app_sujets_forum_new') }}" class="btn_1">Nouveau sujet</a>
+            </div>
+        </div>
+
+        {# ===== Search/Filter ===== #}
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-10">
+                <form method="get" action="{{ path('cards_forum') }}" class="row g-2">
+                    <div class="col-md-6">
+                        <input class="form-control" name="search" placeholder="Titre, auteur, catégorie..."
+                               value="{{ search|default('') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="categorie" class="form-control">
+                            <option value="">Toutes</option>
+                            {% for key, cat in categories %}
+                                <option value="{{ cat }}" {{ (categorie_filter|default('')) == cat ? 'selected' : '' }}>
+                                    {{ cat }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search mr-1"></i> Filtrer
+                        </button>
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <a href="{{ path('cards_forum') }}" class="btn_2 btn-sm">Réinitialiser</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ===== Tri ===== #}
+        <div class="row justify-content-center mb-3">
+            <div class="col-lg-10 d-flex flex-wrap align-items-center gap-2">
+                <span class="text-white-50">Trier par :</span>
+                {% set ord = order|default('desc') %}
+
+                <a href="{{ path('cards_forum', {
+                    search: search|default(''),
+                    categorie: categorie_filter|default(''),
+                    sort: 'titre',
+                    order: (sort|default('')) == 'titre' ? (ord == 'desc' ? 'asc' : 'desc') : 'asc'
+                }) }}" class="btn btn-sm btn-light">
+                    Titre {{ (sort|default('')) == 'titre' and ord == 'asc' ? '↑' : '↓' }}
+                </a>
+
+                <a href="{{ path('cards_forum', {
+                    search: search|default(''),
+                    categorie: categorie_filter|default(''),
+                    sort: 'date_creation',
+                    order: (sort|default('')) == 'date_creation' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc'
+                }) }}" class="btn btn-sm btn-light">
+                    Date {{ (sort|default('')) == 'date_creation' and ord == 'asc' ? '↑' : '↓' }}
+                </a>
+
+                <a href="{{ path('cards_forum', {
+                    search: search|default(''),
+                    categorie: categorie_filter|default(''),
+                    sort: 'nb_messages',
+                    order: (sort|default('')) == 'nb_messages' ? (ord == 'desc' ? 'asc' : 'desc') : 'desc'
+                }) }}" class="btn btn-sm btn-light">
+                    Nb messages {{ (sort|default('')) == 'nb_messages' and ord == 'asc' ? '↑' : '↓' }}
+                </a>
+            </div>
+        </div>
+
+        {# ===== Cards (style Shop) ===== #}
+        <div class="row">
+            {% for s in sujets_forums %}
+                <div class="col-lg-4 col-sm-6 mb-4">
+
+                    {# Carte entière cliquable vers la page show (comme Shop) #}
+                    <a href="{{ path('app_sujets_forum_show', {'id': s.id}) }}" style="text-decoration:none;">
+                        <div class="card h-100">
+
+                            {# Header simple (tu peux remplacer par une image si tu veux) #}
+                            <div style="height:140px;background:#222;display:flex;align-items:center;justify-content:center;color:#bbb;">
+                                <span class="badge {{ s.estVerrouille ? 'badge-danger' : 'badge-success' }}">
+                                    {{ s.estVerrouille ? 'Verrouillé' : 'Ouvert' }}
+                                </span>
+                            </div>
+
+                            <div class="card-body">
+                                <h5 class="card-title mb-2">{{ s.titre }}</h5>
+
+                                <p class="mb-2">
+                                    <span class="badge badge-secondary">{{ s.categorie }}</span>
+                                </p>
+
+                                <p class="small text-muted mb-1">
+                                    Auteur : {{ s.creePar }}
+                                </p>
+                                <p class="small text-muted mb-0">
+                                    Date : {{ s.dateCreation ? s.dateCreation|date('d/m/Y H:i') : '-' }}
+                                </p>
+
+                                {# ✅ SEUL BOUTON : Voir messages #}
+                                <div class="mt-3">
+                                    <span class="btn_1 w-100 text-center">
+                                        Voir messages ({{ s.messagesForum|length }})
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </a>
+
+                </div>
+            {% else %}
+                <div class="col-12 text-center text-white-50">
+                    <p>Aucun sujet pour le moment.</p>
+                    <a class="btn_1" href="{{ path('app_sujets_forum_new') }}">Créer un sujet</a>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

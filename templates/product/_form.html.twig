@@ -1,29 +1,56 @@
-{{ form_start(form) }}
-<div class="row g-3">
+<style>
+    .actions-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-start;
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(16, 24, 40, .08);
+    }
+    .actions-bar .btn {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 700;
+    }
+</style>
+
+{# ✅ novalidate removes: "Please fill out this field." #}
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+<div class="row g-4">
     <div class="col-md-6">
         {{ form_row(form.name) }}
     </div>
+
     <div class="col-md-6">
         {{ form_row(form.category) }}
     </div>
+
     <div class="col-md-6">
         {{ form_row(form.price) }}
     </div>
+
     <div class="col-md-6">
         {{ form_row(form.stock) }}
     </div>
-    <div class="col-12">
+
+    <div class="col-md-6">
         {{ form_row(form.image) }}
     </div>
+
     <div class="col-12">
         {{ form_row(form.description) }}
     </div>
 </div>
 
-<div class="mt-4 d-flex gap-2">
-    <button type="submit" class="btn btn-primary">
+<div class="actions-bar">
+    <button class="btn btn-primary" type="submit">
         <i class="feather-save me-2"></i>{{ button_label|default('Save') }}
     </button>
-    <a href="{{ path('product_index') }}" class="btn btn-light-brand">Cancel</a>
+
+    <a href="{{ path('product_index') }}" class="btn btn-outline-secondary">
+        Cancel
+    </a>
 </div>
+
 {{ form_end(form) }}

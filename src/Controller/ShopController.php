@@ -14,7 +14,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ShopController extends AbstractController
 {
-    // ✅ NEW: /shop route so your homepage "Shop" link works
     #[Route('/shop', name: 'shop_home', methods: ['GET'])]
     public function shopHome(): Response
     {
@@ -27,10 +26,19 @@ class ShopController extends AbstractController
         $q = trim((string) $request->query->get('q', ''));
         $category = trim((string) $request->query->get('category', ''));
 
+        // ✅ fixed clean categories list
+        $categories = $repo->getDistinctCategories();
+
+        // ✅ security: if user passes unknown category, ignore it
+        if ($category !== '' && !in_array($category, $categories, true)) {
+            $category = '';
+        }
+
         return $this->render('Shop/products.html.twig', [
             'products' => $repo->search($q !== '' ? $q : null, $category !== '' ? $category : null),
             'q' => $q,
             'category' => $category,
+            'categories' => $categories,
         ]);
     }
 
@@ -67,7 +75,6 @@ class ShopController extends AbstractController
         $order->addProduct($product);
         $order->setTotalAmount((string) $product->getPrice());
 
-        // ✅ Real validation
         $errors = $validator->validate($order);
 
         if (count($errors) > 0) {

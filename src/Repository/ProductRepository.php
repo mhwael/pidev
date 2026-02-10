@@ -16,18 +16,22 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
+    /**
+     * ✅ Used in Shop search (name + real category)
+     */
     public function search(?string $q, ?string $category): array
     {
         $qb = $this->createQueryBuilder('p');
 
         if ($q) {
             $qb->andWhere('LOWER(p.name) LIKE :q')
-                ->setParameter('q', '%' . mb_strtolower($q) . '%');
+               ->setParameter('q', '%' . mb_strtolower($q) . '%');
         }
 
+        // ✅ REAL category filter (exact match, since it comes from dropdown)
         if ($category) {
-            $qb->andWhere('LOWER(p.category) LIKE :cat')
-                ->setParameter('cat', '%' . mb_strtolower($category) . '%');
+            $qb->andWhere('p.category = :cat')
+               ->setParameter('cat', $category);
         }
 
         return $qb->orderBy('p.id', 'DESC')
@@ -35,16 +39,51 @@ class ProductRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findProductsWithOrdersCount(int $limit = 200): array
+    /**
+     * ✅ Shop dropdown categories (CLEAN fixed list)
+     */
+    public function getDistinctCategories(): array
     {
-        return $this->createQueryBuilder('p')
+        return [
+            'Games',
+            'Accessories',
+            'Consoles',
+            'Controllers',
+            'Headsets',
+            'Gift Cards',
+            'Merch',
+        ];
+    }
+
+    /**
+     * ✅ Products + orders count + sorting
+     * sort: "default" | "price" | "orders"
+     * dir : "asc" | "desc"
+     *
+     * default => newest first (id desc)
+     */
+    public function findProductsWithOrdersCount(int $limit = 200, string $sort = 'default', string $dir = 'desc'): array
+    {
+        $sort = in_array($sort, ['default', 'price', 'orders'], true) ? $sort : 'default';
+        $dir  = in_array(strtolower($dir), ['asc', 'desc'], true) ? strtolower($dir) : 'desc';
+
+        $qb = $this->createQueryBuilder('p')
             ->leftJoin('p.orders', 'o')
             ->addSelect('COUNT(DISTINCT o.id) AS ordersCount')
             ->groupBy('p.id')
-            ->orderBy('p.id', 'DESC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+            ->setMaxResults($limit);
+
+        if ($sort === 'price') {
+            $qb->orderBy('p.price', $dir)
+               ->addOrderBy('p.id', 'DESC');
+        } elseif ($sort === 'orders') {
+            $qb->orderBy('ordersCount', $dir)
+               ->addOrderBy('p.id', 'DESC');
+        } else {
+            $qb->orderBy('p.id', 'DESC');
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     public function getStockStats(int $lowStockThreshold = 5): array
@@ -82,10 +121,6 @@ class ProductRepository extends ServiceEntityRepository
         ];
     }
 
-    /**
-     * Category stats: how many products in each category
-     * Returns: [ ['category' => 'pc items', 'productCount' => 3], ... ]
-     */
     public function getCategoryCounts(): array
     {
         $rows = $this->createQueryBuilder('p')

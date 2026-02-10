@@ -75,26 +75,30 @@
                     <div class="col-lg-6">
                         <h4 class="mb-3">Your information</h4>
 
-                        <form method="post" action="{{ path('shop_order_product', {id: product.id}) }}">
+                        {# ✅ novalidate disables HTML5 popup messages #}
+                        <form method="post"
+                              action="{{ path('shop_order_product', {id: product.id}) }}"
+                              novalidate>
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label>First Name</label>
-                                    <input class="form-control" name="firstName" required>
+                                    <input class="form-control" name="firstName">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label>Last Name</label>
-                                    <input class="form-control" name="lastName" required>
+                                    <input class="form-control" name="lastName">
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label>Phone</label>
-                                <input class="form-control" name="phone" required>
+                                <input class="form-control" name="phone">
                             </div>
 
                             <div class="mb-4">
                                 <label>Email</label>
-                                <input type="email" class="form-control" name="email" required>
+                                <input type="email" class="form-control" name="email">
                             </div>
 
                             <button class="btn_1 w-100" type="submit">

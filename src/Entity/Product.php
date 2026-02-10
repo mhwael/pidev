@@ -48,7 +48,10 @@ class Product
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\NotBlank(message: "Category is required.")]
-    #[Assert\Length(max: 100, maxMessage: "Category must be at most {{ limit }} characters.")]
+    #[Assert\Choice(
+        choices: ['Games', 'Accessories', 'Consoles', 'Controllers', 'Headsets', 'Gift Cards', 'Merch'],
+        message: "Please select a valid category."
+    )]
     private ?string $category = null;
 
     /**

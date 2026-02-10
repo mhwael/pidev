@@ -15,9 +15,18 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProductController extends AbstractController
 {
     #[Route('/', name: 'product_index', methods: ['GET'])]
-    public function index(ProductRepository $productRepository): Response
+    public function index(Request $request, ProductRepository $productRepository): Response
     {
-        $productsWithCounts = $productRepository->findProductsWithOrdersCount(200);
+        // tri params (optional)
+        $sort = $request->query->get('sort'); // null | price | orders
+        $dir  = $request->query->get('dir');  // null | asc | desc
+
+        $allowedSort = ['price', 'orders'];
+
+        $sortFinal = in_array($sort, $allowedSort, true) ? $sort : 'default';
+        $dirFinal  = in_array(strtolower((string)$dir), ['asc', 'desc'], true) ? strtolower((string)$dir) : 'desc';
+
+        $productsWithCounts = $productRepository->findProductsWithOrdersCount(200, $sortFinal, $dirFinal);
         $stockStats = $productRepository->getStockStats(5);
         $categoryCounts = $productRepository->getCategoryCounts();
 
@@ -26,7 +35,6 @@ class ProductController extends AbstractController
             $total += (int)$c['productCount'];
         }
 
-        // Add percentage to each category
         $categoryChart = [];
         foreach ($categoryCounts as $c) {
             $count = (int)$c['productCount'];
@@ -44,6 +52,10 @@ class ProductController extends AbstractController
             'categoryCounts' => $categoryCounts,
             'categoryChart' => $categoryChart,
             'categoryTotal' => $total,
+
+            'sort' => $sortFinal,
+            'dir' => $dirFinal,
+            'hasSort' => ($sort !== null || $dir !== null),
         ]);
     }
 

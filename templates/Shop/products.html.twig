@@ -29,7 +29,6 @@
 <body>
 <div class="body_bg">
 
-    <!-- Header -->
     <header class="main_menu single_page_menu">
         <div class="container">
             <div class="row align-items-center">
@@ -50,18 +49,14 @@
                                 <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('orders_index') }}">Dashboard</a></li>
-
                             </ul>
                         </div>
-
-                        {# REMOVE the right-side My Orders button (you said you want only one) #}
                     </nav>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Breadcrumb -->
     <section class="breadcrumb breadcrumb_bg">
         <div class="container">
             <div class="row">
@@ -83,16 +78,30 @@
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-10">
                     <form method="get" action="{{ path('shop_products') }}" class="row g-2">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <input class="form-control" name="q" placeholder="Search by name..." value="{{ q }}">
                         </div>
+
                         <div class="col-md-4">
-                            <input class="form-control" name="category" placeholder="Category..." value="{{ category }}">
+                            {# ✅ REAL dropdown (only your fixed categories) #}
+                            <select class="form-control" name="category">
+                                <option value="">All categories</option>
+                                {% for c in categories %}
+                                    <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
+
                         <div class="col-md-2 d-grid">
                             <button class="btn btn-primary" type="submit">
                                 <i class="fas fa-search mr-1"></i> Search
                             </button>
+                        </div>
+
+                        <div class="col-md-1 d-grid">
+                            <a class="btn btn-light" href="{{ path('shop_products') }}" title="Reset">
+                                <i class="fas fa-times"></i>
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -123,7 +132,6 @@
                                         <span class="badge badge-secondary">{{ p.category ?? 'Uncategorized' }}</span>
                                     </p>
 
-                                    {# PRICE FIX (use property, not dump, not getPrice if it caused issues) #}
                                     <p class="mb-1 price-line">
                                         Price: {{ (p.price ?? 0)|number_format(2, '.', '') }} TND
                                     </p>
@@ -177,7 +185,7 @@
 <script src="js/swiper.min.js"></script>
 <script src="js/masonry.pkgd.js"></script>
 <script src="js/owl.carousel.min.js"></script>
-<script src="js/jquery.nice-select.min.js"></script>
+{# ✅ REMOVED: jquery.nice-select.min.js to avoid the broken dropdown #}
 <script src="js/slick.min.js"></script>
 <script src="js/jquery.counterup.min.js"></script>
 <script src="js/waypoints.min.js"></script>
