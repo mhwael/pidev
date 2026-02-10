@@ -19,10 +19,130 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
+        /* keep your logo controlled */
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
+
+        /* ===== Modern page tweaks ===== */
+        .section_padding { padding: 70px 0; }
         .card { border: 0; }
         .card-body { color: #111; }
-        .price-line { font-weight: 700; }
+
+        /* ===== Filter Bar ===== */
+        .filter-wrap{
+            background:#fff;
+            border-radius:16px;
+            padding:14px;
+            box-shadow:0 10px 30px rgba(0,0,0,.08);
+            border:1px solid rgba(0,0,0,.05);
+        }
+        .filter-wrap .form-control{
+            height:46px;
+            border-radius:12px;
+            border:1px solid rgba(0,0,0,.10);
+        }
+        .filter-title{
+            font-weight:900;
+            margin:0 0 10px;
+            color:#111;
+        }
+
+        /* ===== Product Card ===== */
+        .p-card{
+            background:#fff;
+            border-radius:18px;
+            overflow:hidden;
+            border:1px solid rgba(0,0,0,.06);
+            box-shadow:0 12px 35px rgba(0,0,0,.08);
+            transition:transform .18s ease, box-shadow .18s ease;
+            height:100%;
+        }
+        .p-card:hover{
+            transform:translateY(-5px);
+            box-shadow:0 18px 50px rgba(0,0,0,.12);
+        }
+
+        .p-media{
+            height:230px;
+            background:linear-gradient(180deg,#f6f7f9,#ffffff);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:14px;
+        }
+        .p-media img{
+            width:100%;
+            height:100%;
+            object-fit:contain; /* ✅ important: no more image overriding */
+        }
+        .p-placeholder{
+            height:230px;
+            background:#111;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#bbb;
+            border-bottom:1px solid rgba(255,255,255,.06);
+        }
+
+        .p-body{ padding:14px 14px 16px; }
+        .p-title{
+            font-weight:900;
+            font-size:1.05rem;
+            line-height:1.15;
+            margin:6px 0 8px;
+            color:#111;
+        }
+        .p-badges{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+        }
+        .p-badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 10px;
+            border-radius:999px;
+            font-weight:800;
+            font-size:.78rem;
+            background:rgba(108,117,125,.12);
+            color:#6c757d;
+        }
+        .p-badge.cat{
+            background:rgba(13,110,253,.12);
+            color:#0d6efd;
+        }
+
+        .p-price{
+            font-weight:900;
+            font-size:1.05rem;
+            color:#111;
+        }
+        .p-desc{
+            color:#6c757d;
+            font-size:.9rem;
+            margin:10px 0 0;
+            min-height:38px;
+        }
+
+        .p-cta{
+            margin-top:14px;
+        }
+        /* reuse your theme button class, but make it look more premium */
+        .btn_1{
+            border-radius:999px;
+            font-weight:800;
+            letter-spacing:.2px;
+        }
+
+        /* Breadcrumb title polish */
+        .breadcrumb_iner_item h2{
+            font-weight:900;
+            letter-spacing:.3px;
+        }
     </style>
 </head>
 
@@ -74,77 +194,99 @@
     <section class="section_padding">
         <div class="container">
 
-            <!-- Search -->
+            <!-- Filters -->
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-10">
-                    <form method="get" action="{{ path('shop_products') }}" class="row g-2">
-                        <div class="col-md-5">
-                            <input class="form-control" name="q" placeholder="Search by name..." value="{{ q }}">
-                        </div>
+                    <div class="filter-wrap">
+                        <div class="filter-title">Search & Filter</div>
 
-                        <div class="col-md-4">
-                            {# ✅ REAL dropdown (only your fixed categories) #}
-                            <select class="form-control" name="category">
-                                <option value="">All categories</option>
-                                {% for c in categories %}
-                                    <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        <form method="get" action="{{ path('shop_products') }}" class="row g-2 align-items-center">
+                            <div class="col-md-5">
+                                <input class="form-control" name="q" placeholder="Search by name..." value="{{ q }}">
+                            </div>
 
-                        <div class="col-md-2 d-grid">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search mr-1"></i> Search
-                            </button>
-                        </div>
+                            <div class="col-md-4">
+                                {# ✅ REAL dropdown #}
+                                <select class="form-control" name="category">
+                                    <option value="">All categories</option>
+                                    {% for c in categories %}
+                                        <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                        <div class="col-md-1 d-grid">
-                            <a class="btn btn-light" href="{{ path('shop_products') }}" title="Reset">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-                    </form>
+                            <div class="col-md-2 d-grid">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search mr-1"></i> Search
+                                </button>
+                            </div>
+
+                            <div class="col-md-1 d-grid">
+                                <a class="btn btn-light" href="{{ path('shop_products') }}" title="Reset">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Products -->
             <div class="row">
                 {% for p in products %}
+                    {% set imgSrc = null %}
+                    {% if p.image %}
+                        {# if already absolute (/uploads/.. or http..), keep it. otherwise assume uploads/products #}
+                        {% if p.image starts with('http') or p.image starts with('/') %}
+                            {% set imgSrc = p.image %}
+                        {% else %}
+                            {% set imgSrc = asset('uploads/products/' ~ p.image) %}
+                        {% endif %}
+                    {% endif %}
+
                     <div class="col-lg-4 col-sm-6 mb-4">
                         <a href="{{ path('shop_product_show', {id: p.id}) }}" style="text-decoration:none;">
-                            <div class="card h-100">
+                            <div class="p-card">
 
-                                {% if p.image %}
-                                    <img class="card-img-top"
-                                         src="{{ p.image }}"
-                                         alt="{{ p.name }}"
-                                         style="height:220px;object-fit:cover;">
+                                {% if imgSrc %}
+                                    <div class="p-media">
+                                        <img src="{{ imgSrc }}" alt="{{ p.name }}"
+                                             onerror="this.onerror=null;this.src='{{ asset('uploads/products/placeholder.png') }}';">
+                                    </div>
                                 {% else %}
-                                    <div style="height:220px;background:#222;display:flex;align-items:center;justify-content:center;color:#bbb;">
+                                    <div class="p-placeholder">
                                         No image
                                     </div>
                                 {% endif %}
 
-                                <div class="card-body">
-                                    <h5 class="card-title mb-2">{{ p.name }}</h5>
+                                <div class="p-body">
+                                    <div class="p-badges">
+                                        <span class="p-badge cat">
+                                            {{ p.category ?? 'Uncategorized' }}
+                                        </span>
 
-                                    <p class="mb-2">
-                                        <span class="badge badge-secondary">{{ p.category ?? 'Uncategorized' }}</span>
+                                        <span class="p-badge">
+                                            <i class="fas fa-star"></i> Popular
+                                        </span>
+                                    </div>
+
+                                    <div class="p-title">{{ p.name }}</div>
+
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="p-price">
+                                            {{ (p.price ?? 0)|number_format(2, '.', '') }} TND
+                                        </div>
+                                    </div>
+
+                                    <p class="p-desc">
+                                        {% if p.description %}
+                                            {{ p.description|slice(0, 110) }}{% if p.description|length > 110 %}...{% endif %}
+                                        {% else %}
+                                            No description available.
+                                        {% endif %}
                                     </p>
 
-                                    <p class="mb-1 price-line">
-                                        Price: {{ (p.price ?? 0)|number_format(2, '.', '') }} TND
-                                    </p>
-
-                                    {% if p.description %}
-                                        <p class="small text-muted mt-2 mb-0">
-                                            {{ p.description|slice(0, 120) }}{% if p.description|length > 120 %}...{% endif %}
-                                        </p>
-                                    {% else %}
-                                        <p class="small text-muted mt-2 mb-0">No description.</p>
-                                    {% endif %}
-
-                                    <div class="mt-3">
+                                    <div class="p-cta">
                                         <span class="btn_1 w-100 text-center">View & Order</span>
                                     </div>
                                 </div>
@@ -185,7 +327,10 @@
 <script src="js/swiper.min.js"></script>
 <script src="js/masonry.pkgd.js"></script>
 <script src="js/owl.carousel.min.js"></script>
-{# ✅ REMOVED: jquery.nice-select.min.js to avoid the broken dropdown #}
+
+{# ✅ keep this removed to avoid broken dropdown #}
+{# <script src="js/jquery.nice-select.min.js"></script> #}
+
 <script src="js/slick.min.js"></script>
 <script src="js/jquery.counterup.min.js"></script>
 <script src="js/waypoints.min.js"></script>
