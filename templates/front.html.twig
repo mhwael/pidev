@@ -48,6 +48,21 @@
             border: 2px solid #dc3545 !important;
             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
         }
+        .footer-link {
+        transition: color 0.3s ease;
+        text-decoration: none !important;
+        }
+        .footer-link:hover {
+            color: #ffc107 !important;
+        }
+        .single_footer_part h4 {
+        font-weight: 600;
+        }
+        @media (max-width: 768px) {
+        .copygight_text p {
+        font-size: 0.9rem;
+        }
+        }
     </style>
     {% block stylesheets %}{% endblock %}
 </head>
@@ -59,7 +74,7 @@
                     <div class="col-lg-12">
                         <nav class="navbar navbar-expand-lg navbar-light">
                             <a class="navbar-brand" href="{{ path('front_index') }}">
-                                <img src="{{ asset('front_template/img/levelup_logo') }}" alt="logo">
+                                <img src="{{ asset('front_template/img/logo.png') }}" alt="logo">
                             </a>
                             <button class="navbar-toggler" type="button" data-toggle="collapse"
                                 data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -72,13 +87,13 @@
                                         <a class="nav-link" href="{{ path('front_index') }}">Home</a>
                                     </li>
                                     <li class="nav-item">
-                                    <a class="nav-link" href="{{ path('cards_forum') }}">Forum</a>
+                                        <a class="nav-link" href="{{ path('app_sujets_forum_index') }}">Forum</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="/team">Team</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="/front_template/tournament.html">Tournament</a>
+                                        <a class="nav-link" href="/tournament">Tournament</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="/front_template/contact.html">Contact</a>
@@ -99,20 +114,7 @@
                 </div>
             </div>
         </header>
-        <section class="banner_part">
-            <div class="container">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-lg-8 col-md-10">
-                        <div class="banner_text">
-                            <div class="banner_text_iner text-center">
-                                <h1>{% block banner_title %}Forum{% endblock %}</h1>
-                                <p>{% block banner_subtitle %}{% endblock %}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        
         <section class="about_us section_padding pt-0">
             <div class="container">
                 {% block body %}{% endblock %}
@@ -120,42 +122,88 @@
         </section>
 
         <footer class="footer_part">
-            <div class="footer_top">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="single_footer_part">
-                                <a href="{{ path('front_index') }}" class="footer_logo_iner">
-                                    <img src="{{ asset('front_template/img/logo.png') }}" alt="logo">
-                                </a>
-                                <p>Heaven fruitful doesn't over lesser days appear creeping seasons so behold bearing days open</p>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="single_footer_part">
-                                <h4>Liens</h4>
-                                <ul class="list-unstyled">
-                                    <li><a href="{{ path('front_index') }}">Home</a></li>
-                                    <li><a href="{{ path('app_sujets_forum_index') }}">Forum</a></li>
-                                    <li><a href="{{ path('app_profile') }}">Profil</a></li>
-                                </ul>
-                            </div>
-                        </div>
+    <div class="footer_top">
+        <div class="container">
+            <div class="row">
+                <!-- Logo & Description -->
+                <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="single_footer_part">
+                        <a href="{{ path('front_index') }}" class="footer_logo_iner mb-3 d-block">
+                            <img src="{{ asset('front_template/img/logo.png') }}" alt="Gaming Forum Logo" class="img-fluid" style="max-height: 50px;">
+                        </a>
+                        <p class="mb-0 text-light">Bienvenue sur notre plateforme gaming. Rejoignez la communauté pour discuter, partager et participer aux tournois !</p>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="single_footer_part">
+                        <h4 class="text-white mb-3">Liens Rapides</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="{{ path('front_index') }}" class="text-light footer-link">🏠 Accueil</a></li>
+                            <li class="mb-2"><a href="{{ path('app_sujets_forum_index') }}" class="text-light footer-link">💬 Forum</a></li>
+                            <li class="mb-2"><a href="{{ path('app_profile') }}" class="text-light footer-link">👤 Mon Profil</a></li>
+                            {% if is_granted('ROLE_USER') %}
+                            <li class="mb-2"><a href="/dashboard" class="text-light footer-link">⚙️ Dashboard</a></li>
+                            {% else %}
+                            <li class="mb-2"><a href="{{ path('app_login') }}" class="text-light footer-link">🔐 Connexion</a></li>
+                            {% endif %}
+
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Platform Features -->
+                <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="single_footer_part">
+                        <h4 class="text-white mb-3">Plateforme</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="/team" class="text-light footer-link">👥 Équipe</a></li>
+                            <li class="mb-2"><a href="/tournament" class="text-light footer-link">🏆 Tournois</a></li>
+                            <li class="mb-2"><a href="{{ path('app_register') }}" class="text-light footer-link">📝 Inscription</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="single_footer_part">
+                        <h4 class="text-white mb-3">Contact</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-envelope text-light me-2"></i>contact@gamingforum.tn</li>
+                            <li class="mb-2"><i class="fas fa-map-marker-alt text-light me-2"></i>Tunis, Tunisie</li>
+                            <li class="mt-3">
+                                <a href="#" class="text-light me-3" title="Discord"><i class="fab fa-discord fa-lg"></i></a>
+                                <a href="#" class="text-light me-3" title="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
+                                <a href="#" class="text-light" title="YouTube"><i class="fab fa-youtube fa-lg"></i></a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <div class="copygight_text">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-lg-12 text-center">
-                            <div class="copyright_text">
-                                <p>Copyright &copy; {{ 'now'|date('Y') }} Tous droits réservés</p>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+    </div>
+
+    <div class="copygight_text bg-dark py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <p class="mb-0 text-light">
+                        © {{ 'now'|date('Y') }} Gaming Teams. Tous droits réservés. 
+                        <a href="#" class="text-light text-decoration-none">Mentions légales</a> | 
+                        <a href="#" class="text-light text-decoration-none">Confidentialité</a>
+                    </p>
+                </div>
+                <div class="col-lg-6 text-lg-end mt-2 mt-lg-0">
+                    <small class="text-muted">
+                        Développé avec ❤️ par l'équipe technique
+                    </small>
                 </div>
             </div>
-        </footer>
+        </div>
+    </div>
+</footer>
+
     </div>
 
     <script src="{{ asset('front_template/js/jquery-1.12.1.min.js') }}"></script>
