@@ -11,16 +11,24 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/dashboard/tournament')]
+#[Route('/')]
 class TournamentController extends AbstractController
 {
-    #[Route('/', name: 'app_tournament_index', methods: ['GET'])]
+    #[Route('/dashboard/tournament', name: 'app_tournament_index', methods: ['GET'])]
     public function index(TournamentRepository $tournamentRepository): Response
     {
         return $this->render('tournament/index.html.twig', [
             'tournaments' => $tournamentRepository->findAll(),
         ]);
     }
+    #[Route('/tournament', name: 'app_tournament', methods: ['GET'])]
+    public function tournament(TournamentRepository $tournamentRepository): Response
+    {
+        return $this->render('tournament/tournament.html.twig', [
+            'tournaments' => $tournamentRepository->findAll(),
+        ]);
+    }
+
 
     #[Route('/dashboard/new', name: 'app_tournament_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response

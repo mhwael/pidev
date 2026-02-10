@@ -1,0 +1,83 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}Our Teams - Gaming{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>Explore Teams</h2>
+                            <p>Home / Teams</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="latest_war padding_top">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="section_tittle text-center">
+                        <h2>All Teams</h2>
+                        <p>Discover the elite squads competing in our tournaments</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for team in teams %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="single_war_text text-center p-4 shadow-sm" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                            <div class="team_logo mb-3">
+                                {% if team.logo %}
+                                    <img src="{{ asset('uploads/logos/' ~ team.logo) }}" alt="{{ team.name }}" class="img-fluid" style="max-height: 100px;">
+                                {% else %}
+                                    <img src="{{ asset('img/favicon.png') }}" alt="Default Logo">
+                                {% endif %}
+                            </div>
+
+                            <h4>{{ team.name }}</h4>
+                            
+                            {% if team.captain %}
+                                <p class="text-muted small">
+                                    <i class="fas fa-crown text-warning"></i> 
+                                    Captain: <strong>{{ team.captain.email ?? 'User #' ~ team.captain.id ?? 'Unknown' }}</strong>
+                                </p>
+                            {% else %}
+                                <p class="text-muted small">
+                                    <i class="fas fa-crown text-warning"></i> 
+                                    Captain: <strong>No captain assigned</strong>
+                                </p>
+                            {% endif %}
+
+                            {% if team.description %}
+                                <p class="small">{{ team.description|slice(0, 100) }}{% if team.description|length > 100 %}...{% endif %}</p>
+                            {% else %}
+                                <p class="small text-muted">No description available</p>
+                            {% endif %}
+
+                            <div class="war_text_item d-flex justify-content-between align-items-center mt-3">
+                                <span><i class="fas fa-users"></i> {{ team.members|length }} Members</span>
+                                <span><i class="fas fa-trophy"></i> {{ team.tournaments|length }} Events</span>
+                            </div>
+
+                            <a href="{{ path('app_team_show', {'id': team.id}) }}" class="btn_2 mt-3 d-block">View Profile</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <h4>No teams found</h4>
+                        <p>Get started by <a href="{{ path('app_team_new') }}">creating your first team</a>!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}Nos Tournois - Gaming{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>Explore Tournaments</h2>
+                            <p>Accueil / Tournois</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="latest_war padding_top">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="section_tittle text-center">
+                        <h2>Tous les Tournois</h2>
+                        <p>Participez aux compétitions les plus palpitantes de la communauté gaming</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for tournament in tournaments %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="single_war_text text-center p-4 shadow-sm position-relative" 
+                             style="background: rgba(255,255,255,0.05); border-radius: 15px; min-height: 400px; border-left: 4px solid {{ tournament.status == 'ongoing' ? '#28a745' : (tournament.status == 'open' ? '#007bff' : '#6c757d') }};">
+                            
+                            <!-- Status Badge -->
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge badge-{{ tournament.status == 'ongoing' ? 'success' : (tournament.status == 'open' ? 'primary' : 'secondary') }} fs-6 px-3 py-2">
+                                    {% if tournament.status == 'draft' %}Brouillon
+                                    {% elseif tournament.status == 'open' %}🔓 Ouvert
+                                    {% elseif tournament.status == 'ongoing' %}⚡ En cours
+                                    {% elseif tournament.status == 'completed' %}🏆 Terminé
+                                    {% else %}❌ Annulé{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Tournament Game & Dates -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center justify-content-center mb-3">
+                                    <div class="game-icon me-2" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px;">
+                                        <i class="fas fa-gamepad fa-2x text-warning"></i>
+                                    </div>
+                                    <h5 class="mb-0 text-warning">{{ tournament.game }}</h5>
+                                </div>
+                                <h4 class="mb-3 text-white fw-bold">{{ tournament.name }}</h4>
+                            </div>
+
+                            <!-- Key Dates -->
+                            <div class="dates-section mb-3">
+                                <div class="row text-start g-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">📅 Inscriptions jusqu'au</small>
+                                        <p class="mb-0 fw-bold">{{ tournament.registrationDeadline|date('d/m/Y H:i') }}</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">🎯 Début</small>
+                                        <p class="mb-0 fw-bold">{{ tournament.startDate|date('d/m H:i') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tournament Info -->
+                            {% if tournament.description %}
+                                <p class="small mb-3 text-light">{{ tournament.description|slice(0, 120) }}{% if tournament.description|length > 120 %}...{% endif %}</p>
+                            {% else %}
+                                <p class="small text-muted mb-3">Pas de description disponible</p>
+                            {% endif %}
+
+                            <!-- Stats -->
+                            <div class="war_text_item d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                                <span class="text-muted">
+                                    <i class="fas fa-users me-1"></i> 
+                                    {{ tournament.teams|length }}/{{ tournament.maxTeams }} équipes
+                                </span>
+                                {% if tournament.format %}
+                                    <span class="text-muted">
+                                        <i class="fas fa-layer-group me-1"></i> 
+                                        {{ tournament.format|replace({'single_elimination': 'Élim. simple', 'double_elimination': 'Élim. double', 'league': 'Ligue', 'swiss': 'Swiss'}) }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Prize -->
+                            {% if tournament.prize %}
+                                <div class="prize-badge mb-3 p-3 bg-warning bg-opacity-10 border border-warning rounded">
+                                    <i class="fas fa-trophy text-warning me-2"></i>
+                                    <span class="text-warning fw-bold">{{ tournament.prize }}</span>
+                                </div>
+                            {% endif %}
+
+                            <!-- Action Button -->
+                            <a href="{{ path('app_tournament_show', {'id': tournament.id}) }}" 
+                               class="btn_2 mt-auto d-block position-relative">
+                                Voir le Tournoi
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+
+                            <!-- Organizer -->
+                            {% if tournament.organizer %}
+                                <p class="mt-3 mb-0 text-muted small">
+                                    <i class="fas fa-user-tie text-info me-1"></i>
+                                    Organisé par {{ tournament.organizer.username ?? tournament.organizer.email }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-trophy fa-3x text-muted mb-4"></i>
+                            <h4 class="text-white mb-3">Aucun tournoi trouvé</h4>
+                            <p class="text-muted mb-4">Soyez le premier à créer un tournoi épique !</p>
+                            {% if is_granted('ROLE_USER') %}
+                                <a href="{{ path('app_tournament_new') }}" class="btn_2 btn-lg px-4">Créer un Tournoi</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
