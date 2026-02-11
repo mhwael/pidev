@@ -66,6 +66,18 @@ class TournamentType extends AbstractType
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control']
             ])
+            ->add('status', ChoiceType::class, [
+            'label' => 'Statut',
+            'choices'  => [
+                'Brouillon' => 'draft',
+                'Ouvert aux inscriptions' => 'open',
+                'En cours' => 'ongoing',
+                'Terminé' => 'completed',
+                'Annulé' => 'cancelled',
+            ],
+            'data' => 'draft',  // Default value
+            'attr' => ['class' => 'form-control']
+            ])
             ->add('prize', TextType::class, [
                 'label' => 'Prix / Récompense',
                 'required' => false,

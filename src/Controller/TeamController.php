@@ -33,28 +33,32 @@ class TeamController extends AbstractController
     #[Route('/dashboard/team/new', name: 'app_team_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        
-        $team = new Team();
-        $form = $this->createForm(TeamType::class, $team);
-        $form->handleRequest($request);
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    
+    $team = new Team();
+    
+    // ✅ SET CAPTAIN BEFORE FORM CREATION
+    $team->setCaptain($this->getUser());
+    $team->addMember($this->getUser());
+    
+    $form = $this->createForm(TeamType::class, $team);
+    $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $team->setCaptain($this->getUser());
-            $team->addMember($this->getUser());
-            
-            $entityManager->persist($team);
-            $entityManager->flush();
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->persist($team);
+        $entityManager->flush();
 
-            $this->addFlash('success', 'Équipe créée avec succès !');
-            return $this->redirectToRoute('app_team_index');
-        }
-
-        return $this->render('team/new.html.twig', [
-            'team' => $team,
-            'form' => $form,
-        ]);
+        $this->addFlash('success', 'Équipe créée avec succès !');
+        return $this->redirectToRoute('app_team_index');
     }
+
+    return $this->render('team/new.html.twig', [
+        'team' => $team,
+        'form' => $form->createView(),
+    ]);
+    }
+
+
 
     #[Route('/dashboard/team/{id}', name: 'app_team_show', methods: ['GET'])]
     public function show(?Team $team): Response

@@ -36,13 +36,11 @@ class TournamentController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         
         $tournament = new Tournament();
+        $tournament->setOrganizer($this->getUser());
         $form = $this->createForm(TournamentType::class, $tournament);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // L'utilisateur connecté devient organisateur
-            $tournament->setOrganizer($this->getUser());
-            
             $entityManager->persist($tournament);
             $entityManager->flush();
 
@@ -71,13 +69,7 @@ class TournamentController extends AbstractController
         // Seul l'organisateur peut modifier
         if ($tournament->getOrganizer() !== $this->getUser()) {
             $this->addFlash('error', 'Seul l\'organisateur peut modifier ce tournoi.');
-            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
-        }
-
-        // Impossible de modifier si déjà commencé
-        if (in_array($tournament->getStatus(), ['ongoing', 'completed'])) {
-            $this->addFlash('error', 'Impossible de modifier un tournoi déjà commencé.');
-            return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
+            return $this->redirectToRoute('app_tournament_index');
         }
 
         $form = $this->createForm(TournamentType::class, $tournament);
