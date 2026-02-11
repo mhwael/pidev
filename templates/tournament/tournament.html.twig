@@ -1,0 +1,178 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}🏆 Nos Tournois{% endblock %}
+{% block body %}
+ <section class="banner_part">
+            <div class="container">
+                <div class="row align-items-center justify-content-center">
+                    <div class="col-lg-8 col-md-10">
+                        <div class="banner_text">
+                            <div class="banner_text_iner text-center">
+                                <h1>{% block banner_title %}Explore Tournaments{% endblock %}</h1>
+                                <p>{% block banner_subtitle %}Découvrez les compétitions gaming{% endblock %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+<div class="container py-5">
+
+    <!-- FILTER BAR -->
+    <div class="card bg-dark border-0 shadow mb-5">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+
+                <div class="col-md-4">
+                    <h4 class="text-white mb-0">
+                        <i class="fas fa-trophy text-warning me-2"></i>
+                        Tous les Tournois
+                    </h4>
+                </div>
+
+                <div class="col-md-5">
+                    <input type="text"
+                           class="form-control bg-dark text-white border-secondary"
+                           placeholder="Rechercher..."
+                           id="searchInput">
+                </div>
+
+                <div class="col-md-3">
+                    <select class="form-select bg-dark text-white border-secondary"
+                            id="statusFilter">
+                        <option value="">Tous les statuts</option>
+                        <option value="open">Ouverts</option>
+                        <option value="ongoing">En cours</option>
+                        <option value="completed">Terminés</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="row g-4">
+
+        {% for tournament in tournaments %}
+
+        <div class="col-lg-4 col-md-6 tournament-card"
+             data-game="{{ tournament.game|lower }}"
+             data-status="{{ tournament.status }}"
+             data-name="{{ tournament.name|lower }}">
+
+            <div class="card bg-dark text-white border-0 shadow-sm h-100 tournament-box">
+
+                <div class="card-body d-flex flex-column">
+
+                    <!-- Status -->
+                    <div class="mb-2">
+                        <span class="badge bg-{{
+                            tournament.status == 'ongoing' ? 'success' :
+                            (tournament.status == 'open' ? 'primary' :
+                            (tournament.status == 'completed' ? 'warning' : 'secondary'))
+                        }}">
+                            {{ tournament.status|capitalize }}
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h5 class="fw-bold mb-2">{{ tournament.name }}</h5>
+                    <small class="text-muted mb-3">
+                        <i class="fas fa-gamepad me-1"></i>{{ tournament.game }}
+                    </small>
+
+                    <!-- Progress -->
+                    {% set progress = tournament.maxTeams > 0
+                        ? (tournament.teams|length / tournament.maxTeams * 100)
+                        : 0 %}
+
+                    <div class="mb-3">
+                        <div class="progress" style="height:6px;">
+                            <div class="progress-bar bg-info"
+                                 style="width: {{ progress > 100 ? 100 : progress }}%;">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {{ tournament.teams|length }} / {{ tournament.maxTeams }} équipes
+                        </small>
+                    </div>
+
+                    <!-- Dates -->
+                    <small class="text-muted">
+                        📅 Inscriptions: {{ tournament.registrationDeadline|date('d M Y') }}
+                    </small>
+                    <small class="text-muted mb-3">
+                        🎯 Début: {{ tournament.startDate|date('d M Y H:i') }}
+                    </small>
+
+                    <!-- Spacer -->
+                    <div class="mt-auto"></div>
+
+                    <!-- Buttons -->
+                    <a href="{{ path('app_tournament_show', {'id': tournament.id}) }}"
+                       class="btn btn-outline-light btn-sm w-100 mb-2">
+                        Voir Détails
+                    </a>
+
+                    {% if is_granted('IS_AUTHENTICATED_FULLY') and tournament.status == 'open' %}
+                        <a href="#" class="btn btn-success btn-sm w-100">
+                            Rejoindre
+                        </a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="col-12 text-center text-white py-5">
+            <h4>Aucun tournoi disponible</h4>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+.tournament-box {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+.tournament-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.getElementById('searchInput').addEventListener('input', filterTournaments);
+    document.getElementById('statusFilter').addEventListener('change', filterTournaments);
+
+    function filterTournaments() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        document.querySelectorAll('.tournament-card').forEach(card => {
+            const game = card.dataset.game;
+            const status = card.dataset.status;
+            const name = card.dataset.name;
+
+            const matchesSearch = game.includes(searchTerm) || name.includes(searchTerm);
+            const matchesStatus = !statusFilter || status === statusFilter;
+
+            card.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+});
+</script>
+{% endblock %}

@@ -51,14 +51,11 @@
                                 <div class="col-md-4">{{ form_row(form.startDate) }}</div>
                                 <div class="col-md-4">{{ form_row(form.endDate) }}</div>
                                 <div class="col-md-4">{{ form_row(form.registrationDeadline) }}</div>
-                                
-                                {# --- AJOUT DES CHAMPS MANQUANTS ICI --- #}
-                                <div class="col-12">{{ form_row(form.prize) }}</div>
+                                <div class="col-md-6">{{ form_row(form.prize) }}</div>
+                                <div class="col-md-6">{{ form_row(form.status) }}</div>
                                 <div class="col-12">{{ form_row(form.rules) }}</div>
-                                {# --------------------------------------- #}
                             </div>
-
-                            {# Les boutons sont maintenant placés APRÈS tous les champs #}
+                            
                             <div class="d-flex justify-content-between mt-4 pt-3 border-top">
                                 <a href="{{ path('app_tournament_index') }}" class="btn btn-light-brand">
                                     <i class="feather-arrow-left me-2"></i>Back to list

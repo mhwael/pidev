@@ -1,0 +1,115 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}Our Teams - Gaming{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>Explore Teams</h2>
+                            <p>Home / Teams</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="latest_war padding_top">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="section_tittle text-center">
+                        <h2>All Teams</h2>
+                        <p>Discover the elite squads competing in our tournaments</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for team in teams %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="single_war_text text-center p-4 shadow-sm position-relative" 
+                             style="background: rgba(255,255,255,0.05); border-radius: 15px; min-height: 380px; border-left: 4px solid #007bff;">
+                            
+                            <!-- Team Logo -->
+                            <div class="team_logo mb-3">
+                                {% if team.logo %}
+                                    <img src="{{ team.logo }}" alt="{{ team.name }}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #007bff;">
+                                {% else %}
+                                    <div class="avatar-text d-inline-flex align-items-center justify-content-center" 
+                                         style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; font-size: 40px; color: white; font-weight: bold; border: 3px solid #007bff;">
+                                        {{ team.name|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Team Name -->
+                            <h4 class="text-white fw-bold mb-3">{{ team.name }}</h4>
+                            
+                            <!-- Captain Info -->
+                            {% if team.captain %}
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-crown text-warning me-1"></i> 
+                                    Captain: <strong class="text-warning">{{ team.captain.firstName }} {{ team.captain.lastName }}</strong>
+                                </p>
+                            {% else %}
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-crown text-muted me-1"></i> 
+                                    No captain assigned
+                                </p>
+                            {% endif %}
+
+                            <!-- Description -->
+                            {% if team.description %}
+                                <p class="small mb-3 text-light">{{ team.description|slice(0, 100) }}{% if team.description|length > 100 %}...{% endif %}</p>
+                            {% else %}
+                                <p class="small text-muted mb-3">No description available</p>
+                            {% endif %}
+
+                            <!-- Stats -->
+                            <div class="war_text_item d-flex justify-content-between align-items-center mt-3 mb-4 pb-3 border-bottom">
+                                <span class="text-muted">
+                                    <i class="fas fa-users me-1"></i> 
+                                    {{ team.members|length }} Member{{ team.members|length > 1 ? 's' : '' }}
+                                </span>
+                                <span class="text-muted">
+                                    <i class="fas fa-trophy me-1"></i> 
+                                    {{ team.tournaments|length }} Event{{ team.tournaments|length > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+
+                            <!-- Created Date (optionnel) -->
+                            <p class="mb-3 text-muted small">
+                                <i class="fas fa-calendar me-1"></i>
+                                Created {{ team.createdAt|date('d/m/Y') }}
+                            </p>
+
+                            <!-- Action Button -->
+                            <a href="{{ path('app_team_show', {'id': team.id}) }}" class="btn_2 mt-auto d-block">
+                                View Profile
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-users fa-3x text-muted mb-4"></i>
+                            <h4 class="text-white mb-3">No teams found</h4>
+                            <p class="text-muted mb-4">Be the first to assemble a legendary squad!</p>
+                            {% if is_granted('ROLE_USER') %}
+                                <a href="{{ path('app_team_new') }}" class="btn_2 btn-lg px-4">Create a Team</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

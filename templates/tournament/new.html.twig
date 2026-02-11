@@ -60,8 +60,10 @@
                                     {{ form_row(form.registrationDeadline) }}
                                 </div>
 
-                                {# --- AJOUT DES CHAMPS MANQUANTS POUR QU'ILS SOIENT AVANT LES BOUTONS --- #}
-                                <div class="col-12">
+                                <div class="col-md-6">
+                                    {{ form_row(form.status) }}
+                                </div>
+                                <div class="col-md-6">
                                     {{ form_row(form.prize) }}
                                 </div>
                                 <div class="col-12">
