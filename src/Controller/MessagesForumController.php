@@ -21,14 +21,17 @@ final class MessagesForumController extends AbstractController
     private function validateMessagesForumForm($form): bool
     {
         $valid = true;
+
         if ($form->get('sujetsForum')->getData() === null) {
             $form->get('sujetsForum')->addError(new FormError('Veuillez sélectionner un sujet.'));
             $valid = false;
         }
+
         if ($form->get('auteur_id')->getData() === null) {
             $form->get('auteur_id')->addError(new FormError("L'identifiant auteur est obligatoire."));
             $valid = false;
         }
+
         $contenu = $form->get('contenu')->getData();
         if ($contenu === null || trim((string) $contenu) === '') {
             $form->get('contenu')->addError(new FormError('Le contenu est obligatoire.'));
@@ -37,12 +40,15 @@ final class MessagesForumController extends AbstractController
             $form->get('contenu')->addError(new FormError('Le contenu doit contenir au moins ' . self::MIN_LENGTH . ' caractères.'));
             $valid = false;
         }
+
         if ($form->get('date_creation')->getData() === null) {
             $form->get('date_creation')->addError(new FormError('La date de création est obligatoire.'));
             $valid = false;
         }
+
         return $valid;
     }
+
     #[Route(name: 'app_messages_forum_index', methods: ['GET'])]
     public function index(MessagesForumRepository $messagesForumRepository): Response
     {
@@ -52,9 +58,14 @@ final class MessagesForumController extends AbstractController
     }
 
     #[Route('/new', name: 'app_messages_forum_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, SujetsForumRepository $sujetsForumRepository): Response
-    {
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SujetsForumRepository $sujetsForumRepository
+    ): Response {
         $messagesForum = new MessagesForum();
+
+        // Pré-sélection du sujet via ?sujet_id=...
         $sujetId = $request->query->getInt('sujet_id');
         if ($sujetId > 0) {
             $sujet = $sujetsForumRepository->find($sujetId);
@@ -62,16 +73,19 @@ final class MessagesForumController extends AbstractController
                 $messagesForum->setSujetsForum($sujet);
             }
         }
+
         $form = $this->createForm(MessagesForumType::class, $messagesForum);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid() && $this->validateMessagesForumForm($form)) {
             $entityManager->persist($messagesForum);
             $entityManager->flush();
+
             $sujet = $messagesForum->getSujetsForum();
             if ($sujet !== null) {
                 return $this->redirectToRoute('app_sujets_forum_show', ['id' => $sujet->getId()], Response::HTTP_SEE_OTHER);
             }
+
             return $this->redirectToRoute('app_messages_forum_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -98,6 +112,11 @@ final class MessagesForumController extends AbstractController
         if ($form->isSubmitted() && $form->isValid() && $this->validateMessagesForumForm($form)) {
             $entityManager->flush();
 
+            $sujet = $messagesForum->getSujetsForum();
+            if ($sujet !== null) {
+                return $this->redirectToRoute('app_sujets_forum_show', ['id' => $sujet->getId()], Response::HTTP_SEE_OTHER);
+            }
+
             return $this->redirectToRoute('app_messages_forum_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -110,12 +129,20 @@ final class MessagesForumController extends AbstractController
     #[Route('/{id}', name: 'app_messages_forum_delete', methods: ['POST'])]
     public function delete(Request $request, MessagesForum $messagesForum, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$messagesForum->getId(), $request->getPayload()->getString('_token'))) {
+        // ✅ récupérer le sujet AVANT suppression
+        $sujet = $messagesForum->getSujetsForum();
+
+        if ($this->isCsrfTokenValid('delete' . $messagesForum->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($messagesForum);
             $entityManager->flush();
         }
 
+        // ✅ redirection correcte avec l'id obligatoire
+        if ($sujet !== null) {
+            return $this->redirectToRoute('app_sujets_forum_show', ['id' => $sujet->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        // fallback si jamais le sujet est null
         return $this->redirectToRoute('app_messages_forum_index', [], Response::HTTP_SEE_OTHER);
     }
 }
-//HASSEN

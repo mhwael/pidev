@@ -7,6 +7,7 @@ use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,9 +18,8 @@ class ProductController extends AbstractController
     #[Route('/', name: 'product_index', methods: ['GET'])]
     public function index(Request $request, ProductRepository $productRepository): Response
     {
-        // tri params (optional)
-        $sort = $request->query->get('sort'); // null | price | orders
-        $dir  = $request->query->get('dir');  // null | asc | desc
+        $sort = $request->query->get('sort');
+        $dir  = $request->query->get('dir');
 
         $allowedSort = ['price', 'orders'];
 
@@ -52,7 +52,6 @@ class ProductController extends AbstractController
             'categoryCounts' => $categoryCounts,
             'categoryChart' => $categoryChart,
             'categoryTotal' => $total,
-
             'sort' => $sortFinal,
             'dir' => $dirFinal,
             'hasSort' => ($sort !== null || $dir !== null),
@@ -67,6 +66,34 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            /** @var UploadedFile|null $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
+            $imageUrl  = trim((string) $product->getImage());
+
+            if (!$imageFile && $imageUrl === '') {
+                $this->addFlash('error', 'Please provide an image URL or upload an image.');
+                return $this->render('product/new.html.twig', [
+                    'product' => $product,
+                    'form' => $form->createView(),
+                ]);
+            }
+
+            if ($imageFile) {
+                $ext = strtolower((string) $imageFile->getClientOriginalExtension());
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                    $this->addFlash('error', 'Only JPG, JPEG, PNG, or WEBP images are allowed.');
+                    return $this->render('product/new.html.twig', [
+                        'product' => $product,
+                        'form' => $form->createView(),
+                    ]);
+                }
+
+                $newName = uniqid('p_', true) . '.' . $ext;
+                $imageFile->move($this->getParameter('product_images_dir'), $newName);
+                $product->setImage($newName); // store filename
+            }
+
             $entityManager->persist($product);
             $entityManager->flush();
 
@@ -94,6 +121,34 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            /** @var UploadedFile|null $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
+            $imageUrl  = trim((string) $product->getImage());
+
+            if (!$imageFile && $imageUrl === '') {
+                $this->addFlash('error', 'Please keep an image URL or upload a new image.');
+                return $this->render('product/edit.html.twig', [
+                    'product' => $product,
+                    'form' => $form->createView(),
+                ]);
+            }
+
+            if ($imageFile) {
+                $ext = strtolower((string) $imageFile->getClientOriginalExtension());
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                    $this->addFlash('error', 'Only JPG, JPEG, PNG, or WEBP images are allowed.');
+                    return $this->render('product/edit.html.twig', [
+                        'product' => $product,
+                        'form' => $form->createView(),
+                    ]);
+                }
+
+                $newName = uniqid('p_', true) . '.' . $ext;
+                $imageFile->move($this->getParameter('product_images_dir'), $newName);
+                $product->setImage($newName);
+            }
+
             $entityManager->flush();
             return $this->redirectToRoute('product_index');
         }

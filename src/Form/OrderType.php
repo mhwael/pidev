@@ -52,9 +52,7 @@ class OrderType extends AbstractType
                 'required' => true,
             ]);
 
-        // NOTE: products selection is not in your form currently.
-        // But we added validation Count(min=1) in entity.
-        // If you want to select products during order creation/edit, tell me and I add it safely.
+        
     }
 
     public function configureOptions(OptionsResolver $resolver): void

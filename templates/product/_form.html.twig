@@ -1,56 +1,155 @@
 <style>
-    .actions-bar {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-start;
-        margin-top: 18px;
-        padding-top: 18px;
-        border-top: 1px solid rgba(16, 24, 40, .08);
+    /* Form look */
+    .pform .form-label{
+        font-weight: 800;
+        color:#344054;
+        margin-bottom: .35rem;
     }
-    .actions-bar .btn {
+
+    .pform .form-control,
+    .pform .form-select,
+    .pform textarea,
+    .pform input[type="file"]{
+        border-radius: 12px !important;
+        border: 1px solid rgba(16,24,40,.14) !important;
+        min-height: 46px;
+        background:#fff;
+    }
+
+    .pform textarea{
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .pform .form-control:focus,
+    .pform .form-select:focus,
+    .pform textarea:focus,
+    .pform input[type="file"]:focus{
+        border-color: rgba(13,110,253,.45) !important;
+        box-shadow: 0 0 0 .2rem rgba(13,110,253,.12) !important;
+    }
+
+    /* Validation */
+    .pform .invalid-feedback{ display:block; font-weight: 700; }
+    .pform .is-invalid{ border-color: rgba(220,53,69,.6) !important; }
+
+    /* Small helper blocks */
+    .help-line{
+        font-size: 12px;
+        color: #667085;
+        margin-top: 6px;
+    }
+    .or-divider{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        margin: 8px 0 2px;
+        color:#98a2b3;
+        font-weight: 900;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .12em;
+    }
+    .or-divider:before,
+    .or-divider:after{
+        content:"";
+        height:1px;
+        flex:1;
+        background: rgba(16,24,40,.10);
+    }
+
+    /* Actions */
+    .actions-bar{
+        display:flex;
+        gap:10px;
+        justify-content:flex-end;
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(16,24,40,.08);
+    }
+    .actions-bar .btn{
         border-radius: 12px;
-        padding: 10px 14px;
-        font-weight: 700;
+        padding: 10px 16px;
+        font-weight: 900;
     }
 </style>
 
-{# ✅ novalidate removes: "Please fill out this field." #}
-{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+{# ✅ enctype is auto-handled by form_start when FileType exists #}
+{{ form_start(form, {'attr': {'class': 'pform', 'novalidate': 'novalidate'}}) }}
 
-<div class="row g-4">
-    <div class="col-md-6">
-        {{ form_row(form.name) }}
+<div class="row g-3">
+    <div class="col-lg-6">
+        {{ form_row(form.name, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-control', placeholder: 'e.g. PS5 DualSense Controller' }
+        }) }}
     </div>
 
-    <div class="col-md-6">
-        {{ form_row(form.category) }}
+    <div class="col-lg-6">
+        {{ form_row(form.category, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-select' }
+        }) }}
     </div>
 
-    <div class="col-md-6">
-        {{ form_row(form.price) }}
+    <div class="col-lg-6">
+        {{ form_row(form.price, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-control', placeholder: 'e.g. 199.90' }
+        }) }}
     </div>
 
-    <div class="col-md-6">
-        {{ form_row(form.stock) }}
+    <div class="col-lg-6">
+        {{ form_row(form.stock, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-control', min: 0 }
+        }) }}
     </div>
 
-    <div class="col-md-6">
-        {{ form_row(form.image) }}
+    {# ✅ Image URL (optional) #}
+    <div class="col-12">
+        {{ form_row(form.image, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-control', placeholder: 'https://example.com/image.webp' }
+        }) }}
+        <div class="help-line">Paste a public image URL (https://...).</div>
     </div>
 
     <div class="col-12">
-        {{ form_row(form.description) }}
+        <div class="or-divider">OR</div>
+    </div>
+
+    {# ✅ Upload image from laptop (optional) #}
+    <div class="col-12">
+        {# imageFile exists only if ProductType includes it #}
+        {% if form.imageFile is defined %}
+            {{ form_row(form.imageFile, {
+                label_attr: { class: 'form-label' },
+                attr: { class: 'form-control' }
+            }) }}
+            <div class="help-line">Upload JPG / PNG / WEBP (max 4MB). If you upload, it will be used instead of URL.</div>
+        {% else %}
+            <div class="alert alert-warning mb-0">
+                <b>imageFile field not found.</b> Please add it in <code>ProductType.php</code>.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-12">
+        {{ form_row(form.description, {
+            label_attr: { class: 'form-label' },
+            attr: { class: 'form-control', placeholder: 'Write a short product description...' }
+        }) }}
     </div>
 </div>
 
 <div class="actions-bar">
-    <button class="btn btn-primary" type="submit">
-        <i class="feather-save me-2"></i>{{ button_label|default('Save') }}
-    </button>
-
     <a href="{{ path('product_index') }}" class="btn btn-outline-secondary">
         Cancel
     </a>
+    <button class="btn btn-primary" type="submit">
+        <i class="feather-save me-2"></i>{{ button_label|default('Save') }}
+    </button>
 </div>
 
 {{ form_end(form) }}

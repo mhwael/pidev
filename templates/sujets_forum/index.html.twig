@@ -34,11 +34,12 @@
     </div>
 
     <div class="page-header-right ms-auto d-flex gap-2">
-        <a href="{{ path('app_sujets_forum_new') }}" class="btn btn-primary">
-            <i class="feather-plus me-2"></i>Nouveau sujet
-        </a>
+     
         <a href="{{ path('front_index') }}" class="btn btn-light-brand">
             <i class="feather-arrow-left me-2"></i>Retour accueil
+        </a>
+         <a href="{{ path('app_messages_forum_index') }}" class="btn btn-light-brand">
+            <i class="feather-arrow-left me-2"></i>voir tous les messages
         </a>
     </div>
 </div>
@@ -160,9 +161,7 @@
                             <a href="{{ path('app_sujets_forum_showB', {'id': s.id}) }}" class="btn btn-sm btn-light me-1">
                                 <i class="feather-eye"></i> Voir
                             </a>
-                            <a href="{{ path('app_sujets_forum_edit', {'id': s.id}) }}" class="btn btn-sm btn-primary">
-                                <i class="feather-edit-2"></i> Modifier
-                            </a>
+                           
                         </td>
                     </tr>
                 {% else %}

@@ -19,21 +19,63 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-        /* keep your logo controlled */
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
 
-        /* ===== Modern page tweaks ===== */
-        .section_padding { padding: 70px 0; }
-        .card { border: 0; }
-        .card-body { color: #111; }
+        /* ✅ Whole page background */
+        .body_bg{
+            position: relative;
+            min-height: 100vh;
+            background: url("img/breadcrumb_bg.png") center/cover no-repeat fixed;
+        }
+        .body_bg::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background: linear-gradient(135deg, rgba(0,0,0,.68), rgba(0,0,0,.38));
+            pointer-events:none;
+            z-index:0;
+        }
+        .body_bg > *{ position: relative; z-index:1; }
+
+        /* ✅ IMPORTANT: make the breadcrumb/hero SMALL (no huge space) */
+        .breadcrumb_bg{ background: transparent !important; padding: 0 !important; }
+        .breadcrumb{
+            padding: 90px 0 35px !important; /* compact */
+            margin-bottom: 0 !important;
+        }
+        .breadcrumb_iner{ padding: 0 !important; }
+        .breadcrumb_iner_item h2{
+            font-weight: 900;
+            letter-spacing: .3px;
+            font-size: 56px; /* smaller than before */
+            margin-bottom: 8px;
+        }
+        .breadcrumb_iner_item p{
+            color: rgba(255,255,255,.85);
+            margin: 0;
+            font-weight: 600;
+        }
+        @media (max-width: 991px){
+            .breadcrumb{ padding: 75px 0 28px !important; }
+            .breadcrumb_iner_item h2{ font-size: 40px; }
+        }
+        @media (max-width: 575px){
+            .breadcrumb_iner_item h2{ font-size: 32px; }
+        }
+
+        /* ✅ Make content come up closer */
+        .section_padding{
+            padding: 35px 0 70px !important;
+        }
 
         /* ===== Filter Bar ===== */
         .filter-wrap{
-            background:#fff;
+            background: rgba(255,255,255,.95);
             border-radius:16px;
             padding:14px;
-            box-shadow:0 10px 30px rgba(0,0,0,.08);
-            border:1px solid rgba(0,0,0,.05);
+            box-shadow:0 10px 30px rgba(0,0,0,.18);
+            border:1px solid rgba(255,255,255,.20);
+            backdrop-filter: blur(8px);
         }
         .filter-wrap .form-control{
             height:46px;
@@ -48,31 +90,33 @@
 
         /* ===== Product Card ===== */
         .p-card{
-            background:#fff;
+            background: rgba(255,255,255,.95);
             border-radius:18px;
             overflow:hidden;
-            border:1px solid rgba(0,0,0,.06);
-            box-shadow:0 12px 35px rgba(0,0,0,.08);
+            border:1px solid rgba(255,255,255,.25);
+            box-shadow:0 12px 35px rgba(0,0,0,.20);
             transition:transform .18s ease, box-shadow .18s ease;
             height:100%;
+            position: relative;
+            backdrop-filter: blur(8px);
         }
         .p-card:hover{
             transform:translateY(-5px);
-            box-shadow:0 18px 50px rgba(0,0,0,.12);
+            box-shadow:0 18px 50px rgba(0,0,0,.28);
         }
-
         .p-media{
             height:230px;
-            background:linear-gradient(180deg,#f6f7f9,#ffffff);
+            background: linear-gradient(180deg,#f6f7f9,#ffffff);
             display:flex;
             align-items:center;
             justify-content:center;
             padding:14px;
+            position: relative;
         }
         .p-media img{
             width:100%;
             height:100%;
-            object-fit:contain; /* ✅ important: no more image overriding */
+            object-fit:contain;
         }
         .p-placeholder{
             height:230px;
@@ -81,9 +125,7 @@
             align-items:center;
             justify-content:center;
             color:#bbb;
-            border-bottom:1px solid rgba(255,255,255,.06);
         }
-
         .p-body{ padding:14px 14px 16px; }
         .p-title{
             font-weight:900;
@@ -116,33 +158,33 @@
             color:#0d6efd;
         }
 
-        .p-price{
-            font-weight:900;
-            font-size:1.05rem;
-            color:#111;
-        }
-        .p-desc{
-            color:#6c757d;
-            font-size:.9rem;
-            margin:10px 0 0;
-            min-height:38px;
-        }
-
-        .p-cta{
-            margin-top:14px;
-        }
-        /* reuse your theme button class, but make it look more premium */
-        .btn_1{
+        /* ✅ Stock badge */
+        .stock-badge{
+            position:absolute;
+            top:12px;
+            right:12px;
+            padding:7px 10px;
             border-radius:999px;
-            font-weight:800;
-            letter-spacing:.2px;
-        }
-
-        /* Breadcrumb title polish */
-        .breadcrumb_iner_item h2{
             font-weight:900;
-            letter-spacing:.3px;
+            font-size:.78rem;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            box-shadow:0 10px 18px rgba(0,0,0,.15);
         }
+        .stock-in{ background: rgba(25,135,84,.92); color: #fff; }
+        .stock-low{ background: rgba(255,193,7,.95); color: #111; }
+        .stock-out{ background: rgba(220,53,69,.95); color: #fff; }
+
+        .p-price{ font-weight:900; font-size:1.05rem; color:#111; }
+        .p-desc{ color:#6c757d; font-size:.9rem; margin:10px 0 0; min-height:38px; }
+
+        .p-cta{ margin-top:14px; }
+        .btn_1{ border-radius:999px; font-weight:800; letter-spacing:.2px; }
+
+        /* Optional: reduce footer contrast on bg */
+        .footer_part{ background: transparent !important; }
+        .copygight_text{ background: rgba(0,0,0,.20) !important; }
     </style>
 </head>
 
@@ -177,6 +219,7 @@
         </div>
     </header>
 
+    <!-- ✅ Compact hero -->
     <section class="breadcrumb breadcrumb_bg">
         <div class="container">
             <div class="row">
@@ -184,6 +227,7 @@
                     <div class="breadcrumb_iner text-center">
                         <div class="breadcrumb_iner_item">
                             <h2>Shop Products</h2>
+                            <p>Browse games, accessories and gear — fast & clean.</p>
                         </div>
                     </div>
                 </div>
@@ -206,7 +250,6 @@
                             </div>
 
                             <div class="col-md-4">
-                                {# ✅ REAL dropdown #}
                                 <select class="form-control" name="category">
                                     <option value="">All categories</option>
                                     {% for c in categories %}
@@ -236,7 +279,6 @@
                 {% for p in products %}
                     {% set imgSrc = null %}
                     {% if p.image %}
-                        {# if already absolute (/uploads/.. or http..), keep it. otherwise assume uploads/products #}
                         {% if p.image starts with('http') or p.image starts with('/') %}
                             {% set imgSrc = p.image %}
                         {% else %}
@@ -248,26 +290,29 @@
                         <a href="{{ path('shop_product_show', {id: p.id}) }}" style="text-decoration:none;">
                             <div class="p-card">
 
-                                {% if imgSrc %}
-                                    <div class="p-media">
+                                <div class="p-media">
+                                    {% if p.stock is defined %}
+                                        {% if p.stock <= 0 %}
+                                            <span class="stock-badge stock-out"><i class="fas fa-times-circle"></i> Out</span>
+                                        {% elseif p.stock <= 5 %}
+                                            <span class="stock-badge stock-low"><i class="fas fa-exclamation-circle"></i> Low ({{ p.stock }})</span>
+                                        {% else %}
+                                            <span class="stock-badge stock-in"><i class="fas fa-check-circle"></i> In stock</span>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if imgSrc %}
                                         <img src="{{ imgSrc }}" alt="{{ p.name }}"
                                              onerror="this.onerror=null;this.src='{{ asset('uploads/products/placeholder.png') }}';">
-                                    </div>
-                                {% else %}
-                                    <div class="p-placeholder">
-                                        No image
-                                    </div>
-                                {% endif %}
+                                    {% else %}
+                                        <div class="p-placeholder w-100">No image</div>
+                                    {% endif %}
+                                </div>
 
                                 <div class="p-body">
                                     <div class="p-badges">
-                                        <span class="p-badge cat">
-                                            {{ p.category ?? 'Uncategorized' }}
-                                        </span>
-
-                                        <span class="p-badge">
-                                            <i class="fas fa-star"></i> Popular
-                                        </span>
+                                        <span class="p-badge cat">{{ p.category ?? 'Uncategorized' }}</span>
+                                        <span class="p-badge"><i class="fas fa-star"></i> Featured</span>
                                     </div>
 
                                     <div class="p-title">{{ p.name }}</div>
@@ -276,6 +321,9 @@
                                         <div class="p-price">
                                             {{ (p.price ?? 0)|number_format(2, '.', '') }} TND
                                         </div>
+                                        {% if p.stock is defined %}
+                                            <small class="text-muted font-weight-bold">Stock: {{ p.stock }}</small>
+                                        {% endif %}
                                     </div>
 
                                     <p class="p-desc">
@@ -327,10 +375,6 @@
 <script src="js/swiper.min.js"></script>
 <script src="js/masonry.pkgd.js"></script>
 <script src="js/owl.carousel.min.js"></script>
-
-{# ✅ keep this removed to avoid broken dropdown #}
-{# <script src="js/jquery.nice-select.min.js"></script> #}
-
 <script src="js/slick.min.js"></script>
 <script src="js/jquery.counterup.min.js"></script>
 <script src="js/waypoints.min.js"></script>

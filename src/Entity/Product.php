@@ -19,20 +19,20 @@ class Product
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Name is required.")]
-    #[Assert\Length(min: 2, max: 255, minMessage: "Name must be at least {{ limit }} characters.")]
+    #[Assert\Length(min: 3, max: 255, minMessage: "Name must be at least 3 characters.")]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: "Description is required.")]
-    #[Assert\Length(min: 10, minMessage: "Description must be at least {{ limit }} characters.")]
+    #[Assert\Length(min: 10, minMessage: "Description must be at least 10 characters.")]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Assert\NotBlank(message: "Price is required.")]
+    #[Assert\NotBlank(message: "Price is required and musts be a valid number (exp : 10 /10.5 ..).")]
     #[Assert\Positive(message: "Price must be greater than 0.")]
     #[Assert\Regex(
         pattern: "/^\d+(\.\d{1,2})?$/",
-        message: "Price must be a valid number (example: 10 or 10.50)."
+        
     )]
     private ?string $price = null;
 
@@ -42,14 +42,13 @@ class Product
     private ?int $stock = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Image is required.")]
-    #[Assert\Url(message: "Image must be a valid URL.")]
+    #[Assert\Length(max: 255)]
     private ?string $image = null;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\NotBlank(message: "Category is required.")]
     #[Assert\Choice(
-        choices: ['Games', 'Accessories', 'Consoles', 'Controllers', 'Headsets', 'Gift Cards', 'Merch'],
+        choices: ['Games', 'Accessories', 'Consoles', 'Controllers', 'Headsets', 'Gift Cards'],
         message: "Please select a valid category."
     )]
     private ?string $category = null;
@@ -65,84 +64,41 @@ class Product
         $this->orders = new ArrayCollection();
     }
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    public function getId(): ?int { return $this->id; }
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+    public function getName(): ?string { return $this->name; }
+    public function setName(string $name): static { $this->name = $name; return $this; }
 
-    public function setName(string $name): static
+    public function getDescription(): ?string { return $this->description; }
+    public function setDescription(?string $description): static { $this->description = $description; return $this; }
+
+    public function getPrice(): ?string { return $this->price; }
+    public function setPrice(string $price): static { $this->price = $price; return $this; }
+
+    public function getStock(): ?int { return $this->stock; }
+    public function setStock(int $stock): static { $this->stock = $stock; return $this; }
+
+    
+    public function decreaseStock(int $qty = 1): self
     {
-        $this->name = $name;
+        $current = (int) ($this->stock ?? 0);
+        if ($qty < 1) return $this;
+
+        if ($current < $qty) {
+            throw new \RuntimeException('Out of stock.');
+        }
+
+        $this->stock = $current - $qty;
         return $this;
     }
 
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+    public function getImage(): ?string { return $this->image; }
+    public function setImage(?string $image): static { $this->image = $image; return $this; }
 
-    public function setDescription(?string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
+    public function getCategory(): ?string { return $this->category; }
+    public function setCategory(?string $category): static { $this->category = $category; return $this; }
 
-    public function getPrice(): ?string
-    {
-        return $this->price;
-    }
-
-    public function setPrice(string $price): static
-    {
-        $this->price = $price;
-        return $this;
-    }
-
-    public function getStock(): ?int
-    {
-        return $this->stock;
-    }
-
-    public function setStock(int $stock): static
-    {
-        $this->stock = $stock;
-        return $this;
-    }
-
-    public function getImage(): ?string
-    {
-        return $this->image;
-    }
-
-    public function setImage(?string $image): static
-    {
-        $this->image = $image;
-        return $this;
-    }
-
-    public function getCategory(): ?string
-    {
-        return $this->category;
-    }
-
-    public function setCategory(?string $category): static
-    {
-        $this->category = $category;
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Order>
-     */
-    public function getOrders(): Collection
-    {
-        return $this->orders;
-    }
+    public function getOrders(): Collection { return $this->orders; }
 
     public function addOrder(Order $order): static
     {

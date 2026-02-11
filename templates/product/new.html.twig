@@ -4,92 +4,109 @@
 <base href="/back_template/">
 
 <style>
-    .page-wrap {
-        max-width: 1050px;
-        margin: 0 auto;
-    }
+    .page-wrap{ max-width: 1180px; margin: 0 auto; }
 
-    .topbar {
-        background: #fff;
-        border: 1px solid rgba(16, 24, 40, .08);
-        border-radius: 16px;
-        padding: 18px 20px;
-        box-shadow: 0 10px 30px rgba(16, 24, 40, .06);
-        margin-bottom: 18px;
+    /* Header */
+    .topbar{
+        background:#fff;
+        border:1px solid rgba(16,24,40,.08);
+        border-radius:18px;
+        padding:18px 20px;
+        box-shadow:0 10px 30px rgba(16,24,40,.06);
+        margin-bottom:18px;
+        position: sticky;
+        top: 12px;
+        z-index: 5;
     }
+    .topbar .title{ display:flex; align-items:center; gap:12px; }
+    .icon-badge{
+        width:46px; height:46px; border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        background: rgba(13,110,253,.12);
+        border:1px solid rgba(13,110,253,.15);
+    }
+    .title h4{ margin:0; font-weight:900; letter-spacing:.2px; }
+    .subtitle{ margin-top:4px; font-size:13px; color:#667085; }
+    .breadcrumb-lite{ font-size:12px; color:#98a2b3; margin-top:6px; }
+    .breadcrumb-lite a{ color:#98a2b3; text-decoration:none; }
+    .breadcrumb-lite a:hover{ text-decoration:underline; }
 
-    .topbar .title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+    /* Buttons */
+    .btn-pill{ border-radius:12px; padding:10px 14px; font-weight:800; }
 
-    .icon-badge {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(13, 110, 253, .12);
-        border: 1px solid rgba(13, 110, 253, .15);
+    /* Cards */
+    .card-soft{
+        border:1px solid rgba(16,24,40,.08);
+        border-radius:18px;
+        box-shadow:0 12px 34px rgba(16,24,40,.08);
+        overflow:hidden;
+        background:#fff;
     }
-
-    .title h4 {
-        margin: 0;
-        font-weight: 800;
-        letter-spacing: .2px;
-    }
-
-    .subtitle {
-        margin-top: 4px;
-        font-size: 13px;
-        color: #667085;
-    }
-
-    .breadcrumb-lite {
-        font-size: 12px;
-        color: #98a2b3;
-        margin-top: 6px;
-    }
-    .breadcrumb-lite a {
-        color: #98a2b3;
-        text-decoration: none;
-    }
-    .breadcrumb-lite a:hover {
-        text-decoration: underline;
-    }
-
-    .btn-pill {
-        border-radius: 12px;
-        padding: 10px 14px;
-        font-weight: 700;
-    }
-
-    .card-soft {
-        border: 1px solid rgba(16, 24, 40, .08);
-        border-radius: 16px;
-        box-shadow: 0 12px 34px rgba(16, 24, 40, .08);
-        overflow: hidden;
-        background: #fff;
-    }
-
-    .card-soft .card-header {
+    .card-soft .card-header{
         background: linear-gradient(180deg, rgba(13,110,253,.10), rgba(13,110,253,.02));
-        border-bottom: 1px solid rgba(16, 24, 40, .08);
-        padding: 16px 20px;
+        border-bottom:1px solid rgba(16,24,40,.08);
+        padding:16px 20px;
+    }
+    .header-title{ font-weight:900; margin:0; line-height:1.1; }
+    .header-desc{ font-size:12px; color:#667085; margin-top:4px; }
+
+    /* Layout */
+    .grid{
+        display:grid;
+        grid-template-columns: 1.6fr .85fr;
+        gap:16px;
+        align-items:start;
+    }
+    @media (max-width: 992px){
+        .grid{ grid-template-columns: 1fr; }
+        .topbar{ position: static; }
     }
 
-    .card-soft .card-header .header-title {
-        font-weight: 800;
-        margin: 0;
-        line-height: 1.1;
-    }
+    /* Sidebar */
+    .side-card{ position: sticky; top: 92px; }
+    @media (max-width: 992px){ .side-card{ position: static; } }
 
-    .card-soft .card-header .header-desc {
-        font-size: 12px;
-        color: #667085;
-        margin-top: 4px;
+    .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+        display:inline-flex; align-items:center; gap:8px;
+        padding:7px 10px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:900;
+        border: 1px solid rgba(16,24,40,.10);
+        background: rgba(16,24,40,.03);
+        color:#344054;
+    }
+    .chip i{ font-size:14px; }
+
+    .rule{
+        display:flex; gap:10px;
+        padding:12px 12px;
+        border-radius:14px;
+        border:1px solid rgba(16,24,40,.08);
+        background: #fff;
+        margin-top: 10px;
+    }
+    .rule i{ margin-top:2px; color:#0d6efd; }
+    .rule .t{ font-weight:900; font-size:13px; margin:0; color:#101828; }
+    .rule .d{ font-size:12px; color:#667085; margin:2px 0 0; line-height:1.45; }
+
+    .divider{ height:1px; background:rgba(16,24,40,.08); margin:12px 0; }
+
+    /* Subtle form styling without touching _form */
+    .card-body .form-control,
+    .card-body select,
+    .card-body textarea{
+        border-radius:12px !important;
+        border:1px solid rgba(16,24,40,.12) !important;
+        min-height:46px;
+    }
+    .card-body textarea{ min-height: 120px; }
+    .card-body .form-control:focus,
+    .card-body select:focus,
+    .card-body textarea:focus{
+        border-color: rgba(13,110,253,.45) !important;
+        box-shadow: 0 0 0 .2rem rgba(13,110,253,.15) !important;
     }
 </style>
 
@@ -104,7 +121,7 @@
                     </div>
                     <div>
                         <h4>Add Product</h4>
-                        <div class="subtitle">Create a new product with category, stock, and details.</div>
+                        <div class="subtitle">Create a new item for the shop catalog.</div>
                         <div class="breadcrumb-lite">
                             <a href="/dashboard">Dashboard</a> &nbsp;›&nbsp;
                             <a href="{{ path('product_index') }}">Product Management</a> &nbsp;›&nbsp;
@@ -114,22 +131,83 @@
                 </div>
             </div>
 
-            <div>
+            <div class="d-flex gap-2 align-items-center">
                 <a href="{{ path('product_index') }}" class="btn btn-outline-secondary btn-pill">
                     <i class="feather-arrow-left me-2"></i>Back
                 </a>
+                {# If you can add id="product_form" to the <form> in _form.html.twig, you can use an external submit button:
+                <button class="btn btn-primary btn-pill" type="submit" form="product_form">
+                    <i class="feather-check me-2"></i>Create
+                </button>
+                #}
             </div>
         </div>
 
-        <div class="card card-soft">
-            <div class="card-header">
-                <div class="header-title">Product Details</div>
-                <div class="header-desc">Fill in the fields below then click Create.</div>
+        <div class="grid">
+
+            <div class="card card-soft">
+                <div class="card-header">
+                    <div class="header-title">Product Details</div>
+                    <div class="header-desc">Complete the form and submit to publish the product.</div>
+                </div>
+
+                <div class="card-body p-4">
+                    {% include 'product/_form.html.twig' with { form: form, button_label: 'Create' } %}
+                </div>
             </div>
 
-            <div class="card-body p-4">
-                {% include 'product/_form.html.twig' with { form: form, button_label: 'Create' } %}
+            <div class="side-card">
+                <div class="card card-soft">
+                    <div class="card-header">
+                        <div class="header-title">Publishing Rules</div>
+                        <div class="header-desc">Quick validation checklist.</div>
+                    </div>
+
+                    <div class="card-body p-3">
+                        <div class="chip-row">
+                            <span class="chip"><i class="feather-check-circle"></i>Required fields</span>
+                            <span class="chip"><i class="feather-shield"></i>Valid category</span>
+                            <span class="chip"><i class="feather-dollar-sign"></i>Positive price</span>
+                            <span class="chip"><i class="feather-box"></i>Stock ≥ 0</span>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="rule">
+                            <i class="feather-image"></i>
+                            <div>
+                                <p class="t">Image</p>
+                                <p class="d">Use a good image (URL or upload) so product cards look consistent.</p>
+                            </div>
+                        </div>
+
+                        <div class="rule">
+                            <i class="feather-tag"></i>
+                            <div>
+                                <p class="t">Category</p>
+                                <p class="d">Choose one of the allowed categories to keep filtering clean.</p>
+                            </div>
+                        </div>
+
+                        <div class="rule">
+                            <i class="feather-clipboard"></i>
+                            <div>
+                                <p class="t">Description</p>
+                                <p class="d">Write a short, clear description (at least 10 characters).</p>
+                            </div>
+                        </div>
+
+                        <div class="rule">
+                            <i class="feather-box"></i>
+                            <div>
+                                <p class="t">Stock</p>
+                                <p class="d">Stock decreases automatically when customers place an order.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
 
     </div>

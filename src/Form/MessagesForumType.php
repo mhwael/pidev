@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class MessagesForumType extends AbstractType
 {
@@ -20,12 +21,44 @@ class MessagesForumType extends AbstractType
             ->add('sujetsForum', EntityType::class, [
                 'class' => SujetsForum::class,
                 'choice_label' => 'titre',
+                'placeholder' => 'Choisir un sujet',
+                'required' => false, // ✅ pas de required HTML
+                'constraints' => [
+                    new Assert\NotNull(['message' => 'Le sujet est obligatoire.']),
+                ],
             ])
-            ->add('auteur_id', IntegerType::class)
-            ->add('contenu', TextareaType::class)
-            ->add('date_creation', DateTimeType::class)
-            ->add('nombre_likes', IntegerType::class, ['required' => false, 'empty_data' => 0])
-        ;
+            ->add('auteur_id', IntegerType::class, [
+                'required' => false, // ✅ pas de required HTML
+                'constraints' => [
+                    new Assert\NotNull(['message' => "L'auteur est obligatoire."]),
+                    new Assert\Positive(['message' => "L'auteur doit être un nombre positif."]),
+                ],
+            ])
+            ->add('contenu', TextareaType::class, [
+                'required' => false, // ✅ pas de required HTML
+                'constraints' => [
+                    new Assert\NotBlank(['message' => 'Le contenu est obligatoire.']),
+                    new Assert\Length([
+                        'min' => 3,
+                        'minMessage' => 'Le contenu doit contenir au moins {{ limit }} caractères.',
+                    ]),
+                ],
+            ])
+            ->add('date_creation', DateTimeType::class, [
+                'required' => false,  // ✅ pas de required HTML
+                'widget' => 'single_text',
+                'html5' => false,     // ✅ évite datetime-local HTML5
+                'constraints' => [
+                    new Assert\NotNull(['message' => 'La date de création est obligatoire.']),
+                ],
+            ])
+            ->add('nombre_likes', IntegerType::class, [
+                'required' => false,
+                'empty_data' => '0',
+                'constraints' => [
+                    new Assert\PositiveOrZero(['message' => 'Le nombre de likes doit être >= 0.']),
+                ],
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

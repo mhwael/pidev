@@ -18,7 +18,9 @@
                     <div>
                         <a href="{{ path('app_messages_forum_new', { sujet_id: sujets_forum.id }) }}" class="btn_1 btn-sm me-2">Répondre</a>
                         <a href="{{ path('app_sujets_forum_edit', {'id': sujets_forum.id}) }}" class="btn_2 btn-sm me-2">Modifier</a>
+
                         {{ include('sujets_forum/_delete_form.html.twig') }}
+                        
                     </div>
                 </div>
                 <p class="text-muted mb-0">Créé par <strong>{{ sujets_forum.creePar }}</strong> le {{ sujets_forum.dateCreation ? sujets_forum.dateCreation|date('d/m/Y à H:i') : '' }}</p>

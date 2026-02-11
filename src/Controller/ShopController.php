@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Repository\ProductRepository;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,10 +27,8 @@ class ShopController extends AbstractController
         $q = trim((string) $request->query->get('q', ''));
         $category = trim((string) $request->query->get('category', ''));
 
-        // ✅ fixed clean categories list
         $categories = $repo->getDistinctCategories();
 
-        // ✅ security: if user passes unknown category, ignore it
         if ($category !== '' && !in_array($category, $categories, true)) {
             $category = '';
         }
@@ -62,32 +61,61 @@ class ShopController extends AbstractController
         $phone     = trim((string) $request->request->get('phone', ''));
         $email     = trim((string) $request->request->get('email', ''));
 
-        $order = new Order();
-        $order->setReference('ORD-' . date('YmdHis'));
-        $order->setStatus('NEW');
-        $order->setCreatedAt(new \DateTimeImmutable());
+        $conn = $em->getConnection();
+        $conn->beginTransaction();
 
-        $order->setCustomerFirstName($firstName);
-        $order->setCustomerLastName($lastName);
-        $order->setCustomerPhone($phone);
-        $order->setCustomerEmail($email);
-
-        $order->addProduct($product);
-        $order->setTotalAmount((string) $product->getPrice());
-
-        $errors = $validator->validate($order);
-
-        if (count($errors) > 0) {
-            foreach ($errors as $error) {
-                $this->addFlash('error', $error->getMessage());
+        try {
+            // ✅ lock product row + re-fetch to avoid race conditions
+            $lockedProduct = $em->find(Product::class, $product->getId(), LockMode::PESSIMISTIC_WRITE);
+            if (!$lockedProduct) {
+                throw new \RuntimeException('Product not found.');
             }
+
+            if ((int)$lockedProduct->getStock() <= 0) {
+                $this->addFlash('error', 'This product is out of stock.');
+                $conn->rollBack();
+                return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
+            }
+
+            // ✅ create order
+            $order = new Order();
+            $order->setReference('ORD-' . date('YmdHis'));
+            $order->setStatus('NEW');
+            $order->setCreatedAt(new \DateTimeImmutable());
+
+            $order->setCustomerFirstName($firstName);
+            $order->setCustomerLastName($lastName);
+            $order->setCustomerPhone($phone);
+            $order->setCustomerEmail($email);
+
+            // ✅ attach product (ManyToMany)
+            $order->addProduct($lockedProduct);
+            $order->setTotalAmount((string) $lockedProduct->getPrice());
+
+            // ✅ decrement stock by 1
+            $lockedProduct->decreaseStock(1);
+
+            // ✅ validate order
+            $errors = $validator->validate($order);
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                $conn->rollBack();
+                return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
+            }
+
+            $em->persist($order);
+            $em->flush();
+            $conn->commit();
+
+            return $this->redirectToRoute('my_orders');
+
+        } catch (\Throwable $e) {
+            $conn->rollBack();
+            $this->addFlash('error', $e->getMessage());
             return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
         }
-
-        $em->persist($order);
-        $em->flush();
-
-        return $this->redirectToRoute('my_orders');
     }
 
     #[Route('/shop/my-orders', name: 'my_orders', methods: ['GET'])]

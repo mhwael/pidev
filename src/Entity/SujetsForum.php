@@ -6,6 +6,7 @@ use App\Repository\SujetsForumRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SujetsForumRepository::class)]
 class SujetsForum
@@ -24,19 +25,25 @@ class SujetsForum
     }
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "")]
+    #[Assert\Length(min: 3, minMessage: "")]
     private ?string $titre = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: '')]
+    #[Assert\Length(min: 3, minMessage: '')]
     private ?string $cree_par = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "")]
     private ?string $categorie = null;
 
-    #[ORM\Column]
-    private ?\DateTime $date_creation = null; // <-- changé en DateTime
+    #[ORM\Column(type: 'datetime')]
+    #[Assert\NotNull(message: "")]
+    private ?\DateTimeInterface $date_creation = null;
 
-    #[ORM\Column]
-    private ?bool $est_verrouille = false; // <-- changé en bool, valeur par défaut false
+    #[ORM\Column(type: 'boolean')]
+    private bool $est_verrouille = false;
 
     public function getId(): ?int
     {
@@ -48,7 +55,7 @@ class SujetsForum
         return $this->titre;
     }
 
-    public function setTitre(string $titre): static
+    public function setTitre(?string $titre): static
     {
         $this->titre = $titre;
         return $this;
@@ -59,7 +66,7 @@ class SujetsForum
         return $this->cree_par;
     }
 
-    public function setCreePar(string $cree_par): static
+    public function setCreePar(?string $cree_par): static
     {
         $this->cree_par = $cree_par;
         return $this;
@@ -70,24 +77,25 @@ class SujetsForum
         return $this->categorie;
     }
 
-    public function setCategorie(string $categorie): static
+    public function setCategorie(?string $categorie): static
     {
         $this->categorie = $categorie;
         return $this;
     }
 
-    public function getDateCreation(): ?\DateTime
+    public function getDateCreation(): ?\DateTimeInterface
     {
         return $this->date_creation;
     }
 
-    public function setDateCreation(\DateTime $date_creation): static
+    // ✅ accepte null => plus de crash, la validation PHP NotNull gère l'erreur
+    public function setDateCreation(?\DateTimeInterface $date_creation): static
     {
         $this->date_creation = $date_creation;
         return $this;
     }
 
-    public function getEstVerrouille(): ?bool
+    public function getEstVerrouille(): bool
     {
         return $this->est_verrouille;
     }
@@ -98,9 +106,6 @@ class SujetsForum
         return $this;
     }
 
-    /**
-     * @return Collection<int, MessagesForum>
-     */
     public function getMessagesForum(): Collection
     {
         return $this->messagesForum;
