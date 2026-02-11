@@ -1,0 +1,70 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}{{ game.name }}{% endblock %}
+
+{% block body %}
+<div class="position-relative" style="height: 400px; overflow: hidden;">
+    {# CHANGED game.image TO game.coverImage #}
+    {% if game.coverImage %}
+        <img src="{{ asset('uploads/guide/' ~ game.coverImage) }}" class="w-100" style="filter: brightness(0.4); object-fit: cover; height: 100%;">
+    {% else %}
+        <div style="background: #1b1b2f; height: 100%; width: 100%;"></div>
+    {% endif %}
+    
+    <div class="position-absolute w-100 text-center text-white" style="top: 50%; transform: translateY(-50%);">
+        <h1 class="display-3 font-weight-bold">{{ game.name }}</h1>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h3 class="text-white mb-4 border-bottom pb-2">Available Guides</h3>
+            <div class="row">
+                {% for guide in guides %}
+                    <div class="col-md-6 mb-4">
+                        <div class="single_blog_item" style="background: #16173d; border-radius: 10px; overflow: hidden;">
+                            <div class="single_blog_text p-4">
+                                <h4 class="mt-0"><a href="{{ path('front_guide_show', {'id': guide.id}) }}" class="text-white">{{ guide.title }}</a></h4>
+                                <span class="badge badge-warning">{{ guide.difficulty }}</span>
+                                <a href="{{ path('front_guide_show', {'id': guide.id}) }}" class="float-right text-primary">Read <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted ml-3">No guides written for this game yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="bg-dark p-4 rounded shadow">
+                <h4 class="text-white mb-3">Community Reviews</h4>
+                
+                {% if app.user %}
+                    <form method="post" action="{{ path('front_game_show', {'id': game.id}) }}">
+                        <div class="form-group">
+                            <label class="text-white">Rate this Game</label>
+                            <select name="rating" class="form-control">
+                                <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
+                                <option value="4">⭐⭐⭐⭐ - Good</option>
+                                <option value="3">⭐⭐⭐ - Average</option>
+                                <option value="2">⭐⭐ - Poor</option>
+                                <option value="1">⭐ - Terrible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Write your review..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn_3 w-100">Post Review</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info">
+                        Please <a href="{{ path('app_login') }}">Login</a> to write a review.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

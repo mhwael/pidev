@@ -1,0 +1,66 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}All Guides - Duralux{% endblock %}
+
+{% block body %}
+    <section class="breadcrumb breadcrumb_bg" style="background-color: #1b1b2f; padding: 100px 0;">
+        <div class="container text-center">
+            <h2 style="color: white; font-size: 50px; font-weight: bold;">Game Guides</h2>
+            <p style="color: #888;">Home // Guides</p>
+        </div>
+    </section>
+
+    <section class="blog_part section_padding" style="background-color: #0b0c2a; padding-top: 80px;">
+        <div class="container">
+            <div class="row">
+                {% if guides is empty %}
+                    <div class="col-12 text-center text-white">
+                        <p>No guides found yet.</p>
+                    </div>
+                {% else %}
+                    {% for guide in guides %}
+                        <div class="col-sm-6 col-lg-4 d-flex align-items-stretch">
+                            <div class="single_blog_item" style="background: #16173d; width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                
+                                <div class="single_blog_img">
+                                    <a href="{{ path('front_guide_show', {'id': guide.id}) }}">
+                                        {# ✨ FIXED: Path changed to uploads/guide to match your folder #}
+                                        {% if guide.coverImage %}
+                                            <img src="{{ asset('uploads/guide/' ~ guide.coverImage) }}" 
+                                                 alt="{{ guide.title }}" 
+                                                 style="height: 220px; width: 100%; object-fit: cover;">
+                                        {% else %}
+                                            {# Fallback to a gamepad icon if no image exists #}
+                                            <div class="d-flex align-items-center justify-content-center bg-secondary" style="height: 220px;">
+                                                <i class="fas fa-gamepad fa-4x text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                
+                                <div class="single_blog_text" style="padding: 25px;">
+                                    <div class="mb-3">
+                                        <span class="badge badge-primary">{{ guide.game.name }}</span>
+                                        <span class="badge badge-warning text-dark">{{ guide.difficulty }}</span>
+                                    </div>
+
+                                    <h3 style="margin-bottom: 15px;">
+                                        <a href="{{ path('front_guide_show', {'id': guide.id}) }}" style="color: white; font-weight: 700; text-decoration: none;">
+                                            {{ guide.title }}
+                                        </a>
+                                    </h3>
+                                    
+                                    <p style="color: #aab; font-size: 14px;">
+                                        {{ guide.description|slice(0, 80) }}...
+                                    </p>
+                                    
+                                    <a href="{{ path('front_guide_show', {'id': guide.id}) }}" class="btn_3">Read Guide</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
