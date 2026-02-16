@@ -25,13 +25,10 @@
          <div class="col-lg-8 posts-list">
             <div class="single-post">
                
-               {# ✨ 2. THIS IS THE CODE FOR THE UPLOADED PICTURE #}
                <div class="feature-img">
                   {% if guide.coverImage %}
-                      {# Using uploads/guide/ to match your folder #}
                       <img class="img-fluid" src="{{ asset('uploads/guide/' ~ guide.coverImage) }}" alt="{{ guide.title }}" style="width:100%; max-height: 500px; object-fit: cover; border-radius: 10px; margin-bottom: 30px;">
                   {% else %}
-                      {# Optional: Placeholder if no image is uploaded #}
                       <div class="alert alert-secondary text-center">No cover image uploaded for this guide.</div>
                   {% endif %}
                </div>

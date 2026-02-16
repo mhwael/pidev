@@ -4,7 +4,6 @@
 
 {% block body %}
 <div class="position-relative" style="height: 400px; overflow: hidden;">
-    {# CHANGED game.image TO game.coverImage #}
     {% if game.coverImage %}
         <img src="{{ asset('uploads/guide/' ~ game.coverImage) }}" class="w-100" style="filter: brightness(0.4); object-fit: cover; height: 100%;">
     {% else %}

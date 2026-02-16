@@ -24,13 +24,11 @@
                                 
                                 <div class="single_blog_img">
                                     <a href="{{ path('front_guide_show', {'id': guide.id}) }}">
-                                        {# ✨ FIXED: Path changed to uploads/guide to match your folder #}
                                         {% if guide.coverImage %}
                                             <img src="{{ asset('uploads/guide/' ~ guide.coverImage) }}" 
                                                  alt="{{ guide.title }}" 
                                                  style="height: 220px; width: 100%; object-fit: cover;">
                                         {% else %}
-                                            {# Fallback to a gamepad icon if no image exists #}
                                             <div class="d-flex align-items-center justify-content-center bg-secondary" style="height: 220px;">
                                                 <i class="fas fa-gamepad fa-4x text-white"></i>
                                             </div>
