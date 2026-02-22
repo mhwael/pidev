@@ -3,18 +3,23 @@
 namespace App\Controller;
 
 use App\Entity\Order;
+use App\Entity\OrderItem;
 use App\Entity\Product;
+use App\Form\CheckoutType;
 use App\Repository\ProductRepository;
+use App\Service\OrderMailer;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ShopController extends AbstractController
 {
+    private const CART_KEY = 'cart_items'; // [productId => qty]
+
     #[Route('/shop', name: 'shop_home', methods: ['GET'])]
     public function shopHome(): Response
     {
@@ -28,7 +33,6 @@ class ShopController extends AbstractController
         $category = trim((string) $request->query->get('category', ''));
 
         $categories = $repo->getDistinctCategories();
-
         if ($category !== '' && !in_array($category, $categories, true)) {
             $category = '';
         }
@@ -49,73 +53,194 @@ class ShopController extends AbstractController
         ]);
     }
 
-    #[Route('/shop/order/{id}', name: 'shop_order_product', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function orderOne(
-        Product $product,
-        Request $request,
-        EntityManagerInterface $em,
-        ValidatorInterface $validator
-    ): Response {
-        $firstName = trim((string) $request->request->get('firstName', ''));
-        $lastName  = trim((string) $request->request->get('lastName', ''));
-        $phone     = trim((string) $request->request->get('phone', ''));
-        $email     = trim((string) $request->request->get('email', ''));
+    #[Route('/shop/cart/add/{id}', name: 'shop_cart_add', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function addToCart(Product $product, Request $request, SessionInterface $session): Response
+    {
+        $qty = (int) $request->request->get('qty', 1);
+        $qty = max(1, min(20, $qty));
 
-        $conn = $em->getConnection();
-        $conn->beginTransaction();
+        $cart = $session->get(self::CART_KEY, []);
+        $pid = $product->getId();
 
-        try {
-            // ✅ lock product row + re-fetch to avoid race conditions
-            $lockedProduct = $em->find(Product::class, $product->getId(), LockMode::PESSIMISTIC_WRITE);
-            if (!$lockedProduct) {
-                throw new \RuntimeException('Product not found.');
-            }
+        $cart[$pid] = ($cart[$pid] ?? 0) + $qty;
 
-            if ((int)$lockedProduct->getStock() <= 0) {
-                $this->addFlash('error', 'This product is out of stock.');
-                $conn->rollBack();
-                return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
-            }
+        $session->set(self::CART_KEY, $cart);
+        $this->addFlash('success', 'Product added to cart.');
 
-            // ✅ create order
-            $order = new Order();
-            $order->setReference('ORD-' . date('YmdHis'));
-            $order->setStatus('NEW');
-            $order->setCreatedAt(new \DateTimeImmutable());
+        return $this->redirectToRoute('shop_cart');
+    }
 
-            $order->setCustomerFirstName($firstName);
-            $order->setCustomerLastName($lastName);
-            $order->setCustomerPhone($phone);
-            $order->setCustomerEmail($email);
+    #[Route('/shop/cart', name: 'shop_cart', methods: ['GET'])]
+    public function cart(SessionInterface $session, ProductRepository $repo): Response
+    {
+        $cart = $session->get(self::CART_KEY, []);
+        $ids = array_keys($cart);
 
-            // ✅ attach product (ManyToMany)
-            $order->addProduct($lockedProduct);
-            $order->setTotalAmount((string) $lockedProduct->getPrice());
+        $products = $ids
+            ? $repo->createQueryBuilder('p')->andWhere('p.id IN (:ids)')->setParameter('ids', $ids)->getQuery()->getResult()
+            : [];
 
-            // ✅ decrement stock by 1
-            $lockedProduct->decreaseStock(1);
+        $lines = [];
+        $total = 0.0;
 
-            // ✅ validate order
-            $errors = $validator->validate($order);
-            if (count($errors) > 0) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error->getMessage());
-                }
-                $conn->rollBack();
-                return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
-            }
+        foreach ($products as $p) {
+            /** @var Product $p */
+            $qty = (int) ($cart[$p->getId()] ?? 0);
+            if ($qty < 1) continue;
 
-            $em->persist($order);
-            $em->flush();
-            $conn->commit();
+            $lineTotal = (float) $p->getPrice() * $qty;
+            $total += $lineTotal;
 
-            return $this->redirectToRoute('my_orders');
-
-        } catch (\Throwable $e) {
-            $conn->rollBack();
-            $this->addFlash('error', $e->getMessage());
-            return $this->redirectToRoute('shop_product_show', ['id' => $product->getId()]);
+            $lines[] = [
+                'product' => $p,
+                'qty' => $qty,
+                'lineTotal' => number_format($lineTotal, 2, '.', ''),
+            ];
         }
+
+        return $this->render('Shop/cart.html.twig', [
+            'lines' => $lines,
+            'total' => number_format($total, 2, '.', ''),
+        ]);
+    }
+
+    #[Route('/shop/cart/update/{id}', name: 'shop_cart_update', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function updateCart(Product $product, Request $request, SessionInterface $session): Response
+    {
+        $qty = (int) $request->request->get('qty', 1);
+        $qty = max(0, min(20, $qty));
+
+        $cart = $session->get(self::CART_KEY, []);
+        $pid = $product->getId();
+
+        if ($qty === 0) unset($cart[$pid]);
+        else $cart[$pid] = $qty;
+
+        $session->set(self::CART_KEY, $cart);
+        return $this->redirectToRoute('shop_cart');
+    }
+
+    #[Route('/shop/cart/remove/{id}', name: 'shop_cart_remove', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function removeFromCart(Product $product, SessionInterface $session): Response
+    {
+        $cart = $session->get(self::CART_KEY, []);
+        unset($cart[$product->getId()]);
+        $session->set(self::CART_KEY, $cart);
+
+        return $this->redirectToRoute('shop_cart');
+    }
+
+    #[Route('/shop/checkout', name: 'shop_checkout', methods: ['GET','POST'])]
+    public function checkout(
+        Request $request,
+        SessionInterface $session,
+        ProductRepository $repo,
+        EntityManagerInterface $em,
+        OrderMailer $orderMailer
+    ): Response {
+        $cart = $session->get(self::CART_KEY, []);
+        if (!$cart) {
+            $this->addFlash('error', 'Your cart is empty.');
+            return $this->redirectToRoute('shop_products');
+        }
+
+        $ids = array_keys($cart);
+        $products = $repo->createQueryBuilder('p')
+            ->andWhere('p.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+
+        if (!$products) {
+            $this->addFlash('error', 'Your cart is empty.');
+            return $this->redirectToRoute('shop_products');
+        }
+
+        $total = 0.0;
+        foreach ($products as $p) {
+            $qty = (int) ($cart[$p->getId()] ?? 0);
+            if ($qty > 0) $total += (float) $p->getPrice() * $qty;
+        }
+
+        $form = $this->createForm(CheckoutType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $conn = $em->getConnection();
+            $conn->beginTransaction();
+
+            try {
+                $order = new Order();
+                $order->setReference('ORD-' . date('YmdHis'));
+                $order->setStatus('NEW');
+                $order->setCreatedAt(new \DateTimeImmutable());
+
+                $order->setCustomerFirstName(trim((string) $data['firstName']));
+                $order->setCustomerLastName(trim((string) $data['lastName']));
+                $order->setCustomerPhone(trim((string) $data['phone']));
+                $order->setCustomerEmail(trim((string) $data['email']));
+
+                $order->setPaymentMethod($data['paymentMethod'] ?? 'COD');
+                $order->setPaymentStatus('PENDING');
+                $order->setTotalAmount(number_format($total, 2, '.', ''));
+
+                foreach ($products as $p) {
+                    $qty = (int) ($cart[$p->getId()] ?? 0);
+                    if ($qty < 1) continue;
+
+                    $locked = $em->find(Product::class, $p->getId(), LockMode::PESSIMISTIC_WRITE);
+                    if (!$locked) throw new \RuntimeException('Product not found.');
+
+                    if ((int) $locked->getStock() < $qty) {
+                        throw new \RuntimeException('Not enough stock for: ' . $locked->getName());
+                    }
+
+                    $item = new OrderItem();
+                    $item->setProduct($locked);
+                    $item->setQuantity($qty);
+                    $item->setUnitPrice((string) $locked->getPrice());
+                    $order->addItem($item);
+
+                    $locked->decreaseStock($qty);
+                    $order->addProduct($locked); // optional old relation
+                }
+
+                if ($order->getPaymentMethod() === 'CARD') {
+                    $order->setPaymentStatus('PAID');
+                    $order->setStatus('PAID');
+                } else {
+                    $order->setPaymentStatus('PENDING');
+                    $order->setStatus('NEW');
+                }
+
+                $em->persist($order);
+                $em->flush();
+                $conn->commit();
+
+                // ✅ Send email + PDF after commit
+                try {
+                    $orderMailer->sendOrderConfirmation($order);
+                    $this->addFlash('success', 'Email sent to: ' . $order->getCustomerEmail());
+                } catch (\Throwable $mailErr) {
+                    $this->addFlash('error', 'Order placed but email failed: ' . $mailErr->getMessage());
+                }
+
+                $session->remove(self::CART_KEY);
+
+                $this->addFlash('success', 'Order placed successfully.');
+                return $this->redirectToRoute('my_orders');
+
+            } catch (\Throwable $e) {
+                $conn->rollBack();
+                $this->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('Shop/checkout.html.twig', [
+            'form' => $form->createView(),
+            'total' => number_format($total, 2, '.', ''),
+        ]);
     }
 
     #[Route('/shop/my-orders', name: 'my_orders', methods: ['GET'])]
@@ -127,4 +252,25 @@ class ShopController extends AbstractController
             'orders' => $orders,
         ]);
     }
+
+    #[Route('/shop/test-mail', name: 'shop_test_mail', methods: ['GET'])]
+public function testMail(OrderMailer $orderMailer, EntityManagerInterface $em): Response
+{
+    $order = $em->getRepository(\App\Entity\Order::class)->findOneBy([], ['id' => 'DESC']);
+    if (!$order) {
+        return new Response('No order found.');
+    }
+
+    try {
+        $orderMailer->sendOrderConfirmation($order);
+        return new Response('Mail sent to: ' . $order->getCustomerEmail());
+    } catch (\Throwable $e) {
+        return new Response('MAIL ERROR: ' . $e->getMessage());
+    }
+}
+     #[Route('/debug-mailer-dsn', name: 'debug_mailer_dsn')]
+public function debugMailerDsn(): Response
+{
+    return new Response((string) $_ENV['MAILER_DSN']);
+}
 }

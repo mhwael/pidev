@@ -17,18 +17,18 @@ class ProductRepository extends ServiceEntityRepository
     }
 
     /**
-     * ✅ Used in Shop search (name + real category)
+     * ✅ Used in Shop search (name + real category) + ONLY active products
      */
     public function search(?string $q, ?string $category): array
     {
-        $qb = $this->createQueryBuilder('p');
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.isActive = true');
 
         if ($q) {
             $qb->andWhere('LOWER(p.name) LIKE :q')
                ->setParameter('q', '%' . mb_strtolower($q) . '%');
         }
 
-        // ✅ REAL category filter (exact match, since it comes from dropdown)
         if ($category) {
             $qb->andWhere('p.category = :cat')
                ->setParameter('cat', $category);
@@ -56,11 +56,9 @@ class ProductRepository extends ServiceEntityRepository
     }
 
     /**
-     * ✅ Products + orders count + sorting
-     * sort: "default" | "price" | "orders"
-     * dir : "asc" | "desc"
-     *
-     * default => newest first (id desc)
+     * ✅ Products + orders count + sorting (Dashboard)
+     * NOTE: we keep showing all products including disabled ones.
+     * If you want to hide disabled in dashboard too, tell me.
      */
     public function findProductsWithOrdersCount(int $limit = 200, string $sort = 'default', string $dir = 'desc'): array
     {

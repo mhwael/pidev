@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Form\ProductType;
+use App\Repository\ProductForecastRepository;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,13 +17,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProductController extends AbstractController
 {
     #[Route('/', name: 'product_index', methods: ['GET'])]
-    public function index(Request $request, ProductRepository $productRepository): Response
-    {
+    public function index(
+        Request $request,
+        ProductRepository $productRepository,
+        ProductForecastRepository $forecastRepo
+    ): Response {
         $sort = $request->query->get('sort');
         $dir  = $request->query->get('dir');
 
         $allowedSort = ['price', 'orders'];
-
         $sortFinal = in_array($sort, $allowedSort, true) ? $sort : 'default';
         $dirFinal  = in_array(strtolower((string)$dir), ['asc', 'desc'], true) ? strtolower((string)$dir) : 'desc';
 
@@ -46,6 +49,16 @@ class ProductController extends AbstractController
             ];
         }
 
+        // ✅ ML forecasts: latest row per product (forecastDays=7)
+        $productIds = [];
+        foreach ($productsWithCounts as $row) {
+            /** @var Product $p */
+            $p = $row[0];
+            $productIds[] = $p->getId();
+        }
+
+        $forecastMap = $forecastRepo->findLatestByProductIds($productIds, 7);
+
         return $this->render('product/index.html.twig', [
             'productsWithCounts' => $productsWithCounts,
             'stockStats' => $stockStats,
@@ -55,6 +68,9 @@ class ProductController extends AbstractController
             'sort' => $sortFinal,
             'dir' => $dirFinal,
             'hasSort' => ($sort !== null || $dir !== null),
+
+            // ✅ ML
+            'forecastMap' => $forecastMap,
         ]);
     }
 
@@ -91,26 +107,19 @@ class ProductController extends AbstractController
 
                 $newName = uniqid('p_', true) . '.' . $ext;
                 $imageFile->move($this->getParameter('product_images_dir'), $newName);
-                $product->setImage($newName); // store filename
+                $product->setImage($newName);
             }
 
             $entityManager->persist($product);
             $entityManager->flush();
 
+            $this->addFlash('success', 'Product created.');
             return $this->redirectToRoute('product_index');
         }
 
         return $this->render('product/new.html.twig', [
             'product' => $product,
             'form' => $form->createView(),
-        ]);
-    }
-
-    #[Route('/{id}', name: 'product_show', methods: ['GET'])]
-    public function show(Product $product): Response
-    {
-        return $this->render('product/show.html.twig', [
-            'product' => $product,
         ]);
     }
 
@@ -150,6 +159,7 @@ class ProductController extends AbstractController
             }
 
             $entityManager->flush();
+            $this->addFlash('success', 'Product updated.');
             return $this->redirectToRoute('product_index');
         }
 
@@ -162,11 +172,32 @@ class ProductController extends AbstractController
     #[Route('/{id}', name: 'product_delete', methods: ['POST'])]
     public function delete(Request $request, Product $product, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete_product_' . $product->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($product);
-            $entityManager->flush();
+        if (!$this->isCsrfTokenValid('delete_product_' . $product->getId(), (string)$request->request->get('_token'))) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('product_index');
         }
 
+        // ✅ IMPORTANT: prevent deletion if referenced by order_item (FK constraint)
+        $conn = $entityManager->getConnection();
+        $count = (int) $conn->fetchOne(
+            'SELECT COUNT(*) FROM order_item WHERE product_id = ?',
+            [$product->getId()]
+        );
+
+        if ($count > 0) {
+            $this->addFlash('error', "Can't delete this product: it is used in $count order item(s). You can set stock=0 instead.");
+            return $this->redirectToRoute('product_index');
+        }
+
+        // ✅ detach ManyToMany orders (order_product pivot) to avoid pivot constraint
+        foreach ($product->getOrders() as $order) {
+            $order->removeProduct($product);
+        }
+
+        $entityManager->remove($product);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Product deleted.');
         return $this->redirectToRoute('product_index');
     }
 }
