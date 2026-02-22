@@ -21,11 +21,10 @@
     <style>
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
 
-        /* ✅ Whole page background */
         .body_bg{
             position: relative;
             min-height: 100vh;
-            background: url("img/breadcrumb_bg.png") center/cover no-repeat fixed;
+            background: url("img/breadcrumb.png") center/cover no-repeat fixed;
         }
         .body_bg::before{
             content:"";
@@ -37,17 +36,16 @@
         }
         .body_bg > *{ position: relative; z-index:1; }
 
-        /* ✅ IMPORTANT: make the breadcrumb/hero SMALL (no huge space) */
         .breadcrumb_bg{ background: transparent !important; padding: 0 !important; }
         .breadcrumb{
-            padding: 90px 0 35px !important; /* compact */
+            padding: 90px 0 35px !important;
             margin-bottom: 0 !important;
         }
         .breadcrumb_iner{ padding: 0 !important; }
         .breadcrumb_iner_item h2{
             font-weight: 900;
             letter-spacing: .3px;
-            font-size: 56px; /* smaller than before */
+            font-size: 56px;
             margin-bottom: 8px;
         }
         .breadcrumb_iner_item p{
@@ -63,12 +61,8 @@
             .breadcrumb_iner_item h2{ font-size: 32px; }
         }
 
-        /* ✅ Make content come up closer */
-        .section_padding{
-            padding: 35px 0 70px !important;
-        }
+        .section_padding{ padding: 35px 0 70px !important; }
 
-        /* ===== Filter Bar ===== */
         .filter-wrap{
             background: rgba(255,255,255,.95);
             border-radius:16px;
@@ -82,13 +76,8 @@
             border-radius:12px;
             border:1px solid rgba(0,0,0,.10);
         }
-        .filter-title{
-            font-weight:900;
-            margin:0 0 10px;
-            color:#111;
-        }
+        .filter-title{ font-weight:900; margin:0 0 10px; color:#111; }
 
-        /* ===== Product Card ===== */
         .p-card{
             background: rgba(255,255,255,.95);
             border-radius:18px;
@@ -113,11 +102,7 @@
             padding:14px;
             position: relative;
         }
-        .p-media img{
-            width:100%;
-            height:100%;
-            object-fit:contain;
-        }
+        .p-media img{ width:100%; height:100%; object-fit:contain; }
         .p-placeholder{
             height:230px;
             background:#111;
@@ -153,12 +138,8 @@
             background:rgba(108,117,125,.12);
             color:#6c757d;
         }
-        .p-badge.cat{
-            background:rgba(13,110,253,.12);
-            color:#0d6efd;
-        }
+        .p-badge.cat{ background:rgba(13,110,253,.12); color:#0d6efd; }
 
-        /* ✅ Stock badge */
         .stock-badge{
             position:absolute;
             top:12px;
@@ -182,9 +163,23 @@
         .p-cta{ margin-top:14px; }
         .btn_1{ border-radius:999px; font-weight:800; letter-spacing:.2px; }
 
-        /* Optional: reduce footer contrast on bg */
         .footer_part{ background: transparent !important; }
         .copygight_text{ background: rgba(0,0,0,.20) !important; }
+
+        /* small nav pill buttons */
+        .nav-pill-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 14px;
+            border-radius:999px;
+            background: rgba(255,255,255,.12);
+            color:#fff;
+            font-weight:900;
+            text-decoration:none;
+            border:1px solid rgba(255,255,255,.18);
+        }
+        .nav-pill-btn:hover{ color:#fff; background: rgba(255,255,255,.18); }
     </style>
 </head>
 
@@ -210,16 +205,26 @@
                             <ul class="navbar-nav">
                                 <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('my_orders') }}">My Orders</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('orders_index') }}">Dashboard</a></li>
                             </ul>
                         </div>
+
+                        <div class="d-none d-lg-flex align-items-center" style="gap:10px;">
+                            <a class="nav-pill-btn" href="{{ path('shop_cart') }}">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                            </a>
+                            <a class="nav-pill-btn" href="{{ path('my_orders') }}">
+                                <i class="fas fa-receipt"></i> Orders
+                            </a>
+                        </div>
+
                     </nav>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- ✅ Compact hero -->
     <section class="breadcrumb breadcrumb_bg">
         <div class="container">
             <div class="row">
@@ -238,7 +243,13 @@
     <section class="section_padding">
         <div class="container">
 
-            <!-- Filters -->
+            {% for msg in app.flashes('success') %}
+                <div class="alert alert-success">{{ msg }}</div>
+            {% endfor %}
+            {% for msg in app.flashes('error') %}
+                <div class="alert alert-danger">{{ msg }}</div>
+            {% endfor %}
+
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-10">
                     <div class="filter-wrap">
@@ -274,7 +285,6 @@
                 </div>
             </div>
 
-            <!-- Products -->
             <div class="row">
                 {% for p in products %}
                     {% set imgSrc = null %}
@@ -335,7 +345,7 @@
                                     </p>
 
                                     <div class="p-cta">
-                                        <span class="btn_1 w-100 text-center">View & Order</span>
+                                        <span class="btn_1 w-100 text-center">View & Add to Cart</span>
                                     </div>
                                 </div>
 

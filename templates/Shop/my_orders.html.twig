@@ -15,6 +15,20 @@
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
         .wrap-card { background: #fff; border-radius: 10px; padding: 20px; }
         table td, table th { vertical-align: middle !important; }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 10px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:.78rem;
+            background: rgba(108,117,125,.12);
+            color:#6c757d;
+        }
+        .pill.blue{ background: rgba(13,110,253,.12); color:#0d6efd; }
+        .pill.green{ background: rgba(25,135,84,.12); color:#198754; }
+        .pill.red{ background: rgba(220,53,69,.12); color:#dc3545; }
     </style>
 </head>
 
@@ -31,6 +45,7 @@
                 <div class="collapse navbar-collapse main-menu-item">
                     <ul class="navbar-nav">
                         <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ path('shop_cart') }}">Cart</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ path('my_orders') }}">My Orders</a></li>
                     </ul>
                 </div>
@@ -52,10 +67,11 @@
                             <th>#</th>
                             <th>Reference</th>
                             <th>Status</th>
+                            <th>Payment</th>
                             <th>Total</th>
                             <th>Created</th>
                             <th>Customer</th>
-                            <th>Products</th>
+                            <th>Items</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -63,7 +79,23 @@
                             <tr>
                                 <td>{{ o.id }}</td>
                                 <td>{{ o.reference }}</td>
-                                <td>{{ o.status }}</td>
+
+                                <td>
+                                    <span class="pill blue">{{ o.status }}</span>
+                                </td>
+
+                                <td>
+                                    <div class="small"><b>Method:</b> {{ o.paymentMethod ?? 'COD' }}</div>
+                                    {% set ps = o.paymentStatus ?? 'PENDING' %}
+                                    {% if ps == 'PAID' %}
+                                        <span class="pill green">PAID</span>
+                                    {% elseif ps in ['FAILED','CANCELLED'] %}
+                                        <span class="pill red">{{ ps }}</span>
+                                    {% else %}
+                                        <span class="pill">{{ ps }}</span>
+                                    {% endif %}
+                                </td>
+
                                 <td>{{ (o.totalAmount ?? 0)|number_format(2, '.', '') }} TND</td>
                                 <td>{{ o.createdAt ? o.createdAt|date('Y-m-d H:i') : '-' }}</td>
 
@@ -74,7 +106,15 @@
                                 </td>
 
                                 <td>
-                                    {% if o.products is defined and o.products|length > 0 %}
+                                    {% if o.items is defined and o.items|length > 0 %}
+                                        {% for it in o.items %}
+                                            <div>
+                                                {{ it.product ? it.product.name : 'Product' }}
+                                                <span class="text-muted">x{{ it.quantity }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    {% elseif o.products is defined and o.products|length > 0 %}
+                                        {# fallback old relation #}
                                         {% for p in o.products %}
                                             <div>{{ p.name }}</div>
                                         {% endfor %}
@@ -85,7 +125,7 @@
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted">No orders yet.</td>
+                                <td colspan="8" class="text-center text-muted">No orders yet.</td>
                             </tr>
                         {% endfor %}
                         </tbody>

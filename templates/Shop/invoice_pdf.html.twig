@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color:#111; }
+        .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 18px; }
+        .title { font-size: 20px; font-weight: 900; }
+        .muted { color:#666; }
+        table { width:100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border:1px solid #ddd; padding:8px; }
+        th { background:#f6f6f6; text-align:left; }
+        .right { text-align:right; }
+        .totalrow { margin-top: 14px; text-align:right; font-size: 14px; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <div class="title">FACTURE</div>
+        <div class="muted">LevelUp eSport Platform</div>
+    </div>
+    <div>
+        <div><b>Référence:</b> {{ order.reference }}</div>
+        <div><b>Date:</b> {{ order.createdAt ? order.createdAt|date('Y-m-d H:i') : '' }}</div>
+        <div><b>Statut:</b> {{ order.status }}</div>
+    </div>
+</div>
+
+<div>
+    <div><b>Client:</b> {{ order.customerFirstName }} {{ order.customerLastName }}</div>
+    <div><b>Email:</b> {{ order.customerEmail }}</div>
+    <div><b>Tél:</b> {{ order.customerPhone }}</div>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Article</th>
+        <th class="right">Qté</th>
+        <th class="right">Prix</th>
+        <th class="right">Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% if order.items is defined and order.items|length > 0 %}
+        {% for it in order.items %}
+            <tr>
+                <td>{{ it.product ? it.product.name : 'Produit' }}</td>
+                <td class="right">{{ it.quantity }}</td>
+                <td class="right">{{ (it.unitPrice ?? 0)|number_format(2,'.','') }} TND</td>
+                <td class="right">{{ ((it.unitPrice ?? 0) * it.quantity)|number_format(2,'.','') }} TND</td>
+            </tr>
+        {% endfor %}
+    {% else %}
+        {% for p in order.products %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td class="right">1</td>
+                <td class="right">{{ (p.price ?? 0)|number_format(2,'.','') }} TND</td>
+                <td class="right">{{ (p.price ?? 0)|number_format(2,'.','') }} TND</td>
+            </tr>
+        {% endfor %}
+    {% endif %}
+    </tbody>
+</table>
+
+<div class="totalrow">
+    Total: {{ (order.totalAmount ?? 0)|number_format(2,'.','') }} TND
+</div>
+
+<div class="muted" style="margin-top:10px;">
+    Paiement: {{ order.paymentMethod ?? 'COD' }} — Statut paiement: {{ order.paymentStatus ?? 'PENDING' }}
+</div>
+
+</body>
+</html>

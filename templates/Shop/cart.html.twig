@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zxx">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Cart</title>
+
+    <base href="/front_template/">
+
+    <link rel="icon" href="img/favicon.png">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
+
+        .body_bg{
+            position: relative;
+            min-height: 100vh;
+            background: url("img/breadcrumb.png") center/cover no-repeat fixed;
+        }
+        .body_bg::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background: linear-gradient(135deg, rgba(0,0,0,.68), rgba(0,0,0,.38));
+            pointer-events:none;
+            z-index:0;
+        }
+        .body_bg > *{ position:relative; z-index:1; }
+
+        .section_padding{ padding: 45px 0 80px !important; }
+
+        .wrap-card{
+            background: rgba(255,255,255,.95);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow:0 18px 55px rgba(0,0,0,.28);
+            border:1px solid rgba(255,255,255,.20);
+            backdrop-filter: blur(8px);
+        }
+        table td, table th{ vertical-align: middle !important; }
+
+        .btn_1{ border-radius:999px; font-weight:900; }
+        .qty-input{
+            width: 90px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,.12);
+            text-align:center;
+        }
+        .mini-img{
+            width:60px;height:60px;object-fit:contain;
+            border-radius:12px;background:#fff;
+            border:1px solid rgba(0,0,0,.08);
+            padding:6px;
+        }
+        .muted{ color:#6c757d; }
+    </style>
+</head>
+
+<body>
+<div class="body_bg">
+
+    <header class="main_menu single_page_menu">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <a class="navbar-brand" href="/">
+                    <img src="img/levelup_logo.png" alt="LevelUp">
+                </a>
+
+                <div class="collapse navbar-collapse main-menu-item">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="{{ path('shop_products') }}">Shop</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ path('my_orders') }}">My Orders</a></li>
+                    </ul>
+                </div>
+
+                <a href="{{ path('shop_products') }}" class="btn_1 d-none d-sm-block">Back To Shop</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="section_padding">
+        <div class="container">
+
+            {% for msg in app.flashes('success') %}
+                <div class="alert alert-success">{{ msg }}</div>
+            {% endfor %}
+            {% for msg in app.flashes('error') %}
+                <div class="alert alert-danger">{{ msg }}</div>
+            {% endfor %}
+
+            <div class="wrap-card">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <h3 class="m-0" style="font-weight:900;">Your Cart</h3>
+                    <a href="{{ path('shop_checkout') }}" class="btn btn-primary" style="border-radius:999px;font-weight:900;">
+                        Checkout <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                {% if lines is empty %}
+                    <div class="alert alert-info m-0">
+                        Your cart is empty. <a href="{{ path('shop_products') }}">Continue shopping</a>
+                    </div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                                <th>Total</th>
+                                <th style="width:120px;">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for line in lines %}
+                                {% set p = line.product %}
+                                {% set imgSrc = null %}
+                                {% if p.image %}
+                                    {% if p.image starts with('http') or p.image starts with('/') %}
+                                        {% set imgSrc = p.image %}
+                                    {% else %}
+                                        {% set imgSrc = asset('uploads/products/' ~ p.image) %}
+                                    {% endif %}
+                                {% endif %}
+
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center" style="gap:12px;">
+                                            {% if imgSrc %}
+                                                <img class="mini-img" src="{{ imgSrc }}" alt="{{ p.name }}"
+                                                     onerror="this.onerror=null;this.src='{{ asset('uploads/products/placeholder.png') }}';">
+                                            {% else %}
+                                                <div class="mini-img d-flex align-items-center justify-content-center muted">No img</div>
+                                            {% endif %}
+                                            <div>
+                                                <div style="font-weight:900;">{{ p.name }}</div>
+                                                <div class="muted small">{{ p.category ?? '-' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <form method="post" action="{{ path('shop_cart_update', {id: p.id}) }}" class="d-flex align-items-center" style="gap:10px;">
+                                            <input class="qty-input" type="number" min="0" max="20" name="qty" value="{{ line.qty }}">
+                                            <button class="btn btn-sm btn-outline-primary" type="submit" style="border-radius:999px;font-weight:900;">
+                                                Update
+                                            </button>
+                                        </form>
+                                        <div class="muted small mt-1">Set 0 to remove</div>
+                                    </td>
+
+                                    <td>{{ (p.price ?? 0)|number_format(2, '.', '') }} TND</td>
+                                    <td>{{ line.lineTotal }} TND</td>
+
+                                    <td>
+                                        <form method="post" action="{{ path('shop_cart_remove', {id: p.id}) }}">
+                                            <button class="btn btn-sm btn-outline-danger w-100" type="submit" style="border-radius:999px;font-weight:900;">
+                                                Remove
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <div style="min-width: 260px;">
+                            <div class="d-flex justify-content-between">
+                                <div class="muted">Total</div>
+                                <div style="font-weight:900;font-size:1.1rem;">{{ total }} TND</div>
+                            </div>
+                            <a href="{{ path('shop_checkout') }}" class="btn btn-primary w-100 mt-2" style="border-radius:999px;font-weight:900;">
+                                Proceed to Checkout
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </section>
+
+</div>
+
+<script src="js/jquery-1.12.1.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,17 +1,26 @@
 # This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
 
 parameters:
     product_images_dir: '%kernel.project_dir%/public/uploads/products'
+    app.mail_from: '%env(APP_MAIL_FROM)%'
 
 services:
     _defaults:
         autowire: true
         autoconfigure: true
 
+    # Auto-register everything in src/
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # Explicit mailer service with FROM email
+    App\Service\OrderMailer:
+        arguments:
+            $fromEmail: '%app.mail_from%'
+
+    # Explicit PDF generator (force register)
+    App\Service\InvoicePdfGenerator: ~

@@ -31,8 +31,7 @@ class Product
     #[Assert\NotBlank(message: "Price is required and musts be a valid number (exp : 10 /10.5 ..).")]
     #[Assert\Positive(message: "Price must be greater than 0.")]
     #[Assert\Regex(
-        pattern: "/^\d+(\.\d{1,2})?$/",
-        
+        pattern: "/^\d+(\.\d{1,2})?$/"
     )]
     private ?string $price = null;
 
@@ -52,6 +51,10 @@ class Product
         message: "Please select a valid category."
     )]
     private ?string $category = null;
+
+    // ✅ NEW: soft delete flag
+    #[ORM\Column(options: ['default' => true])]
+    private bool $isActive = true;
 
     /**
      * @var Collection<int, Order>
@@ -78,7 +81,6 @@ class Product
     public function getStock(): ?int { return $this->stock; }
     public function setStock(int $stock): static { $this->stock = $stock; return $this; }
 
-    
     public function decreaseStock(int $qty = 1): self
     {
         $current = (int) ($this->stock ?? 0);
@@ -97,6 +99,10 @@ class Product
 
     public function getCategory(): ?string { return $this->category; }
     public function setCategory(?string $category): static { $this->category = $category; return $this; }
+
+    // ✅ Soft delete accessors
+    public function isActive(): bool { return $this->isActive; }
+    public function setIsActive(bool $isActive): static { $this->isActive = $isActive; return $this; }
 
     public function getOrders(): Collection { return $this->orders; }
 

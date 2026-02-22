@@ -14,13 +14,11 @@
     <style>
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
 
-        /* ✅ Whole page background */
         .body_bg{
             position: relative;
             min-height: 100vh;
             background: url("img/latest_war_img_1.png") center/cover no-repeat fixed;
         }
-        /* if your file is jpg, change to latest_war_img_1.jpg */
         .body_bg::before{
             content:"";
             position:absolute;
@@ -33,7 +31,6 @@
 
         .section_padding{ padding: 45px 0 80px !important; }
 
-        /* Layout cards */
         .panel{
             background: rgba(255,255,255,.95);
             border: 1px solid rgba(255,255,255,.20);
@@ -44,7 +41,6 @@
         }
         .panel-inner{ padding: 18px; }
 
-        /* Product media */
         .media-wrap{
             background: linear-gradient(180deg,#f6f7f9,#ffffff);
             border-radius: 16px;
@@ -70,7 +66,6 @@
             color:#777;
         }
 
-        /* Badges */
         .pill{
             display:inline-flex;
             align-items:center;
@@ -104,7 +99,6 @@
         .stock-low{ background: rgba(255,193,7,.95); color:#111; }
         .stock-out{ background: rgba(220,53,69,.95); color:#fff; }
 
-        /* Product text */
         .p-title{ font-weight: 900; font-size: 1.6rem; margin: 12px 0 6px; color:#111; }
         .p-desc{ color:#6c757d; margin: 0; line-height: 1.55; }
         .price{
@@ -118,14 +112,12 @@
             margin: 14px 0;
         }
 
-        /* Order form */
         .form-label{ font-weight: 800; margin-bottom: 6px; }
         .form-control{
             border-radius: 12px;
             border: 1px solid rgba(0,0,0,.12);
             height: 46px;
         }
-        textarea.form-control{ height:auto; }
         .form-control:focus{
             border-color: rgba(13,110,253,.50);
             box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
@@ -141,6 +133,20 @@
             font-size:.92rem;
             margin-top: 12px;
         }
+
+        .nav-pill-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 14px;
+            border-radius:999px;
+            background: rgba(255,255,255,.12);
+            color:#fff;
+            font-weight:900;
+            text-decoration:none;
+            border:1px solid rgba(255,255,255,.18);
+        }
+        .nav-pill-btn:hover{ color:#fff; background: rgba(255,255,255,.18); }
     </style>
 </head>
 
@@ -161,7 +167,12 @@
                     </ul>
                 </div>
 
-                <a href="{{ path('shop_products') }}" class="btn_1 d-none d-sm-block">Back To Shop</a>
+                <div class="d-none d-sm-flex align-items-center" style="gap:10px;">
+                    <a class="nav-pill-btn" href="{{ path('shop_cart') }}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                    </a>
+                    <a class="btn_1 d-none d-md-block" href="{{ path('shop_products') }}">Back To Shop</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -169,6 +180,9 @@
     <section class="section_padding">
         <div class="container">
 
+            {% for msg in app.flashes('success') %}
+                <div class="alert alert-success">{{ msg }}</div>
+            {% endfor %}
             {% for msg in app.flashes('error') %}
                 <div class="alert alert-danger">{{ msg }}</div>
             {% endfor %}
@@ -177,11 +191,8 @@
                 <div class="panel-inner">
                     <div class="row g-4 align-items-start">
 
-                        <!-- LEFT: Product -->
                         <div class="col-lg-6">
                             <div class="media-wrap">
-
-                                {# ✅ Stock badge (only if stock exists) #}
                                 {% if product.stock is defined %}
                                     {% if product.stock <= 0 %}
                                         <span class="stock-badge stock-out">Out of stock</span>
@@ -236,35 +247,18 @@
                             </p>
                         </div>
 
-                        <!-- RIGHT: Order Form -->
                         <div class="col-lg-6">
                             <div class="panel" style="box-shadow:none;">
                                 <div class="panel-inner">
-                                    <h4 class="mb-3" style="font-weight:900;color:#111;">Your information</h4>
+                                    <h4 class="mb-3" style="font-weight:900;color:#111;">Add to cart</h4>
 
                                     <form method="post"
-                                          action="{{ path('shop_order_product', {id: product.id}) }}"
+                                          action="{{ path('shop_cart_add', {id: product.id}) }}"
                                           novalidate>
 
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">First Name</label>
-                                                <input class="form-control" name="firstName" placeholder="Your first name">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Last Name</label>
-                                                <input class="form-control" name="lastName" placeholder="Your last name">
-                                            </div>
-                                        </div>
-
                                         <div class="mb-3">
-                                            <label class="form-label">Phone</label>
-                                            <input class="form-control" name="phone" placeholder="+216 ...">
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" class="form-control" name="email" placeholder="you@example.com">
+                                            <label class="form-label">Quantity</label>
+                                            <input type="number" min="1" max="20" value="1" name="qty" class="form-control">
                                         </div>
 
                                         {% if product.stock is defined and product.stock <= 0 %}
@@ -276,14 +270,21 @@
                                             </button>
                                         {% else %}
                                             <button class="btn_1 w-100" type="submit">
-                                                <i class="fas fa-shopping-cart mr-2"></i> Confirm Order
+                                                <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
                                             </button>
                                         {% endif %}
 
                                         <p class="help-note mb-0">
-                                            By confirming, your order will appear in <b>My Orders</b>.
+                                            Then go to <b>Cart</b> to checkout and choose payment method.
                                         </p>
                                     </form>
+
+                                    <div class="mt-3 d-grid">
+                                        <a href="{{ path('shop_cart') }}" class="btn btn-outline-primary" style="border-radius:999px;font-weight:900;">
+                                            <i class="fas fa-arrow-right mr-1"></i> Go to Cart
+                                        </a>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>

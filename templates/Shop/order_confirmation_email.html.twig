@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<body style="font-family: Arial, sans-serif; color:#111;">
+<h2 style="margin:0 0 10px;">✅ Confirmation de commande</h2>
+
+<p style="margin:0 0 6px;">
+    Bonjour <b>{{ order.customerFirstName }}</b> {{ order.customerLastName }},
+</p>
+
+<p style="margin:0 0 12px;">
+    Votre commande <b>{{ order.reference }}</b> a été bien enregistrée.
+</p>
+
+<div style="padding:12px; border:1px solid #eee; border-radius:10px; margin-bottom:12px;">
+    <div><b>Total:</b> {{ (order.totalAmount ?? 0)|number_format(2,'.','') }} TND</div>
+    <div><b>Paiement:</b> {{ order.paymentMethod ?? 'COD' }} — <b>Statut:</b> {{ order.paymentStatus ?? 'PENDING' }}</div>
+    <div><b>Date:</b> {{ order.createdAt ? order.createdAt|date('Y-m-d H:i') : '' }}</div>
+</div>
+
+<p style="margin:0 0 12px;">
+    📎 Vous trouverez votre <b>facture PDF</b> en pièce jointe.
+</p>
+
+<p style="margin:0;">
+    Merci,<br>
+    <b>LevelUp</b>
+</p>
+</body>
+</html>

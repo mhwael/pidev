@@ -22,6 +22,13 @@
     .dotGreen { background:#198754; }
 
     .sortbar .btn { border-radius: 10px; }
+
+    .badge-soft{
+        border-radius: 999px;
+        padding: .35rem .6rem;
+        font-weight: 800;
+        font-size: .78rem;
+    }
 </style>
 
 <div class="page-header mb-4">
@@ -50,13 +57,20 @@
     </div>
 </div>
 
+{# Flash messages #}
+{% for msg in app.flashes('success') %}
+    <div class="alert alert-success">{{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('error') %}
+    <div class="alert alert-danger">{{ msg }}</div>
+{% endfor %}
+
 {# ✅ SORT BAR + RESET #}
 <div class="card mb-3">
     <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2 sortbar">
         <div class="fw-bold">Sort products</div>
 
         <div class="d-flex gap-2 flex-wrap align-items-center">
-            {# Price sort #}
             <a class="btn btn-outline-secondary btn-sm {{ sort == 'price' ? 'active' : '' }}"
                href="{{ path('product_index', {
                    sort: 'price',
@@ -69,7 +83,6 @@
                 {% endif %}
             </a>
 
-            {# Orders sort #}
             <a class="btn btn-outline-secondary btn-sm {{ sort == 'orders' ? 'active' : '' }}"
                href="{{ path('product_index', {
                    sort: 'orders',
@@ -82,7 +95,6 @@
                 {% endif %}
             </a>
 
-            {# Reset button: back to normal without query params #}
             {% if hasSort %}
                 <a class="btn btn-light-brand btn-sm" href="{{ path('product_index') }}">
                     <i class="feather-refresh-ccw me-1"></i>Reset
@@ -92,7 +104,7 @@
     </div>
 </div>
 
-{# ✅ TABLE FIRST (FULL WIDTH) #}
+{# ✅ TABLE + ML #}
 <div class="card mb-4">
     <div class="card-body">
         <div class="table-responsive">
@@ -105,6 +117,8 @@
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Orders</th>
+                    <th class="text-nowrap">Pred (7d)</th>
+                    <th class="text-nowrap">Reorder</th>
                     <th>Image</th>
                     <th class="text-nowrap">Actions</th>
                 </tr>
@@ -121,6 +135,8 @@
                         {% set dotClass = 'dotYellow' %}
                     {% endif %}
 
+                    {% set fc = forecastMap[p.id]|default(null) %}
+
                     <tr>
                         <td>{{ p.id }}</td>
                         <td>
@@ -131,14 +147,50 @@
                         <td>{{ p.price }}</td>
                         <td>{{ p.stock }}</td>
                         <td><strong>{{ ordersCount }}</strong></td>
-                        <td>{{ p.image ?? '-' }}</td>
+
                         <td class="text-nowrap">
-                            <a href="{{ path('product_show', {id: p.id}) }}" class="btn btn-sm btn-light me-1">
+                            {% if fc %}
+                                <div style="font-weight:800;">
+                                    {{ (fc.predictedQty + 0)|number_format(2, '.', '') }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ fc.generatedAt ? fc.generatedAt|date('Y-m-d H:i') : '' }}
+                                </small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        {# ✅ Reorder is computed LIVE: if you change stock, it must change immediately #}
+                        <td class="text-nowrap">
+                            {% if fc %}
+                                {% set pred = (fc.predictedQty + 0) %}
+                                {% set stock = p.stock|default(0) %}
+                                {% set buffer = 1 %}
+                                {% set need = (pred + buffer) - stock %}
+                                {% set reorder = need > 0 ? need|round(0, 'ceil') : 0 %}
+
+                                {% if reorder > 0 %}
+                                    <span class="badge bg-danger badge-soft">+{{ reorder }}</span>
+                                {% else %}
+                                    <span class="badge bg-success badge-soft">OK</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ p.image ?? '-' }}</td>
+
+                        <td class="text-nowrap">
+                            <a href="{{ path('product_edit', {id: p.id}) }}" class="btn btn-sm btn-light me-1">
                                 <i class="feather-eye"></i> Show
                             </a>
+
                             <a href="{{ path('product_edit', {id: p.id}) }}" class="btn btn-sm btn-primary me-1">
                                 <i class="feather-edit-2"></i> Edit
                             </a>
+
                             <form method="post"
                                   action="{{ path('product_delete', {id: p.id}) }}"
                                   class="d-inline"
@@ -152,7 +204,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No products found.</td>
+                        <td colspan="10" class="text-center text-muted">No products found.</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -161,7 +213,7 @@
     </div>
 </div>
 
-{# ✅ TOP STATS UNDER TABLE (FULL WIDTH) #}
+{# ✅ TOP STATS #}
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card">
@@ -224,7 +276,7 @@
     </div>
 </div>
 
-{# ✅ CATEGORY PIE + COUNTS UNDER STATS (FULL WIDTH) #}
+{# ✅ CATEGORY PIE + COUNTS #}
 <div class="row g-3">
     <div class="col-lg-6">
         <div class="card h-100">
@@ -247,11 +299,7 @@
                     {% set deg = end %}
                 {% endfor %}
 
-                {% if gradientParts|length == 0 %}
-                    {% set gradient = '#ddd 0deg 360deg' %}
-                {% else %}
-                    {% set gradient = gradientParts|join(', ') %}
-                {% endif %}
+                {% set gradient = gradientParts|length == 0 ? '#ddd 0deg 360deg' : gradientParts|join(', ') %}
 
                 <div class="pieWrap mt-3">
                     <div class="pie" style="background: conic-gradient({{ gradient }});"></div>
