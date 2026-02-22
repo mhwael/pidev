@@ -1,0 +1,45 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}All Games{% endblock %}
+
+{% block body %}
+<section class="breadcrumb breadcrumb_bg" style="background-color: #1b1b2f; padding: 80px 0;">
+    <div class="container text-center">
+        <h2 class="text-white display-4 font-weight-bold">Game Library</h2>
+        <p class="text-muted">Choose a game to see guides and reviews</p>
+    </div>
+</section>
+
+<section class="section_padding">
+    <div class="container">
+        <div class="row">
+            {% for game in games %}
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-dark text-white border-0 shadow-lg h-100">
+                        {# ✨ FIXED: Path changed from uploads/games to uploads/products #}
+                        {% if game.coverImage %} 
+                             <img src="{{ asset('uploads/guide/' ~ game.coverImage) }}" 
+                                  class="card-img-top" 
+                                  alt="{{ game.name }}"
+                                  style="height: 250px; object-fit: cover;">
+                        {% else %}
+                             <div class="d-flex align-items-center justify-content-center bg-secondary" style="height: 250px;">
+                                 <i class="fas fa-gamepad fa-3x"></i>
+                             </div>
+                        {% endif %}
+
+                        <div class="card-body text-center">
+                            <h4 class="card-title font-weight-bold">{{ game.name }}</h4>
+                            <a href="{{ path('front_game_show', {'id': game.id}) }}" class="btn_3 mt-2">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center text-white">
+                    <p>No games available right now.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
