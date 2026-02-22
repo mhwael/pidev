@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Guide;
 use App\Entity\Game;
 use App\Entity\GuideRating;
+use App\Form\FrontGuideRatingType;
 use App\Repository\GuideRepository;
 use App\Repository\GameRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,35 +28,42 @@ class GuideFrontController extends AbstractController
     #[Route('/guides/{id}', name: 'front_guide_show', methods: ['GET', 'POST'])]
     public function show(Guide $guide, Request $request, EntityManagerInterface $em): Response
     {
-        // 1. Handle Guide Rating Submission
-        if ($request->isMethod('POST')) {
+        // 1. Create a fresh Rating object
+        $rating = new GuideRating();
+
+        // 2. Create the Form (FrontGuideRatingType)
+        $form = $this->createForm(FrontGuideRatingType::class, $rating);
+        $form->handleRequest($request);
+
+        // 3. Handle Form Submission
+        if ($form->isSubmitted() && $form->isValid()) {
+            
             $user = $this->getUser();
+            
+            // Security Check
             if (!$user) {
                 $this->addFlash('error', 'You must be logged in to rate a guide.');
                 return $this->redirectToRoute('app_login');
             }
 
-            $comment = $request->request->get('comment');
-            $ratingVal = $request->request->get('ratingValue');
+            // ✨ Set the missing data automatically
+            $rating->setUser($user);
+            $rating->setGuide($guide); // Link to the current guide
+            $rating->setCreatedAt(new \DateTimeImmutable());
 
-            if ($comment && $ratingVal) {
-                $rating = new GuideRating();
-                $rating->setGuide($guide);
-                $rating->setUser($user);
-                $rating->setComment($comment); // Matches your getComment/setComment
-                $rating->setRatingValue((int)$ratingVal); // Matches your getRatingValue/setRatingValue
-                $rating->setCreatedAt(new \DateTimeImmutable()); // Required based on your entity
+            $em->persist($rating);
+            $em->flush();
 
-                $em->persist($rating);
-                $em->flush();
-
-                $this->addFlash('success', 'Thank you! Your feedback has been posted.');
-                return $this->redirectToRoute('front_guide_show', ['id' => $guide->getId()]);
-            }
+            $this->addFlash('success', 'Thank you! Your feedback has been posted.');
+            
+            // Redirect to avoid form re-submission
+            return $this->redirectToRoute('front_guide_show', ['id' => $guide->getId()]);
         }
 
+        // 4. Render the page with the form view
         return $this->render('guide_front/show.html.twig', [
             'guide' => $guide,
+            'ratingForm' => $form->createView(), // 🚀 THIS LINE FIXES YOUR ERROR
         ]);
     }
 

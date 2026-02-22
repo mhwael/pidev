@@ -24,7 +24,7 @@
       <div class="row">
          <div class="col-lg-8 posts-list">
             <div class="single-post">
-               
+                
                <div class="feature-img">
                   {% if guide.coverImage %}
                       <img class="img-fluid" src="{{ asset('uploads/guide/' ~ guide.coverImage) }}" alt="{{ guide.title }}" style="width:100%; max-height: 500px; object-fit: cover; border-radius: 10px; margin-bottom: 30px;">
@@ -36,12 +36,12 @@
                <div class="blog_details">
                   <h2>{{ guide.title }}</h2>
                   <ul class="blog-info-link mt-3 mb-4">
-                     <li><a href="#"><i class="far fa-user"></i> Game: {{ guide.game.name }}</a></li>
-                     <li><a href="#"><i class="far fa-comments"></i> Difficulty: {{ guide.difficulty }}</a></li>
+                      <li><a href="#"><i class="far fa-user"></i> Game: {{ guide.game.name }}</a></li>
+                      <li><a href="#"><i class="far fa-comments"></i> Difficulty: {{ guide.difficulty }}</a></li>
                   </ul>
                   
                   <p class="excert">
-                     {{ guide.description|nl2br }}
+                      {{ guide.description|nl2br }}
                   </p>
 
                   <div class="quote-wrapper">
@@ -53,13 +53,31 @@
                           <div class="step-item mb-5 border-bottom pb-4">
                               <h4 class="mb-3" style="color: #ff005c;">Step {{ step.stepOrder }}: {{ step.title }}</h4>
                               
+                              {# ✨ SMART MEDIA LOGIC #}
                               {% if step.image %}
-                                  <img src="{{ asset('uploads/guide/' ~ step.image) }}" class="img-fluid my-3 rounded" style="max-height: 350px;">
+                                  <div class="step-media my-3">
+                                      {% if 'http' in step.image %}
+                                          {# API Logic #}
+                                          <img src="{{ step.image }}" 
+                                               alt="{{ step.title }}" 
+                                               class="img-fluid rounded" 
+                                               style="max-height: 350px; width: 100%; object-fit: cover; border: 2px solid #ff005c;">
+                                      {% else %}
+                                          {# Local Logic #}
+                                          <img src="{{ asset('uploads/guide/' ~ step.image) }}" 
+                                               alt="{{ step.title }}" 
+                                               class="img-fluid rounded" 
+                                               style="max-height: 350px;">
+                                      {% endif %}
+                                  </div>
                               {% endif %}
                               
                               {% if step.videoUrl %}
                                   <div class="video-container mt-3 mb-3">
-                                      <iframe width="100%" height="315" src="{{ step.videoUrl|replace({'watch?v=': 'embed/'}) }}" frameborder="0" allowfullscreen></iframe>
+                                      <iframe width="100%" height="315" 
+                                              src="{{ step.videoUrl|replace({'watch?v=': 'embed/'}) }}" 
+                                              frameborder="0" allowfullscreen>
+                                      </iframe>
                                   </div>
                               {% endif %}
                               
@@ -76,6 +94,8 @@
          {# SIDEBAR #}
          <div class="col-lg-4">
             <div class="blog_right_sidebar">
+               
+               {# 1. GAME INFO WIDGET #}
                <aside class="single_sidebar_widget post_category_widget" style="background: #111235; border: 1px solid #2a2b5e;">
                   <h4 class="widget_title" style="color: white;">Game Info</h4>
                   <ul class="list cat-list">
@@ -93,6 +113,73 @@
                      </li>
                   </ul>
                </aside>
+
+               {# ✨ 2. COMMUNITY REVIEWS WIDGET #}
+               <aside class="single_sidebar_widget post_category_widget" style="background: #111235; border: 1px solid #2a2b5e; margin-top: 30px;">
+                  <h4 class="widget_title" style="color: white;">Community Reviews</h4>
+                  
+                  {# A. THE RATING FORM #}
+                  <div class="rating-form-box mb-4">
+                      {% if app.user %}
+                          {{ form_start(ratingForm) }}
+                              
+                              {# 🚀 GLOBAL ERRORS (Just in case) #}
+                              <div style="color: #ff005c;">
+                                  {{ form_errors(ratingForm) }}
+                              </div>
+
+                              <div class="form-group">
+                                  {{ form_widget(ratingForm.ratingValue) }}
+                              </div>
+                              
+                              <div class="form-group mt-2">
+                                  {{ form_widget(ratingForm.comment) }}
+                                  
+                                  {# 🚀 THIS IS THE KEY PART: Displays the "Bad Word" Error #}
+                                  <div style="color: #ff005c; font-weight: bold; font-size: 0.9rem; margin-top: 5px;">
+                                      {{ form_errors(ratingForm.comment) }}
+                                  </div>
+                              </div>
+                              
+                            
+
+                          {{ form_end(ratingForm) }}
+                      {% else %}
+                          <div class="alert alert-dark text-center" style="background: #1f2042; border: 1px solid #2a2b5e;">
+                              <a href="{{ path('app_login') }}" style="color: #ff005c;">Login</a> to write a review.
+                          </div>
+                      {% endif %}
+                  </div>
+            
+                  <hr style="border-top: 1px solid #2a2b5e;">
+            
+                  {# B. THE REVIEW LIST #}
+                  <div class="review-list" style="max-height: 400px; overflow-y: auto;">
+                      {% for rating in guide.guideRatings %}
+                           <div class="review-item" style="border-bottom: 1px solid #2a2b5e; padding-bottom: 10px; margin-bottom: 15px;">
+                              <div class="d-flex justify-content-between">
+                                  <span style="color: #ffc107; font-size: 1.1rem;">
+                                      {% for i in 1..rating.ratingValue %}★{% endfor %}
+                                  </span>
+                                  <small style="color: #666;">{{ rating.createdAt|date('d M') }}</small>
+                              </div>
+                              
+                              {% if rating.comment %}
+                                  <p style="color: #ddd; font-size: 0.9rem; margin-top: 5px; font-style: italic;">
+                                      "{{ rating.comment }}"
+                                  </p>
+                              {% endif %}
+                              
+                              <p style="color: #888; font-size: 0.75rem; text-align: right; margin-bottom: 0;">
+                                  - {{ rating.user ? rating.user.email : 'Anonymous' }}
+                              </p>
+                           </div>
+                      {% else %}
+                          <p style="color: #888; text-align: center;">No reviews yet. Be the first!</p>
+                      {% endfor %}
+                  </div>
+               </aside>
+
             </div>
          </div>
       </div>
