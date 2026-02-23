@@ -83,14 +83,14 @@
                                 </span>
                             </div>
 
-                            <!-- Created Date (optionnel) -->
+                            <!-- Created Date -->
                             <p class="mb-3 text-muted small">
                                 <i class="fas fa-calendar me-1"></i>
                                 Created {{ team.createdAt|date('d/m/Y') }}
                             </p>
 
                             <!-- Action Button -->
-                            <a href="{{ path('app_team_show', {'id': team.id}) }}" class="btn_2 mt-auto d-block">
+                            <a href="{{ path('app_team_view', {'id': team.id}) }}" class="btn_2 mt-auto d-block">
                                 View Profile
                                 <i class="fas fa-arrow-right ms-2"></i>
                             </a>

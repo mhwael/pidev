@@ -112,15 +112,17 @@
                     <div class="mt-auto"></div>
 
                     <!-- Buttons -->
-                    <a href="{{ path('app_tournament_show', {'id': tournament.id}) }}"
+                    <a href="{{ path('app_tournament_view', {'id': tournament.id}) }}"
                        class="btn btn-outline-light btn-sm w-100 mb-2">
                         Voir Détails
                     </a>
 
                     {% if is_granted('IS_AUTHENTICATED_FULLY') and tournament.status == 'open' %}
-                        <a href="#" class="btn btn-success btn-sm w-100">
-                            Rejoindre
-                        </a>
+                    <button class="btn btn-success btn-sm w-100 join-btn"
+                        data-tournament-id="{{ tournament.id }}"
+                        data-token="{{ csrf_token('join_tournament') }}">
+                        Rejoindre
+                    </button>
                     {% endif %}
 
                 </div>
@@ -134,7 +136,30 @@
         {% endfor %}
 
     </div>
+</div> </section> <div class="modal fade" id="joinModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark text-white" style="border: 1px solid #444;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Rejoindre le tournoi</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Choisissez votre équipe :</label>
+                <select id="teamSelect" class="form-control bg-dark text-white border-secondary">
+                    <option>Chargement...</option>
+                </select>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="confirmJoin">Confirmer</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<section class="dummy-section">
 {% endblock %}
 
 {% block stylesheets %}
@@ -147,13 +172,120 @@
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0,0,0,0.4);
 }
+/* Fix modal blocked by theme */
+.modal {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop {
+    z-index: 9998 !important;
+}
+
+/* Ensure no parent container has a transform that resets z-index */
+body.modal-open .banner_part, 
+body.modal-open .container {
+    transform: none !important;
+    perspective: none !important;
+    filter: none !important;
+}
+
+/* Remove stacking context created by theme */
+.banner_part,
+header,
+.navbar,
+.section,
+.container {
+    transform: none !important;
+}
+.modal-backdrop {
+    display: none !important; /* Temporary test: if you can click now, the backdrop was the problem */
+}
+/* Better fix: */
+.modal {
+    background: rgba(0, 0, 0, 0.8); /* Manual backdrop */
+}
 </style>
 {% endblock %}
 
 {% block javascripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    let selectedTournament = null;
 
+    // Use jQuery (which your template already loads) for the modal
+    const $modal = $('#joinModal');
+
+    document.querySelectorAll('.join-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            selectedTournament = this.dataset.tournamentId;
+            
+            fetch('/api/user/teams')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('teamSelect');
+                    select.innerHTML = '';
+                    const teams = data.teams;
+
+                    if (!teams || teams.length === 0) {
+                        select.innerHTML = '<option value="">Aucune équipe disponible</option>';
+                    } else {
+                        teams.forEach(team => {
+                            const option = document.createElement('option');
+                            option.value = team.id;
+                            option.textContent = `${team.name} (ELO ${team.elo})`;
+                            select.appendChild(option);
+                        });
+                    }
+                    // Trigger modal show via jQuery to match template version
+                    $modal.modal('show');
+                });
+        });
+    });
+
+    /*
+     * STEP 2 — CONFIRM JOIN (ONLY ONE LISTENER)
+     */
+    document.getElementById('confirmJoin').addEventListener('click', function () {
+
+        const teamId = document.getElementById('teamSelect').value;
+
+        if (!teamId) {
+            alert('Veuillez sélectionner une équipe.');
+            return;
+        }
+
+        const token = document.querySelector(
+            '.join-btn[data-tournament-id="' + selectedTournament + '"]'
+        ).dataset.token;
+
+        const formData = new FormData();
+        formData.append('teamId', teamId);
+        formData.append('tournamentId', selectedTournament);
+        formData.append('_token', token);
+
+        fetch('/tournament/join', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            alert(data.message);
+
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(err => {
+            console.error('Join error:', err);
+            alert('Erreur serveur.');
+        });
+
+    });
+
+    /*
+     * FILTER SYSTEM (unchanged)
+     */
     document.getElementById('searchInput').addEventListener('input', filterTournaments);
     document.getElementById('statusFilter').addEventListener('change', filterTournaments);
 

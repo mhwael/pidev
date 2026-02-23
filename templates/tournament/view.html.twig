@@ -1,0 +1,525 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}{{ tournament.name }} - Gaming Tournament{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <!-- Breadcrumb Section -->
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>{{ tournament.name }}</h2>
+                            <p>Home / Tournaments / {{ tournament.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tournament Header Section -->
+    <section class="padding_top" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 87, 34, 0.15) 100%);">
+        <div class="container">
+            <div class="row align-items-center mb-4">
+                <!-- Tournament Icon/Image -->
+                <div class="col-lg-4 col-md-6 text-center mb-4 mb-lg-0">
+                    <div class="tournament-icon d-inline-flex align-items-center justify-content-center" 
+                         style="width: 220px; height: 220px; background: linear-gradient(135deg, #ffc107 0%, #ff5722 100%); 
+                                border-radius: 20px; font-size: 80px; color: white; font-weight: bold; 
+                                box-shadow: 0 15px 50px rgba(255, 193, 7, 0.3); position: relative;">
+                        <i class="fas fa-trophy"></i>
+                        <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; background: #ff5722; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                            <span class="badge bg-danger">{{ tournament.status|upper|first }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 col-md-6">
+                    <!-- Tournament Name & Game -->
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 3rem;">{{ tournament.name }}</h1>
+                    <p class="text-warning fw-bold fs-5 mb-3">
+                        <i class="fas fa-gamepad me-2"></i>{{ tournament.game }}
+                    </p>
+
+                    <!-- Status Badge -->
+                    <div class="mb-4">
+                        <span class="badge {% if tournament.status == 'open' %}bg-success{% elseif tournament.status == 'ongoing' %}bg-primary{% elseif tournament.status == 'completed' %}bg-secondary{% else %}bg-warning{% endif %}" 
+                              style="font-size: 1rem; padding: 0.6rem 1.2rem;">
+                            <i class="fas fa-circle me-2"></i>{{ tournament.status|upper }}
+                        </span>
+                    </div>
+
+                    <!-- Tournament Description -->
+                    {% if tournament.description %}
+                        <p class="text-light fs-5 mb-4 lh-lg">{{ tournament.description }}</p>
+                    {% else %}
+                        <p class="text-muted fs-5 mb-4 lh-lg">No description available</p>
+                    {% endif %}
+
+                    <!-- Quick Stats -->
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="stat-box p-2" style="background: rgba(255,255,255,0.05); border-left: 3px solid #ffc107; border-radius: 8px;">
+                                <small class="text-muted d-block">Format</small>
+                                <span class="text-warning fw-bold">{{ tournament.format }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="stat-box p-2" style="background: rgba(255,255,255,0.05); border-left: 3px solid #ff5722; border-radius: 8px;">
+                                <small class="text-muted d-block">Prize</small>
+                                <span class="text-info fw-bold">{% if tournament.prize %}{{ tournament.prize }}{% else %}TBA{% endif %}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="stat-box p-2" style="background: rgba(255,255,255,0.05); border-left: 3px solid #17a2b8; border-radius: 8px;">
+                                <small class="text-muted d-block">Teams</small>
+                                <span class="text-info fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 d-flex flex-wrap gap-2">
+                        <a href="{{ path('app_tournament') }}" class="btn btn-outline-light">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+
+                        {% if is_granted('IS_AUTHENTICATED_FULLY') and tournament.status == 'open' %}
+                            <button class="btn btn-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#registerModal">
+                                <i class="fas fa-plus me-2"></i>Register Your Team
+                            </button>
+                        {% endif %}
+
+                        {# NEW: AI Matchmaking Button #}
+                        {% if tournament.teams|length >= 2 %}
+                            <a href="{{ path('app_tournament_matchmaking', {'id': tournament.id}) }}" 
+                               class="btn btn-info fw-bold position-relative">
+                                <i class="fas fa-robot me-2"></i>AI Matchmaking
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                    AI
+                                </span>
+                            </a>
+                        {% endif %}
+
+                        {% if tournament.status == 'ongoing' %}
+                            <span class="badge bg-primary d-flex align-items-center px-3">Tournament is Live</span>
+                        {% elseif tournament.status == 'completed' %}
+                            <span class="badge bg-secondary d-flex align-items-center px-3">Tournament Completed</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Section -->
+    <section class="padding_top padding_bottom">
+        <div class="container">
+        <style>
+    .bracket-container {
+        display: flex;
+        justify-content: space-around;
+        padding: 40px 0;
+        background: rgba(0,0,0,0.2);
+        border-radius: 15px;
+    }
+    .round {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        width: 250px;
+    }
+    .matchup {
+        background: #2a2a2a;
+        margin: 10px 0;
+        border-radius: 8px;
+        border: 1px solid #444;
+        overflow: hidden;
+        transition: 0.3s;
+    }
+    .matchup:hover { border-color: #ffc107; }
+    .bracket-team {
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        color: #ddd;
+        font-size: 0.9rem;
+    }
+    .bracket-team.winner { color: #ffc107; font-weight: bold; background: rgba(255,193,7,0.1); }
+    .vs-divider { height: 1px; background: #444; }
+</style>
+
+<div class="container mt-5">
+    <h2 class="text-white mb-4"><i class="fas fa-sitemap text-warning me-2"></i>Tournament Bracket</h2>
+    
+    <div class="bracket-container">
+        {# We group matches by round #}
+        {% set totalRounds = 3 %} {# Adjust based on your tournament size #}
+        
+        {% for r in 1..totalRounds %}
+            <div class="round">
+                <h5 class="text-center text-muted mb-3 small uppercase">Round {{ r }}</h5>
+                {% for match in tournament.matches %}
+                    {% if match.round == r %}
+                        <div class="matchup shadow-lg">
+                            <div class="bracket-team {{ match.winner == match.team1 ? 'winner' : '' }}">
+                                <span>{{ match.team1.name }}</span>
+                                <span>{{ match.team1Score ?? '-' }}</span>
+                            </div>
+                            <div class="vs-divider"></div>
+                            <div class="bracket-team {{ match.winner == match.team2 ? 'winner' : '' }}">
+                                <span>{{ match.team2.name }}</span>
+                                <span>{{ match.team2Score ?? '-' }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+            <div class="row">
+                <!-- Left Column: Tournament Info -->
+                <div class="col-lg-8">
+                    <!-- Tournament Schedule -->
+                    <div class="card shadow-lg mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-calendar text-warning me-2"></i>Schedule & Dates
+                            </h3>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="schedule-item p-3 rounded" style="background: rgba(255,255,255,0.03); border-left: 4px solid #ffc107;">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-door-open me-2"></i>Registration Deadline
+                                        </small>
+                                        <h6 class="text-light fw-bold">{{ tournament.registrationDeadline|date('F d, Y - H:i') }}</h6>
+                                        {% set daysUntilDeadline = (tournament.registrationDeadline.timestamp - 'now'|date('U'))/86400 %}
+                                        {% if daysUntilDeadline > 0 %}
+                                            <small class="text-warning">{{ daysUntilDeadline|round(0) }} days remaining</small>
+                                        {% else %}
+                                            <small class="text-danger">Closed</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="schedule-item p-3 rounded" style="background: rgba(255,255,255,0.03); border-left: 4px solid #ff5722;">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-play-circle me-2"></i>Tournament Start
+                                        </small>
+                                        <h6 class="text-light fw-bold">{{ tournament.startDate|date('F d, Y - H:i') }}</h6>
+                                        <small class="text-info">{{ tournament.startDate|date('l') }}</small>
+                                    </div>
+                                </div>
+
+                                {% if tournament.endDate %}
+                                <div class="col-md-6">
+                                    <div class="schedule-item p-3 rounded" style="background: rgba(255,255,255,0.03); border-left: 4px solid #17a2b8;">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-flag-checkered me-2"></i>Tournament End
+                                        </small>
+                                        <h6 class="text-light fw-bold">{{ tournament.endDate|date('F d, Y - H:i') }}</h6>
+                                        <small class="text-info">Duration: ~{{ ((tournament.endDate.timestamp - tournament.startDate.timestamp)/86400)|round(0) }} days</small>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <div class="col-md-6">
+                                    <div class="schedule-item p-3 rounded" style="background: rgba(255,255,255,0.03); border-left: 4px solid #28a745;">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-users me-2"></i>Teams Capacity
+                                        </small>
+                                        <h6 class="text-light fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }}</h6>
+                                        {% set fillPercentage = (tournament.teams|length / tournament.maxTeams * 100) %}
+                                        <div class="progress mt-2" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: {{ fillPercentage > 100 ? 100 : fillPercentage }}%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tournament Details -->
+                    <div class="card shadow-lg mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-info-circle text-info me-2"></i>Tournament Details
+                            </h3>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block mb-2">Format</small>
+                                    <h6 class="text-light fw-bold">{{ tournament.format }}</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block mb-2">Game</small>
+                                    <h6 class="text-light fw-bold">{{ tournament.game }}</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block mb-2">Prize</small>
+                                    <h6 class="text-warning fw-bold">{% if tournament.prize %}{{ tournament.prize }}{% else %}To Be Announced{% endif %}</h6>
+                                </div>
+
+                                {% if tournament.rules %}
+                                <div class="col-12">
+                                    <small class="text-muted d-block mb-2">Rules</small>
+                                    <p class="text-light small mb-0">{{ tournament.rules }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registered Teams -->
+                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-users text-success me-2"></i>Registered Teams ({{ tournament.teams|length }})
+                            </h3>
+
+                            {% if tournament.teams|length > 0 %}
+                                <div class="row g-3">
+                                    {% for team in tournament.teams %}
+                                        <div class="col-md-6">
+                                            <div class="team-card p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    {% if team.logo %}
+                                        <img src="{{ team.logo }}" alt="{{ team.name }}" class="rounded" 
+                                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #ffc107; margin-right: 12px;">
+                                    {% else %}
+                                        <div class="avatar-text d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                    border-radius: 50%; font-size: 18px; color: white; font-weight: bold; margin-right: 12px;">
+                                            {{ team.name|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="{{ path('app_team_view', {'id': team.id}) }}" class="text-white fw-bold text-decoration-none hover-link">{{ team.name }}</a>
+                                        <small class="text-muted d-block">{{ team.members|length }} members</small>
+                                    </div>
+                                </div>
+                                {% if team.captain %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-crown text-warning me-1"></i>{{ team.captain.firstName }} {{ team.captain.lastName }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">No teams registered yet. Be the first!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Tournament Status Card -->
+                    <div class="card shadow-lg mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4 text-center">
+                            <h4 class="text-white fw-bold mb-3">Status</h4>
+                            <div class="status-badge p-3 rounded mb-3" 
+                                 style="background: {% if tournament.status == 'open' %}rgba(40, 167, 69, 0.2); border: 2px solid #28a745{% elseif tournament.status == 'ongoing' %}rgba(0, 123, 255, 0.2); border: 2px solid #007bff{% elseif tournament.status == 'completed' %}rgba(108, 117, 125, 0.2); border: 2px solid #6c757d{% else %}rgba(255, 193, 7, 0.2); border: 2px solid #ffc107{% endif %};">
+                                <span class="badge {% if tournament.status == 'open' %}bg-success{% elseif tournament.status == 'ongoing' %}bg-primary{% elseif tournament.status == 'completed' %}bg-secondary{% else %}bg-warning{% endif %}" style="font-size: 1.1rem; padding: 0.8rem 1.5rem;">
+                                    {{ tournament.status|upper }}
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                {% if tournament.status == 'open' %}
+                                    Registration is open. Join now!
+                                {% elseif tournament.status == 'ongoing' %}
+                                    Tournament is currently in progress
+                                {% elseif tournament.status == 'completed' %}
+                                    Tournament has finished
+                                {% else %}
+                                    Coming soon
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Key Information -->
+                    <div class="card shadow-lg mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h5 class="text-white fw-bold mb-4">Key Information</h5>
+                            
+                            <div class="info-item mb-4 pb-4 border-bottom border-secondary">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-trophy text-warning me-2"></i>Prize
+                                </small>
+                                <h6 class="text-warning fw-bold">{% if tournament.prize %}{{ tournament.prize }}{% else %}TBA{% endif %}</h6>
+                            </div>
+
+                            <div class="info-item mb-4 pb-4 border-bottom border-secondary">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-users text-info me-2"></i>Capacity
+                                </small>
+                                <h6 class="text-info fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }} Teams</h6>
+                            </div>
+
+
+                            <div class="info-item">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-gamepad text-primary me-2"></i>Game
+                                </small>
+                                <h6 class="text-light fw-bold">{{ tournament.game }}</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Organizer -->
+                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4 text-center">
+                            <h5 class="text-white fw-bold mb-3">Questions?</h5>
+                            <p class="text-muted small mb-3">Contact the tournament organizer for more information</p>
+                            <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#contactModal">
+                                <i class="fas fa-envelope me-2"></i>Contact Organizer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Related Tournaments Section -->
+    <section class="padding_top padding_bottom" style="background: rgba(255,255,255,0.02);">
+        <div class="container">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8">
+                    <div class="section_tittle text-center">
+                        <h2 class="text-white">Other Tournaments</h2>
+                        <p class="text-muted">Check out more exciting competitions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 text-center">
+                    <a href="{{ path('app_tournament') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>View All Tournaments
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modals -->
+<!-- Register Modal -->
+{% if is_granted('IS_AUTHENTICATED_FULLY') and tournament.status == 'open' %}
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="registerModalLabel">
+                    <i class="fas fa-plus text-warning me-2"></i>Register Team
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Select your team to register for <strong>{{ tournament.name }}</strong></p>
+                <select class="form-select bg-dark text-white border-secondary" id="teamSelect">
+                    <option value="">Choose your team...</option>
+                    <!-- Teams will be populated here if user has teams -->
+                </select>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning text-dark fw-bold">
+                    <i class="fas fa-check me-2"></i>Register
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="contactModalLabel">
+                    <i class="fas fa-envelope text-info me-2"></i>Contact Organizer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="contactName" placeholder="Your name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Your Email</label>
+                        <input type="email" class="form-control bg-dark text-white border-secondary" id="contactEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactMessage" class="form-label">Message</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" id="contactMessage" rows="4" placeholder="Your message..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info">
+                    <i class="fas fa-send me-2"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .team-card:hover {
+        background: rgba(255,255,255,0.08) !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .schedule-item {
+        transition: all 0.3s ease;
+    }
+
+    .schedule-item:hover {
+        background: rgba(255,255,255,0.08) !important;
+        transform: translateY(-3px);
+    }
+
+    .hover-link:hover {
+        color: #ffc107 !important;
+        text-decoration: underline !important;
+    }
+
+    .status-badge {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .tournament-icon {
+        animation: bounce 3s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+</style>
+{% endblock %}

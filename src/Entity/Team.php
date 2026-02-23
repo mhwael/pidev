@@ -49,6 +49,9 @@ class Team
     #[ORM\ManyToMany(targetEntity: Tournament::class, mappedBy: 'teams')]
     private Collection $tournaments;
 
+    #[ORM\OneToOne(mappedBy: 'team', targetEntity: TeamStats::class, cascade: ['persist', 'remove'])]
+    private ?TeamStats $stats = null;
+
     public function __construct()
     {
         $this->members = new ArrayCollection();
@@ -60,6 +63,61 @@ class Team
     public function setUpdatedAtValue(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+    * Get team stats (create if doesn't exist)
+    */
+    public function getStats(): ?TeamStats
+    {
+        if (!$this->stats) {
+            $this->stats = new TeamStats();
+            $this->stats->setTeam($this);
+    }
+        return $this->stats;
+    }  
+
+    public function setStats(?TeamStats $stats): static
+    {
+        if ($stats === null && $this->stats !== null) {
+            $this->stats->setTeam(null);
+    }
+
+        if ($stats !== null && $stats->getTeam() !== $this) {
+            $stats->setTeam($this);
+    }
+
+        $this->stats = $stats;
+
+        return $this;
+    }  
+
+    /**
+     * Get team strength (helper method)
+     */
+    public function getEloRating(): float
+    {
+        return $this->getStats()->getEloRating();
+    }
+
+    public function getWinRate(): float
+    {
+        return $this->getStats()->getWinRate();
+    }
+
+    public function getTotalWins(): int
+    {
+        return $this->getStats()->getTotalWins();
+    }
+
+    public function getTotalLosses(): int
+    {
+        return $this->getStats()->getTotalLosses();
+    }
+
+    public function getTotalGames(): int
+    {
+        return $this->getStats()->getTotalGames();
     }
 
     // Getters et Setters
