@@ -8,114 +8,125 @@
             <h1 class="h3 mb-0">Game Management</h1>
             <p class="text-muted mb-0">Manage supported games and their settings.</p>
         </div>
-        <a href="{{ path('app_game_new') }}" class="btn btn-primary">
-            <i class="feather-plus"></i> Create new
-        </a>
-    </div>
-
-    {# 📊 STATISTICS SECTION #}
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 bg-primary text-white">
-                <div class="card-body text-center">
-                    <h2 class="fw-bold mb-0">{{ stats.total }}</h2>
-                    <p class="mb-0 opacity-75">Total Games</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 bg-success text-white">
-                <div class="card-body text-center">
-                    <h2 class="fw-bold mb-0">{{ stats.ranked }}</h2>
-                    <p class="mb-0 opacity-75">Competitive (Ranked)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 bg-secondary text-white">
-                <div class="card-body text-center">
-                    <h2 class="fw-bold mb-0">{{ stats.unranked }}</h2>
-                    <p class="mb-0 opacity-75">Casual (No Ranking)</p>
-                </div>
-            </div>
+        <div>
+            {# ✨ 1. THE EXPORT BUTTON ✨ #}
+            <button onclick="downloadPDF()" class="btn btn-danger me-2 shadow-sm">
+                <i class="feather-download"></i> Export PDF
+            </button>
+            
+            <a href="{{ path('app_game_new') }}" class="btn btn-primary shadow-sm">
+                <i class="feather-plus"></i> Create new
+            </a>
         </div>
     </div>
 
-    {# 🔍 DYNAMIC SEARCH BAR #}
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="feather-search text-muted"></i></span>
-                <input type="text" id="liveSearch" class="form-control border-start-0 ps-0" placeholder="Type to search games by name or slug..." autocomplete="off">
+    {# ✨ 2. WRAP THE DASHBOARD IN AN ID FOR THE PDF ✨ #}
+    <div id="dashboard-content" style="background: white; padding: 20px; border-radius: 10px;">
+        
+        {# 📊 STATISTICS SECTION #}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h2 class="fw-bold mb-0">{{ stats.total }}</h2>
+                        <p class="mb-0 opacity-75">Total Games</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    {# 🎮 GAMES TABLE #}
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="gameTable">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Name</th>
-                            <th>Slug</th>
-                            <th>Ranking Support</th>
-                            <th>Created At</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for game in games %}
-                        <tr class="game-row">
-                            <td class="ps-4">
-                                <span class="fw-bold text-dark search-name">{{ game.name }}</span>
-                            </td>
-                            <td><code class="search-slug">{{ game.slug }}</code></td>
-                            <td>
-                                {% if game.hasRanking %}
-                                    <span class="badge bg-light-success text-success">
-                                        <i class="feather-check-circle me-1"></i>Yes
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-light-secondary text-muted">
-                                        <i class="feather-x-circle me-1"></i>No
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-muted small">
-                                {{ game.createdAt ? game.createdAt|date('Y-m-d') : 'N/A' }}
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="{{ path('app_game_show', {'id': game.id}) }}" class="btn btn-sm btn-outline-info">
-                                        <i class="feather-eye"></i>
-                                    </a>
-                                    <a href="{{ path('app_game_edit', {'id': game.id}) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="feather-edit"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="feather-box d-block mb-2 fs-2"></i>
-                                No records found
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                {# Hidden "No Results" Message #}
-                <div id="noResults" class="text-center py-5 d-none">
-                    <i class="feather-frown text-muted fs-1 mb-3"></i>
-                    <h6 class="text-muted">No matching games found.</h6>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 bg-success text-white">
+                    <div class="card-body text-center">
+                        <h2 class="fw-bold mb-0">{{ stats.ranked }}</h2>
+                        <p class="mb-0 opacity-75">Competitive (Ranked)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <h2 class="fw-bold mb-0">{{ stats.unranked }}</h2>
+                        <p class="mb-0 opacity-75">Casual (No Ranking)</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        {# 🔍 DYNAMIC SEARCH BAR #}
+        <div class="row mb-4" data-html2canvas-ignore="true"> {# We ignore the search bar in the PDF #}
+            <div class="col-md-12">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="feather-search text-muted"></i></span>
+                    <input type="text" id="liveSearch" class="form-control border-start-0 ps-0" placeholder="Type to search games by name or slug..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        {# 🎮 GAMES TABLE #}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="gameTable">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Name</th>
+                                <th>Slug</th>
+                                <th>Ranking Support</th>
+                                <th>Created At</th>
+                                <th class="text-end pe-4" data-html2canvas-ignore="true">Actions</th> {# Hide action buttons in PDF #}
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for game in games %}
+                            <tr class="game-row">
+                                <td class="ps-4">
+                                    <span class="fw-bold text-dark search-name">{{ game.name }}</span>
+                                </td>
+                                <td><code class="search-slug">{{ game.slug }}</code></td>
+                                <td>
+                                    {% if game.hasRanking %}
+                                        <span class="badge bg-light-success text-success">
+                                            <i class="feather-check-circle me-1"></i>Yes
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light-secondary text-muted">
+                                            <i class="feather-x-circle me-1"></i>No
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">
+                                    {{ game.createdAt ? game.createdAt|date('Y-m-d') : 'N/A' }}
+                                </td>
+                                <td class="text-end pe-4" data-html2canvas-ignore="true">
+                                    <div class="btn-group">
+                                        <a href="{{ path('app_game_show', {'id': game.id}) }}" class="btn btn-sm btn-outline-info">
+                                            <i class="feather-eye"></i>
+                                        </a>
+                                        <a href="{{ path('app_game_edit', {'id': game.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="feather-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="feather-box d-block mb-2 fs-2"></i>
+                                    No records found
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {# Hidden "No Results" Message #}
+                    <div id="noResults" class="text-center py-5 d-none">
+                        <i class="feather-frown text-muted fs-1 mb-3"></i>
+                        <h6 class="text-muted">No matching games found.</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> {# ✨ END OF DASHBOARD CONTENT ✨ #}
 
     {# ⚡ JAVASCRIPT FOR SEARCH #}
     <script>
@@ -129,19 +140,17 @@
                 let visibleCount = 0;
 
                 tableRows.forEach(row => {
-                    // Search by Name or Slug
                     const name = row.querySelector('.search-name').textContent.toLowerCase();
                     const slug = row.querySelector('.search-slug').textContent.toLowerCase();
 
                     if (name.includes(query) || slug.includes(query)) {
-                        row.style.display = ''; // Show
+                        row.style.display = ''; 
                         visibleCount++;
                     } else {
-                        row.style.display = 'none'; // Hide
+                        row.style.display = 'none'; 
                     }
                 });
 
-                // Show "No Results" message if everything is hidden
                 if (visibleCount === 0) {
                     noResultsMsg.classList.remove('d-none');
                 } else {
@@ -149,5 +158,26 @@
                 }
             });
         });
+    </script>
+
+    {# ✨ 3. JAVASCRIPT FOR PDF EXPORT ✨ #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadPDF() {
+            // Target the dashboard div
+            const element = document.getElementById('dashboard-content');
+            
+            // Configuration for a clean, professional landscape PDF
+            const opt = {
+              margin:       10,
+              filename:     'Game_Management_Report.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2 }, // High resolution
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            // Generate and download
+            html2pdf().set(opt).from(element).save();
+        }
     </script>
 {% endblock %}

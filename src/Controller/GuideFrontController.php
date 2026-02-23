@@ -13,6 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+// ✨ NEW: Import the HTTP Client so Symfony can talk to Python
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/')] 
 class GuideFrontController extends AbstractController
@@ -25,45 +27,67 @@ class GuideFrontController extends AbstractController
         ]);
     }
 
+    // ✨ NEW: Added HttpClientInterface $client here!
     #[Route('/guides/{id}', name: 'front_guide_show', methods: ['GET', 'POST'])]
-    public function show(Guide $guide, Request $request, EntityManagerInterface $em): Response
+    public function show(Guide $guide, Request $request, EntityManagerInterface $em, HttpClientInterface $client): Response
     {
-        // 1. Create a fresh Rating object
         $rating = new GuideRating();
-
-        // 2. Create the Form (FrontGuideRatingType)
         $form = $this->createForm(FrontGuideRatingType::class, $rating);
         $form->handleRequest($request);
 
-        // 3. Handle Form Submission
         if ($form->isSubmitted() && $form->isValid()) {
             
             $user = $this->getUser();
-            
-            // Security Check
             if (!$user) {
                 $this->addFlash('error', 'You must be logged in to rate a guide.');
                 return $this->redirectToRoute('app_login');
             }
 
-            // ✨ Set the missing data automatically
+            // 🚀 THE PRO WAY: Call your Python Microservice!
+            $commentText = $rating->getComment() ?? "";
+            
+            try {
+                // Send the text to Python
+                $response = $client->request('POST', 'http://127.0.0.1:8001/api/predict', [
+                    'json' => ['text' => $commentText]
+                ]);
+
+                // Read Python's answer
+                $aiData = $response->toArray();
+                $prediction = $aiData['sentiment']; // "HAPPY", "ANGRY", or "NEUTRAL"
+                $score = $aiData['score'];
+
+                // Create a cool message for the user
+                if ($prediction === 'HAPPY') {
+                    $aiMessage = "🤖 AI Analysis: We predict you are HAPPY (Score: {$score})! Glad you liked it.";
+                } elseif ($prediction === 'ANGRY') {
+                    $aiMessage = "🤖 AI Analysis: We predict you are FRUSTRATED (Score: {$score}). We will review this guide!";
+                } else {
+                    $aiMessage = "🤖 AI Analysis: Neutral feedback received.";
+                }
+
+            } catch (\Exception $e) {
+                // If the Python server is off, don't crash the website!
+                $aiMessage = "🤖 AI is currently sleeping, but your review was posted!";
+            }
+
+            // Save everything to the database
             $rating->setUser($user);
-            $rating->setGuide($guide); // Link to the current guide
+            $rating->setGuide($guide);
             $rating->setCreatedAt(new \DateTimeImmutable());
 
             $em->persist($rating);
             $em->flush();
 
-            $this->addFlash('success', 'Thank you! Your feedback has been posted.');
+            // Show the AI message!
+            $this->addFlash('success', 'Thank you! ' . $aiMessage);
             
-            // Redirect to avoid form re-submission
             return $this->redirectToRoute('front_guide_show', ['id' => $guide->getId()]);
         }
 
-        // 4. Render the page with the form view
         return $this->render('guide_front/show.html.twig', [
             'guide' => $guide,
-            'ratingForm' => $form->createView(), // 🚀 THIS LINE FIXES YOUR ERROR
+            'ratingForm' => $form->createView(),
         ]);
     }
 
@@ -83,4 +107,29 @@ class GuideFrontController extends AbstractController
             'guides' => $game->getGuides(), 
         ]);
     }
-}
+
+    #[Route('/ai-generator', name: 'front_ai_generator')]
+    public function generateGuide(Request $request, HttpClientInterface $client): Response
+    {
+        $topic = $request->query->get('topic');
+        $generatedText = null;
+
+        if ($topic) {
+            // We use a free, keyless text generation API wrapper for Large Language Models
+            $prompt = "Write a short, professional, step-by-step gaming guide for: " . $topic . ". Make it look like a gaming wiki article.";
+            
+            try {
+                // Send the prompt to the Generative AI
+                $response = $client->request('GET', 'https://text.pollinations.ai/' . urlencode($prompt));
+                $generatedText = $response->getContent(); // It returns pure text!
+            } catch (\Exception $e) {
+                $generatedText = "🤖 AI Error: The servers are currently overloaded. Please try again.";
+            }
+        }
+
+        return $this->render('guide_front/ai_generator.html.twig', [
+            'topic' => $topic,
+            'generatedText' => $generatedText,
+        ]);
+    }
+    }

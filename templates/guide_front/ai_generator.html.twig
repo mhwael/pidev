@@ -1,0 +1,116 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}AI Guide Generator{% endblock %}
+
+{% block body %}
+<section class="breadcrumb breadcrumb_bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb_iner text-center">
+                    <div class="breadcrumb_iner_item">
+                        <h2>🤖 AI Guide Generator</h2>
+                        <p>Powered by Generative Large Language Models</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section_padding">
+   <div class="container">
+      <div class="row justify-content-center">
+         <div class="col-lg-10">
+            
+            {# THE INPUT FORM #}
+            <div class="card shadow" style="background: #111235; border: 1px solid #ff005c; border-radius: 10px;">
+                <div class="card-body p-5 text-center">
+                    <h3 style="color: white; margin-bottom: 20px;">What do you want to create a guide for?</h3>
+                    
+                    <form method="GET" action="{{ path('front_ai_generator') }}">
+                        <div class="input-group mb-3">
+                            <input type="text" name="topic" class="form-control form-control-lg" 
+                                   placeholder="e.g. How to win early game in League of Legends" 
+                                   value="{{ topic }}" required
+                                   style="background: #1a1b4b; color: white; border: 1px solid #2a2b5e;">
+                            <div class="input-group-append">
+                                <button class="btn" type="submit" style="background: #ff005c; color: white; font-weight: bold; padding: 0 30px;">
+                                    Generate 🚀
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <p style="color: #888; font-size: 0.9rem;">The AI takes about 3-5 seconds to write your guide.</p>
+                </div>
+            </div>
+
+            {# THE AI OUTPUT & TOOLS (Only shows if text was generated) #}
+            {% if generatedText %}
+                
+                <div class="row mt-5">
+                    {# LEFT SIDE: THE TEXT #}
+                    <div class="col-lg-8">
+                        <div class="p-4 shadow h-100" style="background: #0d0e26; border-left: 5px solid #00e676; border-radius: 5px;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 style="color: #00e676; margin: 0;">✨ AI Result:</h4>
+                            </div>
+                            
+                            <div id="ai-output" style="color: #ddd; font-family: 'Courier New', Courier, monospace; font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap;">{{ generatedText }}</div>
+                        </div>
+                    </div>
+
+                    {# RIGHT SIDE: THE EXPORT TOOLS #}
+                    <div class="col-lg-4">
+                        <div class="p-4 shadow h-100 text-center" style="background: #111235; border: 1px solid #2a2b5e; border-radius: 5px;">
+                            <h4 style="color: white; margin-bottom: 20px;">Export Options</h4>
+                            
+                            {# 1. COPY BUTTON #}
+                            <button onclick="copyToClipboard()" class="btn w-100 mb-3" style="background: #2a2b5e; color: white;">
+                                📋 Copy Text
+                            </button>
+
+                            {# 2. DOWNLOAD BUTTON (JS API) #}
+                            <button onclick="downloadGuide()" class="btn w-100 mb-4" style="background: #00e676; color: black; font-weight: bold;">
+                                💾 Download as .txt
+                            </button>
+
+                            <hr style="border-color: #2a2b5e;">
+
+                            {# 3. QR CODE API #}
+                            <h5 style="color: #ccc; font-size: 1rem; margin-bottom: 10px;">Share this Prompt on Mobile</h5>
+                            <div style="background: white; padding: 10px; display: inline-block; border-radius: 5px;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ url('front_ai_generator', {'topic': topic}) | url_encode }}" 
+                                     alt="Scan to open" 
+                                     style="width: 150px; height: 150px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# ✨ THE JAVASCRIPT LOGIC ✨ #}
+                <script>
+                    function copyToClipboard() {
+                        const text = document.getElementById('ai-output').innerText;
+                        navigator.clipboard.writeText(text).then(() => {
+                            alert("✅ Copied to clipboard!");
+                        });
+                    }
+
+                    function downloadGuide() {
+                        const text = document.getElementById('ai-output').innerText;
+                        // Use JS Blob API to create a file in the browser instantly!
+                        const blob = new Blob([text], { type: "text/plain" });
+                        const anchor = document.createElement("a");
+                        anchor.download = "AI_Generated_Guide.txt";
+                        anchor.href = window.URL.createObjectURL(blob);
+                        anchor.click();
+                    }
+                </script>
+            {% endif %}
+
+         </div>
+      </div>
+   </div>
+</section>
+{% endblock %}
