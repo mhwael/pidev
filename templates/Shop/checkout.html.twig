@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zxx">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -14,51 +14,87 @@
     <style>
         .navbar-brand img { height: 44px !important; width: auto !important; object-fit: contain; }
 
+        /* ✅ Restore background like your shop pages */
         .body_bg{
             position: relative;
             min-height: 100vh;
-            background: url("img/latest_war_img_1.png") center/cover no-repeat fixed;
+            background: url("img/breadcrumb.png") center/cover no-repeat fixed;
         }
         .body_bg::before{
             content:"";
             position:absolute;
             inset:0;
-            background: linear-gradient(135deg, rgba(0,0,0,.72), rgba(0,0,0,.40));
+            background: linear-gradient(135deg, rgba(0,0,0,.68), rgba(0,0,0,.38));
             pointer-events:none;
             z-index:0;
         }
-        .body_bg > *{ position:relative; z-index:1; }
+        .body_bg > *{ position: relative; z-index:1; }
 
         .section_padding{ padding: 45px 0 80px !important; }
 
-        .panel{
-            background: rgba(255,255,255,.95);
-            border: 1px solid rgba(255,255,255,.20);
+        .wrap{
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255,255,255,.96);
             border-radius: 18px;
-            box-shadow: 0 18px 55px rgba(0,0,0,.28);
-            backdrop-filter: blur(8px);
-            overflow: hidden;
+            box-shadow: 0 18px 55px rgba(0,0,0,.20);
+            padding: 22px;
         }
-        .panel-inner{ padding: 18px; }
 
-        .form-label{ font-weight: 800; margin-bottom: 6px; }
-        .form-control{
-            border-radius: 12px;
-            border: 1px solid rgba(0,0,0,.12);
-            height: 46px;
-        }
-        .form-control:focus{
-            border-color: rgba(13,110,253,.50);
-            box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
-        }
-        .btn_1{ border-radius:999px; font-weight:900; }
+        .title{ font-weight:900; color:#111; }
         .muted{ color:#6c757d; }
+
+        .form-control, .form-select{
+            border-radius: 12px;
+            height: 46px;
+            border:1px solid rgba(0,0,0,.12);
+        }
+
+        .btn_1{
+            border-radius:999px;
+            font-weight:900;
+            letter-spacing: .2px;
+        }
+
+        .err-summary{
+            background: rgba(220,53,69,.08);
+            border:1px solid rgba(220,53,69,.25);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        .voice-toggle{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 12px;
+            border-radius: 14px;
+            background: rgba(13,110,253,.06);
+            border: 1px solid rgba(13,110,253,.12);
+        }
+        .voice-toggle small{ color:#6c757d; }
+
+        /* small nav pill buttons */
+        .nav-pill-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 14px;
+            border-radius:999px;
+            background: rgba(255,255,255,.12);
+            color:#fff;
+            font-weight:900;
+            text-decoration:none;
+            border:1px solid rgba(255,255,255,.18);
+        }
+        .nav-pill-btn:hover{ color:#fff; background: rgba(255,255,255,.18); }
     </style>
 </head>
 
 <body>
 <div class="body_bg">
 
+    {# ✅ Same header style as your shop pages #}
     <header class="main_menu single_page_menu">
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-light">
@@ -73,7 +109,12 @@
                     </ul>
                 </div>
 
-                <a href="{{ path('shop_cart') }}" class="btn_1 d-none d-sm-block">Back To Cart</a>
+                <div class="d-none d-sm-flex align-items-center" style="gap:10px;">
+                    <a class="nav-pill-btn" href="{{ path('shop_cart') }}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                    </a>
+                    <a class="btn_1 d-none d-md-block" href="{{ path('shop_products') }}">Back To Shop</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -81,78 +122,166 @@
     <section class="section_padding">
         <div class="container">
 
-            {% for msg in app.flashes('success') %}
-                <div class="alert alert-success">{{ msg }}</div>
-            {% endfor %}
-            {% for msg in app.flashes('error') %}
-                <div class="alert alert-danger">{{ msg }}</div>
-            {% endfor %}
+            <div class="wrap">
 
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="panel">
-                        <div class="panel-inner">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                                <h3 class="m-0" style="font-weight:900;">Checkout</h3>
-                                <div class="muted">
-                                    Total: <span style="font-weight:900;color:#111;">{{ total }} TND</span>
-                                </div>
-                            </div>
+                {% for msg in app.flashes('success') %}
+                    <div class="alert alert-success">{{ msg }}</div>
+                {% endfor %}
+                {% for msg in app.flashes('error') %}
+                    <div class="alert alert-danger">{{ msg }}</div>
+                {% endfor %}
 
-                            {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div>
+                        <h3 class="title mb-1">Checkout</h3>
+                        <div class="muted">Total: <b>{{ total }}</b> TND</div>
+                    </div>
+                    <a href="{{ path('shop_cart') }}" class="btn btn-outline-secondary" style="border-radius:999px;font-weight:900;">
+                        Back to Cart
+                    </a>
+                </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">First Name</label>
-                                    {{ form_widget(form.firstName, {'attr': {'class':'form-control', 'placeholder':'Your first name'}}) }}
-                                    {{ form_errors(form.firstName) }}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Last Name</label>
-                                    {{ form_widget(form.lastName, {'attr': {'class':'form-control', 'placeholder':'Your last name'}}) }}
-                                    {{ form_errors(form.lastName) }}
-                                </div>
-                            </div>
+                {# ✅ Voice toggle (optional) #}
+                <div class="voice-toggle mb-3">
+                    <input type="checkbox" id="voiceEnabled" checked>
+                    <label for="voiceEnabled" style="margin:0;font-weight:900;">🔊 Voice help (Derja)</label>
+                    <small class="ms-auto">works if Arabic voice exists on PC</small>
+                </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Phone</label>
-                                {{ form_widget(form.phone, {'attr': {'class':'form-control', 'placeholder':'+216 ...'}}) }}
-                                {{ form_errors(form.phone) }}
-                            </div>
+                {# ✅ Top error summary #}
+                {% if form.vars.submitted and not form.vars.valid %}
+                    <div class="err-summary mb-3" id="errSummary">
+                        <div style="font-weight:900;color:#dc3545;">Please fix the errors below:</div>
+                        {{ form_errors(form) }}
+                    </div>
+                {% endif %}
 
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                {{ form_widget(form.email, {'attr': {'class':'form-control', 'placeholder':'you@example.com'}}) }}
-                                {{ form_errors(form.email) }}
-                            </div>
+                {{ form_start(form, { attr: { novalidate: 'novalidate', id: 'checkoutForm' } }) }}
 
-                            <div class="mb-4">
-                                <label class="form-label">Payment Method</label>
-                                {{ form_widget(form.paymentMethod, {'attr': {'class':'form-control'}}) }}
-                                {{ form_errors(form.paymentMethod) }}
-                                <div class="muted small mt-1">
-                                    Card is demo for now (later we can plug Stripe). COD keeps payment pending.
-                                </div>
-                            </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ form_label(form.firstName) }}
+                        {{ form_widget(form.firstName, { attr: { class: 'form-control', placeholder: 'First name' } }) }}
+                        <div class="text-danger small mt-1 field-err" data-field="firstName">{{ form_errors(form.firstName) }}</div>
+                    </div>
 
-                            <button class="btn btn-primary w-100" type="submit" style="border-radius:999px;font-weight:900;">
-                                Confirm & Place Order
-                            </button>
+                    <div class="col-md-6">
+                        {{ form_label(form.lastName) }}
+                        {{ form_widget(form.lastName, { attr: { class: 'form-control', placeholder: 'Last name' } }) }}
+                        <div class="text-danger small mt-1 field-err" data-field="lastName">{{ form_errors(form.lastName) }}</div>
+                    </div>
 
-                            {{ form_end(form) }}
+                    <div class="col-md-6">
+                        {{ form_label(form.phone) }}
+                        {{ form_widget(form.phone, { attr: { class: 'form-control', placeholder: 'Phone' } }) }}
+                        <div class="text-danger small mt-1 field-err" data-field="phone">{{ form_errors(form.phone) }}</div>
+                    </div>
 
-                        </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.email) }}
+                        {{ form_widget(form.email, { attr: { class: 'form-control', placeholder: 'Email' } }) }}
+                        <div class="text-danger small mt-1 field-err" data-field="email">{{ form_errors(form.email) }}</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        {{ form_label(form.paymentMethod) }}
+                        {{ form_widget(form.paymentMethod, { attr: { class: 'form-select' } }) }}
+                        <div class="text-danger small mt-1 field-err" data-field="paymentMethod">{{ form_errors(form.paymentMethod) }}</div>
                     </div>
                 </div>
-            </div>
 
+                <div class="mt-4">
+                    <button class="btn_1 w-100" type="submit">
+                        Place Order
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+
+            </div>
         </div>
     </section>
 
 </div>
 
 <script src="js/jquery-1.12.1.min.js"></script>
-<script src="js/popper.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
+
+<script>
+(function () {
+    const toggle = document.getElementById('voiceEnabled');
+    const saved = localStorage.getItem('voiceEnabled');
+    if (saved !== null) toggle.checked = (saved === '1');
+    toggle.addEventListener('change', () => {
+        localStorage.setItem('voiceEnabled', toggle.checked ? '1' : '0');
+    });
+
+    function voiceOn() { return toggle && toggle.checked; }
+    function hasSpeech() { return ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window); }
+
+    function pickArabicVoice() {
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        if (!voices || !voices.length) return null;
+        return voices.find(v => (v.lang || '').toLowerCase().startsWith('ar')) || null;
+    }
+
+    function speakQueue(texts) {
+        if (!voiceOn() || !hasSpeech()) return;
+        window.speechSynthesis.cancel();
+        const voice = pickArabicVoice();
+
+        let i = 0;
+        const next = () => {
+            if (i >= texts.length) return;
+            const u = new SpeechSynthesisUtterance(texts[i++]);
+            u.lang = (voice && voice.lang) ? voice.lang : 'ar';
+            if (voice) u.voice = voice;
+            u.rate = 0.95;
+            u.pitch = 1.0;
+            u.volume = 1.0;
+            u.onend = next;
+            window.speechSynthesis.speak(u);
+        };
+        next();
+    }
+
+    const MSG = {
+        general: "عندك غلطة في الفورم. عاود ثبّت المعلومات.",
+        firstName: "الإسم لازم يكون صحيح.",
+        lastName: "اللقب لازم يكون صحيح.",
+        phone: "رقم التليفون لازم يكون أرقام وبرشة، على الأقل 8 أرقام.",
+        email: "الإيميل موش صحيح. عاود كتب الإيميل.",
+        paymentMethod: "إختار طريقة الخلاص."
+    };
+
+    function detectErrorFields() {
+        const fields = [];
+        document.querySelectorAll('.field-err').forEach(el => {
+            const field = el.getAttribute('data-field');
+            const txt = (el.innerText || '').trim();
+            if (txt.length > 0) fields.push(field);
+        });
+        return fields;
+    }
+
+    window.addEventListener('load', () => {
+        const hasServerErrors = document.getElementById('errSummary') !== null;
+        if (!hasServerErrors) return;
+
+        setTimeout(() => {
+            const fields = detectErrorFields();
+            const texts = [MSG.general];
+
+            const order = ['phone','email','paymentMethod','firstName','lastName'];
+            order.forEach(f => {
+                if (fields.includes(f) && MSG[f]) texts.push(MSG[f]);
+            });
+
+            speakQueue(texts);
+        }, 200);
+    });
+})();
+</script>
+
 </body>
 </html>

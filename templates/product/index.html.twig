@@ -42,12 +42,17 @@
         </ul>
     </div>
 
-    <div class="page-header-right ms-auto d-flex gap-2">
+    <div class="page-header-right ms-auto d-flex gap-2 flex-wrap">
         <a href="{{ path('product_new') }}" class="btn btn-primary">
             <i class="feather-plus me-2"></i>New Product
         </a>
 
-        {# ✅ NEW: Train Forecast Model (once) #}
+        {# ✅ NEW: System Health #}
+        <a href="{{ path('product_system_health') }}" class="btn btn-success">
+            <i class="feather-heart me-2"></i>System Health
+        </a>
+
+        {# ✅ Train Forecast Model (once) #}
         <form method="post" action="{{ path('product_ml_train_forecast') }}" class="d-inline">
             <input type="hidden" name="_token" value="{{ csrf_token('ml_train_forecast') }}">
             <button type="submit" class="btn btn-outline-dark">
@@ -177,7 +182,7 @@
                             {% endif %}
                         </td>
 
-                        {# ✅ Reorder is computed LIVE: if you change stock, it must change immediately #}
+                        {# ✅ Reorder computed LIVE #}
                         <td class="text-nowrap">
                             {% if fc %}
                                 {% set pred = (fc.predictedQty + 0) %}

@@ -2,7 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Order;
 use App\Entity\Product;
+use App\Entity\ProductForecast;
+use App\Entity\ProductRecommendation;
 use App\Form\ProductType;
 use App\Repository\ProductForecastRepository;
 use App\Repository\ProductRepository;
@@ -50,7 +53,6 @@ class ProductController extends AbstractController
             ];
         }
 
-        // ✅ Forecasts read from DB (filled by ML API refresh)
         $productIds = [];
         foreach ($productsWithCounts as $row) {
             /** @var Product $p */
@@ -69,12 +71,72 @@ class ProductController extends AbstractController
             'sort' => $sortFinal,
             'dir' => $dirFinal,
             'hasSort' => ($sort !== null || $dir !== null),
-
             'forecastMap' => $forecastMap,
         ]);
     }
 
-    // ✅ Refresh AI from website (NO retrain for forecasts now)
+    // ✅ NEW: System Health page (nice UI)
+    #[Route('/system-health', name: 'product_system_health', methods: ['GET'])]
+    public function systemHealth(EntityManagerInterface $em, MlApiClient $ml): Response
+    {
+        // DB + counts
+        $dbOk = true;
+        $productsCount = 0;
+        $ordersCount = 0;
+
+        try {
+            $productsCount = (int) $em->getRepository(Product::class)->count([]);
+            $ordersCount = (int) $em->getRepository(Order::class)->count([]);
+        } catch (\Throwable $e) {
+            $dbOk = false;
+        }
+
+        // last refresh times
+        $lastForecastAt = null;
+        $lastRecoAt = null;
+
+        try {
+            $lastForecastAt = $em->createQueryBuilder()
+                ->select('MAX(pf.generatedAt)')
+                ->from(ProductForecast::class, 'pf')
+                ->getQuery()
+                ->getSingleScalarResult();
+
+            $lastRecoAt = $em->createQueryBuilder()
+                ->select('MAX(pr.generatedAt)')
+                ->from(ProductRecommendation::class, 'pr')
+                ->getQuery()
+                ->getSingleScalarResult();
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        // ML API health
+        $mlOk = false;
+        $mlTime = null;
+        $mlError = null;
+
+        try {
+            $out = $ml->health();
+            $mlOk = (bool)($out['ok'] ?? false);
+            $mlTime = $out['time'] ?? null;
+        } catch (\Throwable $e) {
+            $mlOk = false;
+            $mlError = $e->getMessage();
+        }
+
+        return $this->render('product/system_health.html.twig', [
+            'dbOk' => $dbOk,
+            'mlOk' => $mlOk,
+            'mlTime' => $mlTime,
+            'mlError' => $mlError,
+            'productsCount' => $productsCount,
+            'ordersCount' => $ordersCount,
+            'lastForecastAt' => $lastForecastAt,
+            'lastRecoAt' => $lastRecoAt,
+        ]);
+    }
+
     #[Route('/ml/refresh', name: 'product_ml_refresh', methods: ['POST'])]
     public function refreshMl(Request $request, MlApiClient $ml): Response
     {
@@ -89,9 +151,9 @@ class ProductController extends AbstractController
             $forecast = $ml->refreshForecasts(7);
 
             $msg = "✅ AI refreshed. Reco products: " . ($reco['updated_products'] ?? '-') .
-                   " | Forecast updated: " . ($forecast['updated'] ?? '-') .
-                   " | use_model=" . ((int)($forecast['use_model'] ?? 0)) .
-                   " | model=" . ($forecast['model_name'] ?? '-');
+                " | Forecast updated: " . ($forecast['updated'] ?? '-') .
+                " | use_model=" . ((int)($forecast['use_model'] ?? 0)) .
+                " | model=" . ($forecast['model_name'] ?? '-');
 
             $this->addFlash('success', $msg);
         } catch (\Throwable $e) {
@@ -101,7 +163,6 @@ class ProductController extends AbstractController
         return $this->redirectToRoute('product_index');
     }
 
-    // ✅ Train forecast model ONCE from website
     #[Route('/ml/train-forecast', name: 'product_ml_train_forecast', methods: ['POST'])]
     public function trainForecast(Request $request, MlApiClient $ml): Response
     {

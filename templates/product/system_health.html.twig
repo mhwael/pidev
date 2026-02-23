@@ -1,0 +1,118 @@
+{% extends 'back.html.twig' %}
+
+{% block body %}
+<style>
+    .health-wrap { display:grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .h-card{
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.06);
+        border: 1px solid rgba(0,0,0,.06);
+        overflow:hidden;
+        background:#fff;
+    }
+    .h-head{
+        padding: 14px 16px;
+        font-weight: 900;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        background: linear-gradient(135deg, rgba(0,0,0,.06), rgba(0,0,0,.02));
+    }
+    .h-body{ padding: 16px; }
+    .badge-pill{
+        border-radius:999px;
+        padding:.35rem .65rem;
+        font-weight:900;
+        font-size:.78rem;
+    }
+    .ok{ background: rgba(25,135,84,.14); color:#198754; }
+    .bad{ background: rgba(220,53,69,.14); color:#dc3545; }
+    .warn{ background: rgba(255,193,7,.20); color:#7a5b00; }
+    .metric{ font-weight:900; font-size: 28px; line-height:1; }
+    .muted{ color:#6c757d; font-size: 13px; }
+    .grid-6{ grid-column: span 6; }
+    .grid-12{ grid-column: span 12; }
+</style>
+
+<div class="page-header mb-4">
+    <div class="page-header-left d-flex align-items-center">
+        <div class="page-header-title">
+            <h5 class="m-b-10">System Health</h5>
+        </div>
+        <ul class="breadcrumb ms-3 mb-0">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('product_index') }}">Products</a></li>
+            <li class="breadcrumb-item">System Health</li>
+        </ul>
+    </div>
+
+    <div class="page-header-right ms-auto d-flex gap-2">
+        <a href="{{ path('product_index') }}" class="btn btn-light-brand">
+            <i class="feather-arrow-left me-2"></i>Back
+        </a>
+        <a href="{{ path('api_status') }}" class="btn btn-dark" target="_blank">
+            <i class="feather-code me-2"></i>Open JSON API
+        </a>
+    </div>
+</div>
+
+<div class="health-wrap">
+
+    <div class="h-card grid-6">
+        <div class="h-head">
+            <div>Database</div>
+            <span class="badge-pill {{ dbOk ? 'ok' : 'bad' }}">{{ dbOk ? 'OK' : 'ERROR' }}</span>
+        </div>
+        <div class="h-body">
+            <div class="d-flex gap-4 flex-wrap">
+                <div>
+                    <div class="metric">{{ productsCount }}</div>
+                    <div class="muted">Products</div>
+                </div>
+                <div>
+                    <div class="metric">{{ ordersCount }}</div>
+                    <div class="muted">Orders</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="h-card grid-6">
+        <div class="h-head">
+            <div>ML API (FastAPI)</div>
+            <span class="badge-pill {{ mlOk ? 'ok' : 'bad' }}">{{ mlOk ? 'OK' : 'DOWN' }}</span>
+        </div>
+        <div class="h-body">
+            {% if mlOk %}
+                <div class="muted">Health time:</div>
+                <div style="font-weight:900;">{{ mlTime ?? '-' }}</div>
+            {% else %}
+                <div class="muted">Error:</div>
+                <div style="font-weight:900;color:#dc3545;">{{ mlError ?? 'No details' }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="h-card grid-12">
+        <div class="h-head">
+            <div>Last AI Refresh</div>
+            <span class="badge-pill {{ (lastForecastAt or lastRecoAt) ? 'warn' : 'bad' }}">
+                {{ (lastForecastAt or lastRecoAt) ? 'INFO' : 'NO DATA' }}
+            </span>
+        </div>
+        <div class="h-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="muted">Last Forecast (product_forecast)</div>
+                    <div style="font-weight:900;">{{ lastForecastAt ? (lastForecastAt|date('Y-m-d H:i')) : '-' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="muted">Last Recommendations (product_recommendation)</div>
+                    <div style="font-weight:900;">{{ lastRecoAt ? (lastRecoAt|date('Y-m-d H:i')) : '-' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

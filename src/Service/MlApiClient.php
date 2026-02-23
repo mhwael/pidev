@@ -11,6 +11,15 @@ class MlApiClient
         private string $baseUrl
     ) {}
 
+    public function health(): array
+    {
+        $res = $this->http->request('GET', rtrim($this->baseUrl, '/') . "/health", [
+            'timeout' => 5,
+        ]);
+
+        return $res->toArray(false);
+    }
+
     public function getRecommendations(int $productId, int $k = 6): array
     {
         $res = $this->http->request('GET', rtrim($this->baseUrl, '/') . "/recommend/$productId", [
@@ -51,7 +60,6 @@ class MlApiClient
         return $res->toArray(false);
     }
 
-    // ✅ NEW: train forecast model ONCE (saves model on API side)
     public function trainForecastModel(int $lookbackDays = 365, int $holdoutDays = 30): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/train/forecast", [
