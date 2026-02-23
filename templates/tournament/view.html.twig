@@ -277,50 +277,51 @@
                     </div>
 
                     <!-- Registered Teams -->
-                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
-                        <div class="card-body p-4">
-                            <h3 class="text-white fw-bold mb-4">
-                                <i class="fas fa-users text-success me-2"></i>Registered Teams ({{ tournament.teams|length }})
-                            </h3>
+<div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+    <div class="card-body p-4">
+        <h3 class="text-white fw-bold mb-4">
+            <i class="fas fa-users text-success me-2"></i>Registered Teams ({{ tournament.teams|length }})
+        </h3>
 
-                            {% if tournament.teams|length > 0 %}
-                                <div class="row g-3">
-                                    {% for team in tournament.teams %}
-                                        <div class="col-md-6">
-                                            <div class="team-card p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    {% if team.logo %}
-                                        <img src="{{ team.logo }}" alt="{{ team.name }}" class="rounded" 
-                                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #ffc107; margin-right: 12px;">
-                                    {% else %}
-                                        <div class="avatar-text d-flex align-items-center justify-content-center" 
-                                             style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                    border-radius: 50%; font-size: 18px; color: white; font-weight: bold; margin-right: 12px;">
-                                            {{ team.name|first|upper }}
-                                        </div>
-                                    {% endif %}
-                                    <div>
-                                        <a href="{{ path('app_team_view', {'id': team.id}) }}" class="text-white fw-bold text-decoration-none hover-link">{{ team.name }}</a>
-                                        <small class="text-muted d-block">{{ team.members|length }} members</small>
+        {% if tournament.teams|length > 0 %}
+            <div class="row g-3">
+                {% for team in tournament.teams %}
+                    <div class="col-md-6">
+                        <div class="team-card p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if team.logo %}
+                                    <img src="{{ team.logo }}" alt="{{ team.name }}" class="rounded" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #ffc107; margin-right: 12px;">
+                                {% else %}
+                                    <div class="avatar-text d-flex align-items-center justify-content-center" 
+                                         style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                border-radius: 50%; font-size: 18px; color: white; font-weight: bold; margin-right: 12px;">
+                                        {{ team.name|first|upper }}
                                     </div>
-                                </div>
-                                {% if team.captain %}
-                                    <small class="text-muted">
-                                        <i class="fas fa-crown text-warning me-1"></i>{{ team.captain.firstName }} {{ team.captain.lastName }}
-                                    </small>
                                 {% endif %}
+                                <div>
+                                    <a href="{{ path('app_team_view', {'id': team.id}) }}" class="text-white fw-bold text-decoration-none hover-link">{{ team.name }}</a>
+                                    <small class="text-muted d-block">{{ team.members|length }} members</small>
+                                </div>
                             </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="text-center py-5">
-                                    <i class="fas fa-users fa-2x text-muted mb-3"></i>
-                                    <p class="text-muted">No teams registered yet. Be the first!</p>
-                                </div>
+                            {% if team.captain %}
+                                <small class="text-muted">
+                                    <i class="fas fa-crown text-warning me-1"></i>{{ team.captain.firstName }} {{ team.captain.lastName }}
+                                </small>
                             {% endif %}
                         </div>
                     </div>
-                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                <p class="text-muted">No teams registered yet. Be the first!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 
                 <!-- Right Column: Sidebar -->
                 <div class="col-lg-4">
