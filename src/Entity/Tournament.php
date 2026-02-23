@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\GameMatch;
 
 #[ORM\Entity(repositoryClass: TournamentRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -96,17 +97,48 @@ class Tournament
     #[ORM\JoinTable(name: 'tournament_teams')]
     private Collection $teams;
 
+    #[ORM\OneToMany(targetEntity: GameMatch::class, mappedBy: 'tournament', cascade: ['persist', 'remove'])]
+    private Collection $matches;
+
     public function __construct()
     {
         $this->teams = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->status = 'draft';
+        $this->matches = new ArrayCollection();
     }
 
     #[ORM\PreUpdate]
     public function setUpdatedAtValue(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+    * @return Collection<int, GameMatch>
+    */
+    public function getMatches(): Collection
+    {
+        return $this->matches;
+    }
+
+    public function addMatch(GameMatch $match): static
+    {
+        if (!$this->matches->contains($match)) {
+            $this->matches->add($match);
+            $match->setTournament($this);
+        }
+        return $this;
+    }
+
+    public function removeMatch(GameMatch $match): static
+    {
+        if ($this->matches->removeElement($match)) {
+            if ($match->getTournament() === $this) {
+                $match->setTournament(null);
+            }
+        }
+        return $this;   
     }
 
     // Getters et Setters

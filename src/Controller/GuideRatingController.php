@@ -30,10 +30,34 @@ final class GuideRatingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
+            // ✨ AUTOMATED FIELDS (Required by your Entity)
+            // 1. Set the current date/time
+            $guideRating->setCreatedAt(new \DateTimeImmutable());
+
+            // 2. Set the currently logged-in User
+            // ⚠️ NOTE: You must be logged in for this to work!
+            $user = $this->getUser();
+            if ($user) {
+                $guideRating->setUser($user);
+            } else {
+                // Optional: Redirect to login if not logged in
+                $this->addFlash('danger', 'You must be logged in to rate a guide!');
+                return $this->redirectToRoute('app_login'); 
+            }
+
             $entityManager->persist($guideRating);
             $entityManager->flush();
 
+            // ✨ SUCCESS MESSAGE: Only appears if validation (Bad Words check) passes
+            $this->addFlash('success', 'Your rating has been posted successfully! 🌟');
+
             return $this->redirectToRoute('app_guide_rating_index', [], Response::HTTP_SEE_OTHER);
+        }
+        
+        // ⚠️ ERROR MESSAGE: Helps users know why the save failed (e.g., Bad Words)
+        if ($form->isSubmitted() && !$form->isValid()) {
+            $this->addFlash('danger', 'There were errors in your form. Please check your comments for inappropriate language.');
         }
 
         return $this->render('guide_rating/new.html.twig', [
@@ -59,6 +83,9 @@ final class GuideRatingController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            // ✨ SUCCESS MESSAGE
+            $this->addFlash('success', 'Rating updated successfully!');
+
             return $this->redirectToRoute('app_guide_rating_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -74,6 +101,9 @@ final class GuideRatingController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$guideRating->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($guideRating);
             $entityManager->flush();
+            
+            // ✨ SUCCESS MESSAGE
+            $this->addFlash('warning', 'Rating deleted.');
         }
 
         return $this->redirectToRoute('app_guide_rating_index', [], Response::HTTP_SEE_OTHER);

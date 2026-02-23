@@ -6,6 +6,8 @@ use App\Entity\GuideStep;
 use App\Form\GuideStepType;
 use App\Repository\GameRepository;
 use App\Repository\GuideStepRepository;
+use App\Service\YoutubeApiService; // ✨ Added
+use App\Service\YoutubeHelper;     // ✨ Added
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,25 +20,18 @@ final class GuideStepController extends AbstractController
     #[Route(name: 'app_guide_step_index', methods: ['GET'])]
     public function index(Request $request, GuideStepRepository $guideStepRepository, GameRepository $gameRepository): Response
     {
-        // 1. Get the game ID from the URL (e.g., ?game=1)
         $selectedGameId = $request->query->get('game');
-
-        // 2. Load all games for the dropdown
         $games = $gameRepository->findAll();
 
-        // 3. Create the query builder
         $qb = $guideStepRepository->createQueryBuilder('s')
             ->join('s.guide', 'g')
-            ->addSelect('g'); // Select the guide data too (performance boost)
+            ->addSelect('g');
 
-        // 4. If a game is selected, filter by it
         if ($selectedGameId) {
             $qb->andWhere('g.game = :gameId')
                ->setParameter('gameId', $selectedGameId);
         }
 
-        // 5. CRITICAL: Sort by Guide Title first, then by Step Number
-        // This ensures steps don't get mixed up visually
         $qb->orderBy('g.title', 'ASC')
            ->addOrderBy('s.stepOrder', 'ASC');
 
@@ -48,13 +43,29 @@ final class GuideStepController extends AbstractController
     }
 
     #[Route('/new', name: 'app_guide_step_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+    public function new(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        YoutubeApiService $apiService, // ✨ Injected
+        YoutubeHelper $ytHelper        // ✨ Injected
+    ): Response {
         $guideStep = new GuideStep();
         $form = $this->createForm(GuideStepType::class, $guideStep);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
+            // ✨ API LOGIC: Auto-fetch thumbnail if video URL is present
+            if ($guideStep->getVideoUrl() && !$guideStep->getImage()) {
+                $videoId = $ytHelper->getYoutubeId($guideStep->getVideoUrl());
+                if ($videoId) {
+                    $thumbnailUrl = $apiService->getThumbnailFromApi($videoId);
+                    if ($thumbnailUrl) {
+                        $guideStep->setImage($thumbnailUrl);
+                    }
+                }
+            }
+
             $entityManager->persist($guideStep);
             $entityManager->flush();
 
@@ -76,12 +87,29 @@ final class GuideStepController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_guide_step_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, GuideStep $guideStep, EntityManagerInterface $entityManager): Response
-    {
+    public function edit(
+        Request $request, 
+        GuideStep $guideStep, 
+        EntityManagerInterface $entityManager,
+        YoutubeApiService $apiService, // ✨ Injected
+        YoutubeHelper $ytHelper        // ✨ Injected
+    ): Response {
         $form = $this->createForm(GuideStepType::class, $guideStep);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
+            // ✨ API LOGIC: Update thumbnail if video changed or image is missing
+            if ($guideStep->getVideoUrl()) {
+                $videoId = $ytHelper->getYoutubeId($guideStep->getVideoUrl());
+                if ($videoId) {
+                    $thumbnailUrl = $apiService->getThumbnailFromApi($videoId);
+                    if ($thumbnailUrl) {
+                        $guideStep->setImage($thumbnailUrl);
+                    }
+                }
+            }
+
             $entityManager->flush();
 
             return $this->redirectToRoute('app_guide_step_index', [], Response::HTTP_SEE_OTHER);

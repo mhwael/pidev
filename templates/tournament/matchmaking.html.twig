@@ -1,0 +1,125 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}AI Matchmaking - {{ tournament.name }}{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>AI Matchmaking</h2>
+                            <p>Tournament / {{ tournament.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="padding_top padding_bottom">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-12">
+                    <div class="card bg-dark text-white border-warning shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                        <div class="card-body p-5">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h2 class="display-5 fw-bold mb-3"><i class="fas fa-robot text-warning me-3"></i>AI Pairing Results</h2>
+                                    <p class="lead">Our Linear Regression model analyzed team stats to create balanced matchups.</p>
+                                    <div class="d-flex gap-3 mt-4">
+                                        <div class="badge bg-secondary p-2 px-3">Algorithm: Linear Regression</div>
+                                        <div class="badge bg-secondary p-2 px-3">Avg Balance: {{ averageBalance|round(1) }}%</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="fairness-meter p-3 rounded-4 border border-warning d-inline-block shadow">
+                                        {# FIXED: Just display the string directly instead of multiplying #}
+                                        <h4 class="mb-0 text-warning fw-bold">{{ fairnessRating }}</h4>
+                                        <small class="text-uppercase text-white" style="font-size: 0.7rem;">Match Quality Status</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for match in matchups %}
+    <div class="col-lg-6">
+        <div class="match-card p-4 rounded-4 shadow-sm h-100" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+            
+            <div class="row align-items-center">
+                <div class="col-5 text-center">
+    <div class="avatar-circle mx-auto mb-2" style="width: 70px; height: 70px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);">
+        {% if match.team1.logo %}
+            {# CHANGED: match.team1.logo is a link, so we use it directly in src #}
+            <img src="{{ match.team1.logo }}" alt="{{ match.team1.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+        {% else %}
+            <span style="font-size: 1.5rem;">{{ match.team1.name|first|upper }}</span>
+        {% endif %}
+    </div>
+    <h5 class="text-white small mb-1">{{ match.team1.name }}</h5>
+    <span class="badge bg-dark text-info" style="font-size: 0.7rem;">Strength: {{ match.strength1|round(0) }}</span>
+</div>
+
+<div class="col-2 text-center">
+    <div class="vs-badge bg-warning text-dark fw-bold rounded-circle shadow mx-auto" style="width: 35px; height: 35px; line-height: 35px; font-size: 12px;">VS</div>
+</div>
+
+<div class="col-5 text-center">
+    <div class="avatar-circle mx-auto mb-2" style="width: 70px; height: 70px; background: #ff9a9e; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);">
+        {% if match.team2.logo %}
+            {# CHANGED: match.team2.logo is a link, so we use it directly in src #}
+            <img src="{{ match.team2.logo }}" alt="{{ match.team2.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+        {% else %}
+            <span style="font-size: 1.5rem;">{{ match.team2.name|first|upper }}</span>
+        {% endif %}
+    </div>
+    <h5 class="text-white small mb-1">{{ match.team2.name }}</h5>
+    <span class="badge bg-dark text-info" style="font-size: 0.7rem;">Strength: {{ match.strength2|round(0) }}</span>
+</div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top border-secondary">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Win Probability</small>
+                    <small class="text-warning fw-bold">Fairness: {{ match.balance|round(1) }}%</small>
+                </div>
+                <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1);">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ match.prediction.team1_percentage }}%"></div>
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ match.prediction.team2_percentage }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-1" style="font-size: 0.8rem;">
+                    <span class="text-primary">{{ match.prediction.team1_percentage }}%</span>
+                    <span class="text-danger">{{ match.prediction.team2_percentage }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+            <div class="mt-5 text-center">
+    <a href="{{ path('app_tournament_view', {id: tournament.id}) }}" class="btn btn-outline-light px-5">
+        <i class="fas fa-arrow-left me-2"></i> Cancel
+    </a>
+    
+    {# NEW: Confirm Button #}
+    <form action="{{ path('app_tournament_matchmaking_confirm', {id: tournament.id}) }}" method="POST" style="display: inline-block;">
+        <button type="submit" class="btn btn-warning btn-lg px-5 ms-3 shadow">
+            <i class="fas fa-check-circle me-2"></i> Confirm & Generate Matches
+        </button>
+    </form>
+</div>
+        </div>
+    </section>
+</div>
+
+<style>
+    .match-card:hover { border-color: #ffc107 !important; background: rgba(255,255,255,0.1) !important; transition: 0.3s; }
+</style>
+{% endblock %}

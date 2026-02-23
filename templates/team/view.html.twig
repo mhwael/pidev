@@ -1,0 +1,311 @@
+{% extends 'front.html.twig' %}
+
+{% block title %}{{ team.name }} - Gaming Teams{% endblock %}
+
+{% block body %}
+<div class="body_bg">
+    <!-- Breadcrumb Section -->
+    <section class="breadcrumb breadcrumb_bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb_iner text-center">
+                        <div class="breadcrumb_iner_item">
+                            <h2>{{ team.name }}</h2>
+                            <p>Home / Teams / {{ team.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Header Section -->
+    <section class="padding_top" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
+        <div class="container">
+            <div class="row align-items-center mb-4">
+                <div class="col-lg-4 col-md-6 text-center mb-4 mb-lg-0">
+                    <!-- Team Logo -->
+                    {% if team.logo %}
+                        <img src="{{ team.logo }}" alt="{{ team.name }}" class="img-fluid rounded-lg shadow" 
+                             style="max-width: 250px; max-height: 250px; object-fit: cover; border: 4px solid #007bff;">
+                    {% else %}
+                        <div class="avatar-text d-inline-flex align-items-center justify-content-center" 
+                             style="width: 250px; height: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                    border-radius: 15px; font-size: 100px; color: white; font-weight: bold; 
+                                    border: 4px solid #007bff; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                            {{ team.name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-8 col-md-6">
+                    <!-- Team Name & Description -->
+                    <h1 class="text-white fw-bold mb-3" style="font-size: 3rem;">{{ team.name }}</h1>
+                    
+                    {% if team.description %}
+                        <p class="text-light fs-5 mb-4 lh-lg">{{ team.description }}</p>
+                    {% else %}
+                        <p class="text-muted fs-5 mb-4 lh-lg italic">No description available</p>
+                    {% endif %}
+
+                    <!-- Team Stats -->
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-box p-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid #28a745;">
+                                <div class="stat-value text-success fw-bold" style="font-size: 1.8rem;">{{ team.members|length }}</div>
+                                <div class="stat-label text-muted small">Member{{ team.members|length > 1 ? 's' : '' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-box p-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid #ffc107;">
+                                <div class="stat-value text-warning fw-bold" style="font-size: 1.8rem;">{{ team.tournaments|length }}</div>
+                                <div class="stat-label text-muted small">Tournament{{ team.tournaments|length > 1 ? 's' : '' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-box p-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid #17a2b8;">
+                                <div class="stat-value text-info fw-bold" style="font-size: 1.8rem;">{{ team.createdAt|date('Y') }}</div>
+                                <div class="stat-label text-muted small">Founded</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-box p-3 rounded" style="background: rgba(255,255,255,0.05); border-left: 4px solid #dc3545;">
+                                <div class="stat-value text-danger fw-bold" style="font-size: 1.8rem;">★★★★★</div>
+                                <div class="stat-label text-muted small">Rating</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        <a href="{{ path('app_team_list') }}" class="btn btn-outline-light me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Teams
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Section -->
+    <section class="padding_top padding_bottom">
+        <div class="container">
+            <!-- Captain Section -->
+            <div class="row mb-5">
+                <div class="col-lg-12">
+                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-crown text-warning me-2"></i>Team Captain
+                            </h3>
+                            
+                            {% if team.captain %}
+                                <div class="d-flex align-items-center">
+                                    <!-- Avatar -->
+                                    <div class="avatar-text d-flex align-items-center justify-content-center me-4" 
+                                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                border-radius: 50%; font-size: 32px; color: white; font-weight: bold;">
+                                        {{ team.captain.firstName|first }}{{ team.captain.lastName|first }}
+                                    </div>
+                                    
+                                    <!-- Captain Info -->
+                                    <div>
+                                        <h5 class="text-white fw-bold mb-1">{{ team.captain.firstName }} {{ team.captain.lastName }}</h5>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-envelope me-2"></i>{{ team.captain.email }}
+                                        </p>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-star me-1"></i>Captain
+                                        </span>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>No captain assigned to this team yet.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div class="row mb-5">
+                <div class="col-lg-12">
+                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-users me-2"></i>Team Members ({{ team.members|length }})
+                            </h3>
+                            
+                            {% if team.members|length > 0 %}
+                                <div class="row g-3">
+                                    {% for member in team.members %}
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="member-card p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="avatar-text d-flex align-items-center justify-content-center me-3" 
+                                                         style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                                border-radius: 50%; font-size: 18px; color: white; font-weight: bold;">
+                                                        {{ member.firstName|first }}{{ member.lastName|first }}
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="text-white fw-bold mb-0">{{ member.firstName }} {{ member.lastName }}</h6>
+                                                        <small class="text-muted">Member</small>
+                                                    </div>
+                                                </div>
+                                                <p class="text-muted small mb-0">
+                                                    <i class="fas fa-envelope me-2"></i>{{ member.email }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">No members have joined this team yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tournaments Section -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h3 class="text-white fw-bold mb-4">
+                                <i class="fas fa-trophy me-2"></i>Tournament Participation ({{ team.tournaments|length }})
+                            </h3>
+                            
+                            {% if team.tournaments|length > 0 %}
+                                <div class="row g-3">
+                                    {% for tournament in team.tournaments %}
+                                        <div class="col-lg-6">
+                                            <div class="tournament-card p-4 rounded" 
+                                                 style="background: rgba(255,255,255,0.03); border-left: 4px solid 
+                                                         {% if tournament.status == 'open' %}#28a745
+                                                         {% elseif tournament.status == 'ongoing' %}#007bff
+                                                         {% elseif tournament.status == 'completed' %}#6c757d
+                                                         {% else %}#ffc107
+                                                         {% endif %};
+                                                         border-radius: 10px;">
+                                                
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <h5 class="text-white fw-bold mb-1">{{ tournament.name }}</h5>
+                                                        <p class="text-muted small mb-0">
+                                                            <i class="fas fa-gamepad me-1"></i>{{ tournament.game }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="badge 
+                                                        {% if tournament.status == 'open' %}bg-success
+                                                        {% elseif tournament.status == 'ongoing' %}bg-primary
+                                                        {% elseif tournament.status == 'completed' %}bg-secondary
+                                                        {% else %}bg-warning
+                                                        {% endif %}" style="font-size: 0.85rem; padding: 0.5rem 0.8rem;">
+                                                        {{ tournament.status|upper }}
+                                                    </span>
+                                                </div>
+
+                                                <p class="text-light small mb-3">{{ tournament.description|slice(0, 100) }}{% if tournament.description|length > 100 %}...{% endif %}</p>
+
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-users me-1"></i>Format
+                                                        </small>
+                                                        <span class="text-info fw-bold">{{ tournament.format }}</span>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-calendar me-1"></i>Start Date
+                                                        </small>
+                                                        <span class="text-info fw-bold">{{ tournament.startDate|date('d/m/Y') }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <a href="{{ path('app_tournament_view', {'id': tournament.id}) }}" class="btn btn-sm btn-outline-light w-100">
+                                                    View Tournament Details
+                                                    <i class="fas fa-arrow-right ms-2"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-trophy fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-3">This team hasn't participated in any tournaments yet.</p>
+                                    <a href="/tournament" class="btn btn-outline-light">
+                                        <i class="fas fa-search me-2"></i>Explore Tournaments
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Related Teams Section -->
+    <section class="padding_top padding_bottom" style="background: rgba(255,255,255,0.02);">
+        <div class="container">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8">
+                    <div class="section_tittle text-center">
+                        <h2 class="text-white">Other Elite Teams</h2>
+                        <p class="text-muted">Check out other competitive squads in the arena</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 text-center">
+                    <a href="{{ path('app_team_list') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>View All Teams
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Custom Styles for Better Appearance -->
+<style>
+    .member-card:hover {
+        background: rgba(255,255,255,0.08) !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .tournament-card:hover {
+        background: rgba(255,255,255,0.08) !important;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .stat-box {
+        transition: all 0.3s ease;
+    }
+
+    .stat-box:hover {
+        background: rgba(255,255,255,0.1) !important;
+        transform: translateY(-5px);
+    }
+
+    .rounded-lg {
+        border-radius: 15px;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+</style>
+{% endblock %}

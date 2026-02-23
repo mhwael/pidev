@@ -1,17 +1,20 @@
 {% extends 'back.html.twig' %}
 
-{% block title %}GuideRating index{% endblock %}
+{% block title %}Rating Index{% endblock %}
 
 {% block body %}
-    <h1>GuideRating index</h1>
+<div class="container mt-5">
+    <h1>All Ratings</h1>
 
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>Id</th>
-                <th>RatingValue</th>
+                <th>Game / Guide</th>
+                <th>User</th>
+                <th>Rating</th>
                 <th>Comment</th>
-                <th>CreatedAt</th>
+                <th>Date</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -19,21 +22,42 @@
         {% for guide_rating in guide_ratings %}
             <tr>
                 <td>{{ guide_rating.id }}</td>
-                <td>{{ guide_rating.ratingValue }}</td>
-                <td>{{ guide_rating.comment }}</td>
-                <td>{{ guide_rating.createdAt ? guide_rating.createdAt|date('Y-m-d H:i:s') : '' }}</td>
                 <td>
-                    <a href="{{ path('app_guide_rating_show', {'id': guide_rating.id}) }}">show</a>
-                    <a href="{{ path('app_guide_rating_edit', {'id': guide_rating.id}) }}">edit</a>
+                    {# Show the Guide Title #}
+                    <strong>{{ guide_rating.guide.title }}</strong>
+                </td>
+                <td>
+                    {# Show the User's Email or Name #}
+                    {{ guide_rating.user ? guide_rating.user.email : 'Anonymous' }}
+                </td>
+                <td>
+                    {# ✨ LOGIC TO SHOW STARS INSTEAD OF NUMBERS #}
+                    <span style="color: #ffc107;">
+                        {% for i in 1..5 %}
+                            {% if i <= guide_rating.ratingValue %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    ({{ guide_rating.ratingValue }}/5)
+                </td>
+                <td>{{ guide_rating.comment }}</td>
+                <td>{{ guide_rating.createdAt ? guide_rating.createdAt|date('Y-m-d H:i') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_guide_rating_show', {'id': guide_rating.id}) }}" class="btn btn-sm btn-info">show</a>
+                    <a href="{{ path('app_guide_rating_edit', {'id': guide_rating.id}) }}" class="btn btn-sm btn-warning">edit</a>
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="5">no records found</td>
+                <td colspan="7">no records found</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
-    <a href="{{ path('app_guide_rating_new') }}">Create new</a>
+    <a href="{{ path('app_guide_rating_new') }}" class="btn btn-primary">Create new</a>
+</div>
 {% endblock %}

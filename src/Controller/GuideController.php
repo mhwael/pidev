@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Entity\Guide;
 use App\Form\GuideType;
 use App\Repository\GuideRepository;
+use App\Service\YoutubeApiService;
+use App\Service\YoutubeHelper;
+use App\Service\DiscordService; // ✨ Added
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -31,8 +34,14 @@ final class GuideController extends AbstractController
     }
 
     #[Route('/new', name: 'app_guide_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
-    {
+    public function new(
+        Request $request, 
+        EntityManagerInterface $entityManager, 
+        SluggerInterface $slugger,
+        YoutubeApiService $apiService,
+        YoutubeHelper $ytHelper,
+        DiscordService $discordService // ✨ Injected
+    ): Response {
         $guide = new Guide();
         $form = $this->createForm(GuideType::class, $guide);
         $form->handleRequest($request);
@@ -45,22 +54,31 @@ final class GuideController extends AbstractController
                 $guide->setCoverImage($newFilename);
             }
 
-            // ✨ 2. HANDLE STEP IMAGES (The Missing Part)
-            // We loop through the embedded forms to get the files
+            // 2. Handle Step Images & YouTube API
             foreach ($form->get('guideSteps') as $stepForm) {
-                // 'image' must match the name in GuideStepType
+                $step = $stepForm->getData();
                 $stepImageFile = $stepForm->get('image')->getData(); 
                 
                 if ($stepImageFile) {
                     $stepFilename = $this->uploadFile($stepImageFile, $slugger);
-                    // Get the actual Step entity and set the image name
-                    $step = $stepForm->getData();
                     $step->setImage($stepFilename);
+                } elseif ($step->getVideoUrl()) { 
+                    $videoId = $ytHelper->getYoutubeId($step->getVideoUrl());
+                    if ($videoId) {
+                        $apiUrl = $apiService->getThumbnailFromApi($videoId);
+                        if ($apiUrl) {
+                            $step->setImage($apiUrl);
+                        }
+                    }
                 }
             }
 
             $entityManager->persist($guide);
             $entityManager->flush();
+
+            // 🚀 DISCORD NOTIFICATION
+            // We trigger this only once the full Guide is successfully saved
+            $discordService->sendGuideNotification($guide);
 
             return $this->redirectToRoute('app_guide_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -80,27 +98,39 @@ final class GuideController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_guide_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
-    public function edit(Request $request, Guide $guide, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
-    {
+    public function edit(
+        Request $request, 
+        Guide $guide, 
+        EntityManagerInterface $entityManager, 
+        SluggerInterface $slugger,
+        YoutubeApiService $apiService,
+        YoutubeHelper $ytHelper
+    ): Response {
         $form = $this->createForm(GuideType::class, $guide);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 1. Handle Main Cover Image
             $imageFile = $form->get('coverImage')->getData();
             if ($imageFile) {
                 $newFilename = $this->uploadFile($imageFile, $slugger);
                 $guide->setCoverImage($newFilename);
             }
 
-            // ✨ 2. HANDLE STEP IMAGES LOOP
             foreach ($form->get('guideSteps') as $stepForm) {
+                $step = $stepForm->getData();
                 $stepImageFile = $stepForm->get('image')->getData();
                 
                 if ($stepImageFile) {
                     $stepFilename = $this->uploadFile($stepImageFile, $slugger);
-                    $step = $stepForm->getData();
                     $step->setImage($stepFilename);
+                } elseif ($step->getVideoUrl()) {
+                    $videoId = $ytHelper->getYoutubeId($step->getVideoUrl());
+                    if ($videoId) {
+                        $apiUrl = $apiService->getThumbnailFromApi($videoId);
+                        if ($apiUrl) {
+                            $step->setImage($apiUrl);
+                        }
+                    }
                 }
             }
 
@@ -126,7 +156,6 @@ final class GuideController extends AbstractController
         return $this->redirectToRoute('app_guide_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    // ✨ Helper Function to avoid repeating code
     private function uploadFile($file, SluggerInterface $slugger): string
     {
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
@@ -139,7 +168,7 @@ final class GuideController extends AbstractController
                 $newFilename
             );
         } catch (FileException $e) {
-            // Handle error (e.g., log it)
+            // Handle error
         }
 
         return $newFilename;
