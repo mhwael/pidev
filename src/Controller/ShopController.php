@@ -7,6 +7,7 @@ use App\Entity\OrderItem;
 use App\Entity\Product;
 use App\Form\CheckoutType;
 use App\Repository\ProductRepository;
+use App\Service\MlApiClient;
 use App\Service\OrderMailer;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,10 +47,52 @@ class ShopController extends AbstractController
     }
 
     #[Route('/shop/products/{id}', name: 'shop_product_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function showProduct(Product $product): Response
-    {
+    public function showProduct(
+        Product $product,
+        MlApiClient $ml,
+        ProductRepository $productRepo
+    ): Response {
+        $recommendations = [];
+
+        try {
+            $data = $ml->getRecommendations($product->getId(), 6);
+
+            $items = $data['items'] ?? [];
+            $ids = [];
+            $scoreMap = [];
+
+            foreach ($items as $it) {
+                $rid = (int)($it['product_id'] ?? 0);
+                if ($rid > 0) {
+                    $ids[] = $rid;
+                    $scoreMap[$rid] = (float)($it['score'] ?? 0.0);
+                }
+            }
+
+            if ($ids) {
+                $products = $productRepo->createQueryBuilder('p')
+                    ->andWhere('p.id IN (:ids)')
+                    ->setParameter('ids', $ids)
+                    ->getQuery()
+                    ->getResult();
+
+                foreach ($products as $p) {
+                    /** @var Product $p */
+                    $recommendations[] = [
+                        'product' => $p,
+                        'score' => $scoreMap[$p->getId()] ?? 0.0,
+                    ];
+                }
+
+                usort($recommendations, fn($a, $b) => ($b['score'] <=> $a['score']));
+            }
+        } catch (\Throwable $e) {
+            $recommendations = [];
+        }
+
         return $this->render('Shop/product_show.html.twig', [
             'product' => $product,
+            'recommendations' => $recommendations,
         ]);
     }
 
@@ -88,7 +131,7 @@ class ShopController extends AbstractController
             $qty = (int) ($cart[$p->getId()] ?? 0);
             if ($qty < 1) continue;
 
-            $lineTotal = (float) $p->getPrice() * $qty;
+            $lineTotal = (float)$p->getPrice() * $qty;
             $total += $lineTotal;
 
             $lines[] = [
@@ -113,8 +156,11 @@ class ShopController extends AbstractController
         $cart = $session->get(self::CART_KEY, []);
         $pid = $product->getId();
 
-        if ($qty === 0) unset($cart[$pid]);
-        else $cart[$pid] = $qty;
+        if ($qty === 0) {
+            unset($cart[$pid]);
+        } else {
+            $cart[$pid] = $qty;
+        }
 
         $session->set(self::CART_KEY, $cart);
         return $this->redirectToRoute('shop_cart');
@@ -159,7 +205,9 @@ class ShopController extends AbstractController
         $total = 0.0;
         foreach ($products as $p) {
             $qty = (int) ($cart[$p->getId()] ?? 0);
-            if ($qty > 0) $total += (float) $p->getPrice() * $qty;
+            if ($qty > 0) {
+                $total += (float)$p->getPrice() * $qty;
+            }
         }
 
         $form = $this->createForm(CheckoutType::class);
@@ -176,34 +224,35 @@ class ShopController extends AbstractController
                 $order->setStatus('NEW');
                 $order->setCreatedAt(new \DateTimeImmutable());
 
-                $order->setCustomerFirstName(trim((string) $data['firstName']));
-                $order->setCustomerLastName(trim((string) $data['lastName']));
-                $order->setCustomerPhone(trim((string) $data['phone']));
-                $order->setCustomerEmail(trim((string) $data['email']));
+                $order->setCustomerFirstName(trim((string)$data['firstName']));
+                $order->setCustomerLastName(trim((string)$data['lastName']));
+                $order->setCustomerPhone(trim((string)$data['phone']));
+                $order->setCustomerEmail(trim((string)$data['email']));
 
                 $order->setPaymentMethod($data['paymentMethod'] ?? 'COD');
                 $order->setPaymentStatus('PENDING');
                 $order->setTotalAmount(number_format($total, 2, '.', ''));
 
                 foreach ($products as $p) {
+                    /** @var Product $p */
                     $qty = (int) ($cart[$p->getId()] ?? 0);
                     if ($qty < 1) continue;
 
                     $locked = $em->find(Product::class, $p->getId(), LockMode::PESSIMISTIC_WRITE);
                     if (!$locked) throw new \RuntimeException('Product not found.');
 
-                    if ((int) $locked->getStock() < $qty) {
+                    if ((int)$locked->getStock() < $qty) {
                         throw new \RuntimeException('Not enough stock for: ' . $locked->getName());
                     }
 
                     $item = new OrderItem();
                     $item->setProduct($locked);
                     $item->setQuantity($qty);
-                    $item->setUnitPrice((string) $locked->getPrice());
+                    $item->setUnitPrice((string)$locked->getPrice());
                     $order->addItem($item);
 
                     $locked->decreaseStock($qty);
-                    $order->addProduct($locked); // optional old relation
+                    $order->addProduct($locked);
                 }
 
                 if ($order->getPaymentMethod() === 'CARD') {
@@ -218,12 +267,11 @@ class ShopController extends AbstractController
                 $em->flush();
                 $conn->commit();
 
-                // ✅ Send email + PDF after commit
+                // ✅ Send confirmation email (do NOT block order if email fails)
                 try {
                     $orderMailer->sendOrderConfirmation($order);
-                    $this->addFlash('success', 'Email sent to: ' . $order->getCustomerEmail());
                 } catch (\Throwable $mailErr) {
-                    $this->addFlash('error', 'Order placed but email failed: ' . $mailErr->getMessage());
+                    $this->addFlash('error', 'Order saved but email failed: ' . $mailErr->getMessage());
                 }
 
                 $session->remove(self::CART_KEY);
@@ -252,25 +300,4 @@ class ShopController extends AbstractController
             'orders' => $orders,
         ]);
     }
-
-    #[Route('/shop/test-mail', name: 'shop_test_mail', methods: ['GET'])]
-public function testMail(OrderMailer $orderMailer, EntityManagerInterface $em): Response
-{
-    $order = $em->getRepository(\App\Entity\Order::class)->findOneBy([], ['id' => 'DESC']);
-    if (!$order) {
-        return new Response('No order found.');
-    }
-
-    try {
-        $orderMailer->sendOrderConfirmation($order);
-        return new Response('Mail sent to: ' . $order->getCustomerEmail());
-    } catch (\Throwable $e) {
-        return new Response('MAIL ERROR: ' . $e->getMessage());
-    }
-}
-     #[Route('/debug-mailer-dsn', name: 'debug_mailer_dsn')]
-public function debugMailerDsn(): Response
-{
-    return new Response((string) $_ENV['MAILER_DSN']);
-}
 }

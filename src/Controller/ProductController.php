@@ -6,6 +6,7 @@ use App\Entity\Product;
 use App\Form\ProductType;
 use App\Repository\ProductForecastRepository;
 use App\Repository\ProductRepository;
+use App\Service\MlApiClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -49,7 +50,7 @@ class ProductController extends AbstractController
             ];
         }
 
-        // ✅ ML forecasts: latest row per product (forecastDays=7)
+        // ✅ Forecasts are still read from DB (filled by ML API refresh)
         $productIds = [];
         foreach ($productsWithCounts as $row) {
             /** @var Product $p */
@@ -69,9 +70,42 @@ class ProductController extends AbstractController
             'dir' => $dirFinal,
             'hasSort' => ($sort !== null || $dir !== null),
 
-            // ✅ ML
+            // ✅ ML output
             'forecastMap' => $forecastMap,
         ]);
+    }
+
+    // ✅ NEW: Refresh AI from website (calls FastAPI refresh endpoints)
+    #[Route('/ml/refresh', name: 'product_ml_refresh', methods: ['POST'])]
+    public function refreshMl(Request $request, MlApiClient $ml): Response
+    {
+        // CSRF check (recommended)
+        $token = (string) $request->request->get('_token', '');
+        if (!$this->isCsrfTokenValid('ml_refresh', $token)) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('product_index');
+        }
+
+        try {
+            $reco = $ml->refreshRecommendations(6);
+            $forecast = $ml->refreshForecasts(7);
+
+            $msg = "✅ AI refreshed. Reco products: " . ($reco['updated_products'] ?? '-') .
+                   " | Forecast updated: " . ($forecast['updated'] ?? '-');
+
+            // Optional: show metric for validation
+            if (isset($forecast['mae_model'], $forecast['mae_baseline'])) {
+                $msg .= " | MAE(model)=" . round((float)$forecast['mae_model'], 4) .
+                        " MAE(baseline)=" . round((float)$forecast['mae_baseline'], 4);
+            }
+
+            $this->addFlash('success', $msg);
+
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'AI refresh failed: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('product_index');
     }
 
     #[Route('/new', name: 'product_new', methods: ['GET', 'POST'])]
@@ -113,7 +147,7 @@ class ProductController extends AbstractController
             $entityManager->persist($product);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Product created.');
+            $this->addFlash('success', 'Product created. (Tip: click "Refresh AI" to update predictions/recommendations)');
             return $this->redirectToRoute('product_index');
         }
 
@@ -159,7 +193,7 @@ class ProductController extends AbstractController
             }
 
             $entityManager->flush();
-            $this->addFlash('success', 'Product updated.');
+            $this->addFlash('success', 'Product updated. (Tip: click "Refresh AI" to update predictions/recommendations)');
             return $this->redirectToRoute('product_index');
         }
 

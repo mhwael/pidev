@@ -47,6 +47,14 @@
             <i class="feather-plus me-2"></i>New Product
         </a>
 
+        {# ✅ NEW: Refresh AI (calls FastAPI via Symfony) #}
+        <form method="post" action="{{ path('product_ml_refresh') }}" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('ml_refresh') }}">
+            <button type="submit" class="btn btn-dark">
+                <i class="feather-cpu me-2"></i>Refresh AI
+            </button>
+        </form>
+
         <a href="{{ path('orders_index') }}" class="btn btn-light-brand">
             <i class="feather-shopping-cart me-2"></i>Orders Dashboard
         </a>
@@ -161,7 +169,7 @@
                             {% endif %}
                         </td>
 
-                        {# ✅ Reorder is computed LIVE: if you change stock, it must change immediately #}
+                        {# ✅ Reorder is computed LIVE #}
                         <td class="text-nowrap">
                             {% if fc %}
                                 {% set pred = (fc.predictedQty + 0) %}

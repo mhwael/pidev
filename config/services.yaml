@@ -3,6 +3,7 @@
 parameters:
     product_images_dir: '%kernel.project_dir%/public/uploads/products'
     app.mail_from: '%env(APP_MAIL_FROM)%'
+    ml_api_base_url: '%env(resolve:ML_API_BASE_URL)%'
 
 services:
     _defaults:
@@ -16,6 +17,11 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # ✅ Explicit override: inject baseUrl into ML API client
+    App\Service\MlApiClient:
+        arguments:
+            $baseUrl: '%ml_api_base_url%'
 
     # Explicit mailer service with FROM email
     App\Service\OrderMailer:
