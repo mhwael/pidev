@@ -31,7 +31,6 @@ class MlApiClient
         return $res->toArray(false);
     }
 
-    // ✅ NEW: refresh recommendations from API
     public function refreshRecommendations(int $k = 6): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/refresh/recommendations", [
@@ -42,12 +41,25 @@ class MlApiClient
         return $res->toArray(false);
     }
 
-    // ✅ NEW: refresh forecasts from API
     public function refreshForecasts(int $forecastDays = 7): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/refresh/forecasts", [
             'query' => ['forecast_days' => $forecastDays],
             'timeout' => 120,
+        ]);
+
+        return $res->toArray(false);
+    }
+
+    // ✅ NEW: train forecast model ONCE (saves model on API side)
+    public function trainForecastModel(int $lookbackDays = 365, int $holdoutDays = 30): array
+    {
+        $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/train/forecast", [
+            'query' => [
+                'lookback_days' => $lookbackDays,
+                'eval_holdout_days' => $holdoutDays,
+            ],
+            'timeout' => 300,
         ]);
 
         return $res->toArray(false);

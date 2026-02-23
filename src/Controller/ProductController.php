@@ -50,7 +50,7 @@ class ProductController extends AbstractController
             ];
         }
 
-        // ✅ Forecasts are still read from DB (filled by ML API refresh)
+        // ✅ Forecasts read from DB (filled by ML API refresh)
         $productIds = [];
         foreach ($productsWithCounts as $row) {
             /** @var Product $p */
@@ -70,16 +70,14 @@ class ProductController extends AbstractController
             'dir' => $dirFinal,
             'hasSort' => ($sort !== null || $dir !== null),
 
-            // ✅ ML output
             'forecastMap' => $forecastMap,
         ]);
     }
 
-    // ✅ NEW: Refresh AI from website (calls FastAPI refresh endpoints)
+    // ✅ Refresh AI from website (NO retrain for forecasts now)
     #[Route('/ml/refresh', name: 'product_ml_refresh', methods: ['POST'])]
     public function refreshMl(Request $request, MlApiClient $ml): Response
     {
-        // CSRF check (recommended)
         $token = (string) $request->request->get('_token', '');
         if (!$this->isCsrfTokenValid('ml_refresh', $token)) {
             $this->addFlash('error', 'Invalid CSRF token.');
@@ -91,18 +89,45 @@ class ProductController extends AbstractController
             $forecast = $ml->refreshForecasts(7);
 
             $msg = "✅ AI refreshed. Reco products: " . ($reco['updated_products'] ?? '-') .
-                   " | Forecast updated: " . ($forecast['updated'] ?? '-');
-
-            // Optional: show metric for validation
-            if (isset($forecast['mae_model'], $forecast['mae_baseline'])) {
-                $msg .= " | MAE(model)=" . round((float)$forecast['mae_model'], 4) .
-                        " MAE(baseline)=" . round((float)$forecast['mae_baseline'], 4);
-            }
+                   " | Forecast updated: " . ($forecast['updated'] ?? '-') .
+                   " | use_model=" . ((int)($forecast['use_model'] ?? 0)) .
+                   " | model=" . ($forecast['model_name'] ?? '-');
 
             $this->addFlash('success', $msg);
-
         } catch (\Throwable $e) {
             $this->addFlash('error', 'AI refresh failed: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('product_index');
+    }
+
+    // ✅ Train forecast model ONCE from website
+    #[Route('/ml/train-forecast', name: 'product_ml_train_forecast', methods: ['POST'])]
+    public function trainForecast(Request $request, MlApiClient $ml): Response
+    {
+        $token = (string) $request->request->get('_token', '');
+        if (!$this->isCsrfTokenValid('ml_train_forecast', $token)) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('product_index');
+        }
+
+        try {
+            $out = $ml->trainForecastModel(365, 30);
+
+            if (($out['trained'] ?? false) === true) {
+                $this->addFlash(
+                    'success',
+                    "✅ Forecast trained: " .
+                    ($out['model_name'] ?? '-') .
+                    " | MAE(model)=" . round((float)($out['mae_model'] ?? 0), 4) .
+                    " | MAE(baseline)=" . round((float)($out['mae_baseline'] ?? 0), 4) .
+                    " | beats_baseline=" . ((int)($out['beats_baseline'] ?? 0))
+                );
+            } else {
+                $this->addFlash('error', 'Forecast training skipped: ' . ($out['message'] ?? 'unknown'));
+            }
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Training failed: ' . $e->getMessage());
         }
 
         return $this->redirectToRoute('product_index');
@@ -116,7 +141,6 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
             /** @var UploadedFile|null $imageFile */
             $imageFile = $form->get('imageFile')->getData();
             $imageUrl  = trim((string) $product->getImage());
@@ -147,7 +171,7 @@ class ProductController extends AbstractController
             $entityManager->persist($product);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Product created. (Tip: click "Refresh AI" to update predictions/recommendations)');
+            $this->addFlash('success', 'Product created. Tip: click "Refresh AI".');
             return $this->redirectToRoute('product_index');
         }
 
@@ -164,7 +188,6 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
             /** @var UploadedFile|null $imageFile */
             $imageFile = $form->get('imageFile')->getData();
             $imageUrl  = trim((string) $product->getImage());
@@ -193,7 +216,7 @@ class ProductController extends AbstractController
             }
 
             $entityManager->flush();
-            $this->addFlash('success', 'Product updated. (Tip: click "Refresh AI" to update predictions/recommendations)');
+            $this->addFlash('success', 'Product updated. Tip: click "Refresh AI".');
             return $this->redirectToRoute('product_index');
         }
 
@@ -211,19 +234,13 @@ class ProductController extends AbstractController
             return $this->redirectToRoute('product_index');
         }
 
-        // ✅ IMPORTANT: prevent deletion if referenced by order_item (FK constraint)
         $conn = $entityManager->getConnection();
-        $count = (int) $conn->fetchOne(
-            'SELECT COUNT(*) FROM order_item WHERE product_id = ?',
-            [$product->getId()]
-        );
-
+        $count = (int) $conn->fetchOne('SELECT COUNT(*) FROM order_item WHERE product_id = ?', [$product->getId()]);
         if ($count > 0) {
-            $this->addFlash('error', "Can't delete this product: it is used in $count order item(s). You can set stock=0 instead.");
+            $this->addFlash('error', "Can't delete: used in $count order item(s). Set stock=0 instead.");
             return $this->redirectToRoute('product_index');
         }
 
-        // ✅ detach ManyToMany orders (order_product pivot) to avoid pivot constraint
         foreach ($product->getOrders() as $order) {
             $order->removeProduct($product);
         }

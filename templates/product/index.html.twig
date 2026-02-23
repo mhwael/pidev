@@ -47,7 +47,15 @@
             <i class="feather-plus me-2"></i>New Product
         </a>
 
-        {# ✅ NEW: Refresh AI (calls FastAPI via Symfony) #}
+        {# ✅ NEW: Train Forecast Model (once) #}
+        <form method="post" action="{{ path('product_ml_train_forecast') }}" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('ml_train_forecast') }}">
+            <button type="submit" class="btn btn-outline-dark">
+                <i class="feather-activity me-2"></i>Train Forecast
+            </button>
+        </form>
+
+        {# ✅ Refresh AI (reco + forecasts, no retrain) #}
         <form method="post" action="{{ path('product_ml_refresh') }}" class="d-inline">
             <input type="hidden" name="_token" value="{{ csrf_token('ml_refresh') }}">
             <button type="submit" class="btn btn-dark">
@@ -169,7 +177,7 @@
                             {% endif %}
                         </td>
 
-                        {# ✅ Reorder is computed LIVE #}
+                        {# ✅ Reorder is computed LIVE: if you change stock, it must change immediately #}
                         <td class="text-nowrap">
                             {% if fc %}
                                 {% set pred = (fc.predictedQty + 0) %}
