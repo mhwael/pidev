@@ -123,7 +123,25 @@
                                   </div>
                               {% endif %}
                               
-                              <p>{{ step.content|nl2br }}</p>
+                              {# 👇 AI GAME ADDITION STARTS HERE 👇 #}
+                              <p id="step-desc-{{ loop.index }}">{{ step.content|nl2br }}</p>
+                              
+                              <div class="drill-section mt-4">
+                                  <button onclick="generateGame({{ loop.index }})" id="btn-{{ loop.index }}" class="btn btn-sm" style="background-color: #ff005c; color: white; border: none; font-weight: bold; border-radius: 4px; padding: 10px 20px;">
+                                      🕹️ Practice this Step
+                                  </button>
+                                  
+                                  <div id="game-container-{{ loop.index }}" style="margin-top: 15px; display: none;">
+                                      <iframe id="frame-{{ loop.index }}" 
+                                              width="100%" 
+                                              height="350" 
+                                              sandbox="allow-scripts" 
+                                              style="border: 2px solid #ff005c; border-radius: 8px; background: white;">
+                                      </iframe>
+                                  </div>
+                              </div>
+                              {# 👆 AI GAME ADDITION ENDS HERE 👆 #}
+
                           </div>
                       {% else %}
                           <p class="text-muted">No steps added yet.</p>
@@ -177,8 +195,6 @@
                                   </div>
                               </div>
                               
-                             
-
                           {{ form_end(ratingForm) }}
                       {% else %}
                           <div class="alert alert-dark text-center" style="background: #1f2042; border: 1px solid #2a2b5e;">
@@ -228,4 +244,45 @@
       </div>
    </div>
 </section>
+
+{# ✨ AI MINIGAME JAVASCRIPT LOGIC ✨ #}
+<script>
+function generateGame(index) {
+    const textVariable = document.getElementById('step-desc-' + index).innerText;
+    const btn = document.getElementById('btn-' + index);
+    const container = document.getElementById('game-container-' + index);
+    const iframe = document.getElementById('frame-' + index);
+    
+    // Loading State
+    btn.innerText = "⏳ Compiling AI Mini-Game...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+    // Call Symfony Backend
+    fetch('/api/generate-drill', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ step_text: textVariable })
+    })
+    .then(response => response.text())
+    .then(htmlCode => {
+        // Render Game
+        iframe.srcdoc = htmlCode; 
+        container.style.display = "block";
+        
+        // Reset Button
+        btn.innerText = "🕹️ Regenerate Drill";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.innerText = "❌ AI Server Error";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    });
+}
+</script>
 {% endblock %}
