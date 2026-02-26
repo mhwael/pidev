@@ -10,9 +10,29 @@
         </div>
     </section>
 
-    <section class="blog_part section_padding" style="background-color: #0b0c2a; padding-top: 80px;">
+    <section class="blog_part section_padding" style="background-color: #0b0c2a; padding-top: 80px; padding-bottom: 80px;">
         <div class="container">
-            <div class="row">
+            
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="ai-search-container" style="background: #16173d; padding: 30px; border-radius: 10px; border: 1px solid #ff4655; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <h3 style="color: white; margin-top: 0; font-weight: bold;">🤖 Ask the AI Assistant</h3>
+                        <p style="color: #aab; font-size: 15px;">Can't find a guide? Describe what you are struggling with, and our AI will find it or log a request for our Admins!</p>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <input type="text" id="ai-query" placeholder="e.g., I keep dying to operators on Ascent middle..." 
+                                   style="flex: 1; padding: 15px; background: #0b0c2a; border: 1px solid #333; border-radius: 5px; color: white;">
+                            <button id="ai-search-btn" class="btn_3" style="border: none; cursor: pointer; white-space: nowrap;">
+                                Ask AI
+                            </button>
+                        </div>
+
+                        <div id="ai-response-box" style="margin-top: 20px; padding: 15px; display: none; border-radius: 5px; color: white;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row" id="main-guide-list">
                 {% if guides is empty %}
                     <div class="col-12 text-center text-white">
                         <p>No guides found yet.</p>
@@ -61,4 +81,120 @@
             </div>
         </div>
     </section>
+
+   <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.getElementById('ai-search-btn');
+            
+            if(searchBtn) {
+                searchBtn.addEventListener('click', function() {
+                    const queryInput = document.getElementById('ai-query').value;
+                    const responseBox = document.getElementById('ai-response-box');
+                    const btn = document.getElementById('ai-search-btn');
+
+                    if (!queryInput) {
+                        alert("Please type a question first!");
+                        return;
+                    }
+
+                    btn.innerText = "Thinking...";
+                    btn.style.opacity = "0.7";
+                    responseBox.style.display = "block";
+                    responseBox.style.background = "#1b1b2f"; 
+                    responseBox.style.borderLeft = "4px solid #fff";
+                    responseBox.innerHTML = "🧠 AI is analyzing your request...";
+
+                    fetch('/api/ask-assistant', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: queryInput })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.innerText = "Ask AI";
+                        btn.style.opacity = "1";
+
+                        if (data.status === 'wishlist_added') {
+                            responseBox.style.background = "rgba(255, 70, 85, 0.1)"; 
+                            responseBox.style.borderLeft = "4px solid #ff4655";
+                            responseBox.innerHTML = `<strong style="color: #ff4655;">✅ Request Logged!</strong> <br><span style="color: #e0e0e0;">${data.message}</span> <br><small style="color:#888; margin-top: 5px; display: block;">(Keywords extracted by AI: <i>${data.keywords_extracted}</i>)</small>`;
+                        } 
+                        else if (data.status === 'success') {
+                            responseBox.style.background = "rgba(0, 255, 204, 0.1)"; 
+                            responseBox.style.borderLeft = "4px solid #00ffcc";
+                            responseBox.innerHTML = `<strong style="color: #00ffcc;">🎯 Found it!</strong> <br><span style="color: #e0e0e0;">${data.message}</span> <br><small style="color:#888; margin-top: 5px; display: block;">(Keywords searched: <i>${data.keywords_used}</i>)</small>`;
+                            
+                            const mainList = document.getElementById('main-guide-list');
+                            if (mainList) {
+                                let cardsHtml = '';
+                                
+                                data.data.forEach(guide => {
+                                    let safeDescription = guide.description ? guide.description.substring(0, 80) + '...' : '';
+                                    
+                                    // Handle the image dynamic rendering
+                                    let imageHtml = '';
+                                    if (guide.coverImage) {
+                                        imageHtml = `<img src="/uploads/guide/${guide.coverImage}" alt="${guide.title}" style="height: 220px; width: 100%; object-fit: cover;">`;
+                                    } else {
+                                        imageHtml = `<div class="d-flex align-items-center justify-content-center bg-secondary" style="height: 220px;"><i class="fas fa-robot fa-4x text-white" style="color: #00ffcc !important;"></i></div>`;
+                                    }
+
+                                    // Handle missing difficulties/games gracefully
+                                    let difficulty = guide.difficulty ? guide.difficulty : 'Medium';
+                                    let gameName = guide.gameName ? guide.gameName : 'Game';
+
+                                    cardsHtml += `
+                                    <div class="col-sm-6 col-lg-4 d-flex align-items-stretch">
+                                        <div class="single_blog_item" style="background: #16173d; width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,255,204,0.15); border: 1px solid #00ffcc;">
+                                            
+                                            <div class="single_blog_img">
+                                                <a href="${guide.url}">
+                                                    ${imageHtml}
+                                                </a>
+                                            </div>
+                                            
+                                            <div class="single_blog_text" style="padding: 25px;">
+                                                <div class="mb-3">
+                                                    <span class="badge badge-primary">${gameName}</span>
+                                                    <span class="badge badge-warning text-dark">${difficulty}</span>
+                                                    <span class="badge" style="background-color: #00ffcc; color: #000; margin-left: 5px;">AI Match</span>
+                                                </div>
+
+                                                <h3 style="margin-bottom: 15px;">
+                                                    <a href="${guide.url}" style="color: white; font-weight: 700; text-decoration: none;">
+                                                        ${guide.title}
+                                                    </a>
+                                                </h3>
+                                                
+                                                <p style="color: #aab; font-size: 14px;">
+                                                    ${safeDescription}
+                                                </p>
+                                                
+                                                <a href="${guide.url}" class="btn_3" style="background-color: #00ffcc; color: #000; padding: 10px 20px; display: inline-block; margin-top: 10px;">Read Guide</a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                });
+                                
+                                mainList.innerHTML = cardsHtml;
+                            }
+                        } 
+                        else {
+                            responseBox.style.background = "rgba(255, 193, 7, 0.1)";
+                            responseBox.style.borderLeft = "4px solid #ffc107";
+                            responseBox.innerHTML = `<strong style="color: #ffc107;">⚠️ Oops:</strong> <span style="color: #e0e0e0;">${data.error || "Something went wrong."}</span>`;
+                        }
+                    })
+                    .catch(error => {
+                        btn.innerText = "Ask AI";
+                        btn.style.opacity = "1";
+                        responseBox.style.borderLeft = "4px solid #ff4655";
+                        responseBox.innerHTML = "⚠️ Failed to connect to the AI server. Please try again.";
+                    });
+                });
+            }
+        });
+    </script>
 {% endblock %}
