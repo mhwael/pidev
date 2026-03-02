@@ -93,11 +93,13 @@ class Tournament
     #[Assert\NotNull(message: "Organizer is required")]
     private ?User $organizer = null;
 
+    /** @var Collection<int, Team> */  // ✅ Fix :98 — specify generic types
     #[ORM\ManyToMany(targetEntity: Team::class, inversedBy: 'tournaments')]
     #[ORM\JoinTable(name: 'tournament_teams')]
     private Collection $teams;
 
-    #[ORM\OneToMany(targetEntity: GameMatch::class, mappedBy: 'tournament', cascade: ['persist', 'remove'])]
+    /** @var Collection<int, GameMatch> */  // ✅ Fix :101 — specify generic types
+    #[ORM\OneToMany(targetEntity: GameMatch::class, mappedBy: 'tournament', cascade: ['persist', 'remove'] , orphanRemoval: true)]
     private Collection $matches;
 
     public function __construct()
@@ -115,8 +117,8 @@ class Tournament
     }
 
     /**
-    * @return Collection<int, GameMatch>
-    */
+     * @return Collection<int, GameMatch>
+     */
     public function getMatches(): Collection
     {
         return $this->matches;
@@ -138,7 +140,7 @@ class Tournament
                 $match->setTournament(null);
             }
         }
-        return $this;   
+        return $this;
     }
 
     // Getters et Setters

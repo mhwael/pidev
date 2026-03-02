@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Team;
+use App\Entity\User;
 use App\Form\TeamType;
 use App\Repository\TeamRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,11 +28,15 @@ class TeamController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        
+
+        // ✅ Fix Cat.4 : assert that getUser() returns App\Entity\User
+        $user = $this->getUser();
+        assert($user instanceof User);
+
         $team = new Team();
-        $team->setCaptain($this->getUser());
-        $team->addMember($this->getUser());
-        
+        $team->setCaptain($user);   // ✅ now typed as User, not UserInterface
+        $team->addMember($user);    // ✅ idem
+
         $form = $this->createForm(TeamType::class, $team);
         $form->handleRequest($request);
 
@@ -95,7 +100,9 @@ class TeamController extends AbstractController
             return $this->redirectToRoute('app_team_show', ['id' => $team->getId()]);
         }
 
-        if ($this->isCsrfTokenValid('delete'.$team->getId(), $request->request->get('_token'))) {
+        // ✅ Fix Cat.2 : cast _token to string (request->get() returns mixed)
+        $token = (string) $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $team->getId(), $token)) {
             $entityManager->remove($team);
             $entityManager->flush();
             $this->addFlash('success', 'Équipe supprimée avec succès !');

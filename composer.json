@@ -91,12 +91,12 @@
     },
     "extra": {
         "symfony": {
-            "allow-contrib": false,
+            "allow-contrib": true,
             "require": "6.4.*"
         }
     },
     "require-dev": {
-        "ahmed-bhs/doctrine-doctor": "*",
+        "ahmed-bhs/doctrine-doctor": "^1.0",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5",
         "symfony/browser-kit": "6.4.*",

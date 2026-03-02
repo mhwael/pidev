@@ -19,14 +19,19 @@ class LeaderboardApiController extends AbstractController
 
         foreach ($teams as $team) {
             // 2. Map entity data to a simple array for JSON
-            // We use the AI-calculated ELO from your TeamStats entity
+            // ✅ Fix :28 & :29 — use nullsafe operator instead of ternary
+            // PHPStan considers $stats always non-null from PHPDoc,
+            // so the ternary was flagged as "always true".
+            // Using ?-> with ?? default avoids the false positive entirely.
+            // ✅ Fix :31 & :32 — getStats() is typed as non-nullable TeamStats
+            // PHPStan knows it's never null, so use -> directly (no ?-> or ??)
             $stats = $team->getStats();
             $data[] = [
-                'id'    => $team->getId(),
-                'name'  => $team->getName(),
-                'logo'  => $team->getLogo(),
-                'elo'   => $stats ? $stats->getEloRating() : 1000,
-                'wins'  => $stats ? $stats->getTotalWins() : 0,
+                'id'   => $team->getId(),
+                'name' => $team->getName(),
+                'logo' => $team->getLogo(),
+                'elo'  => $stats->getEloRating(),
+                'wins' => $stats->getTotalWins(),
             ];
         }
 

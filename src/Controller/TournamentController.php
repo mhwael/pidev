@@ -3,7 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Tournament;
-use App\Entity\GameMatch; 
+use App\Entity\GameMatch;
+use App\Entity\User;
 use App\Form\TournamentType;
 use App\Repository\TournamentRepository;
 use App\Repository\TeamRepository;
@@ -33,11 +34,15 @@ class TournamentController extends AbstractController
         ]);
     }
 
+    // ✅ PERFORMANCE FIX: inject teams via INNER JOIN instead of lazy load LEFT JOIN
     #[Route('/tournament/{id}', name: 'app_tournament_view', methods: ['GET'])]
-    public function view(Tournament $tournament): Response
+    public function view(Tournament $tournament, TeamRepository $teamRepository): Response
     {
+        $teams = $teamRepository->findByTournamentWithStats($tournament);
+
         return $this->render('tournament/view.html.twig', [
             'tournament' => $tournament,
+            'teams'      => $teams, // ✅ use {{ teams }} in twig, not {{ tournament.teams }}
         ]);
     }
 
@@ -46,8 +51,9 @@ class TournamentController extends AbstractController
      */
     #[Route('/tournament/{id}/matchmaking', name: 'app_tournament_matchmaking', methods: ['GET'])]
     public function showMatchmaking(
-        int $id, 
-        TournamentRepository $tournamentRepository, 
+        int $id,
+        TournamentRepository $tournamentRepository,
+        TeamRepository $teamRepository,
         MatchmakingAI $matchmakingAI
     ): Response {
         $tournament = $tournamentRepository->find($id);
@@ -56,7 +62,8 @@ class TournamentController extends AbstractController
             throw $this->createNotFoundException('Tournoi non trouvé.');
         }
 
-        $teams = $tournament->getTeams()->toArray();
+        // ✅ INNER JOIN instead of LEFT JOIN
+        $teams = $teamRepository->findByTournamentWithStats($tournament);
 
         if (count($teams) < 2) {
             $this->addFlash('warning', 'Il faut au moins 2 équipes pour générer des matchups.');
@@ -68,8 +75,8 @@ class TournamentController extends AbstractController
         $fairnessRating = $matchmakingAI->getFairnessRating($averageBalance);
 
         return $this->render('tournament/matchmaking.html.twig', [
-            'tournament' => $tournament,
-            'matchups' => $matchups,
+            'tournament'     => $tournament,
+            'matchups'       => $matchups,
             'averageBalance' => $averageBalance,
             'fairnessRating' => $fairnessRating,
         ]);
@@ -80,9 +87,10 @@ class TournamentController extends AbstractController
      */
     #[Route('/tournament/{id}/matchmaking/confirm', name: 'app_tournament_matchmaking_confirm', methods: ['POST'])]
     public function confirmMatchmaking(
-        int $id, 
-        TournamentRepository $tournamentRepository, 
-        EntityManagerInterface $entityManager, 
+        int $id,
+        TournamentRepository $tournamentRepository,
+        TeamRepository $teamRepository,
+        EntityManagerInterface $entityManager,
         MatchmakingAI $matchmakingAI
     ): Response {
         $tournament = $tournamentRepository->find($id);
@@ -90,7 +98,8 @@ class TournamentController extends AbstractController
             throw $this->createNotFoundException('Tournament not found');
         }
 
-        $teams = $tournament->getTeams()->toArray();
+        // ✅ INNER JOIN instead of LEFT JOIN
+        $teams = $teamRepository->findByTournamentWithStats($tournament);
         $matchups = $matchmakingAI->generateMatchups($teams);
 
         foreach ($matchups as $data) {
@@ -100,8 +109,6 @@ class TournamentController extends AbstractController
             $match->setTeam2($data['team2']);
             $match->setStatus('pending');
             $match->setRound(1);
-            
-
             $entityManager->persist($match);
         }
 
@@ -115,9 +122,13 @@ class TournamentController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        
+
+        $user = $this->getUser();
+        assert($user instanceof User);
+
         $tournament = new Tournament();
-        $tournament->setOrganizer($this->getUser());
+        $tournament->setOrganizer($user);
+
         $form = $this->createForm(TournamentType::class, $tournament);
         $form->handleRequest($request);
 
@@ -130,7 +141,7 @@ class TournamentController extends AbstractController
 
         return $this->render('tournament/new.html.twig', [
             'tournament' => $tournament,
-            'form' => $form,
+            'form'       => $form,
         ]);
     }
 
@@ -156,7 +167,7 @@ class TournamentController extends AbstractController
 
         return $this->render('tournament/edit.html.twig', [
             'tournament' => $tournament,
-            'form' => $form,
+            'form'       => $form,
         ]);
     }
 
@@ -173,7 +184,8 @@ class TournamentController extends AbstractController
             return $this->redirectToRoute('app_tournament_show', ['id' => $tournament->getId()]);
         }
 
-        if ($this->isCsrfTokenValid('delete'.$tournament->getId(), $request->request->get('_token'))) {
+        $token = (string) $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $tournament->getId(), $token)) {
             $entityManager->remove($tournament);
             $entityManager->flush();
             $this->addFlash('success', 'Tournoi supprimé avec succès !');
@@ -191,17 +203,17 @@ class TournamentController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        $teamId = $request->request->get('teamId');
+        $teamId      = $request->request->get('teamId');
         $tournamentId = $request->request->get('tournamentId');
-        $token = $request->request->get('_token');
+        $token       = (string) $request->request->get('_token');
 
         if (!$this->isCsrfTokenValid('join_tournament', $token)) {
             return $this->json(['success' => false, 'message' => 'Token CSRF invalide.'], 400);
         }
 
-        $user = $this->getUser();
+        $user       = $this->getUser();
         $tournament = $tournamentRepository->find($tournamentId);
-        $team = $teamRepository->find($teamId);
+        $team       = $teamRepository->find($teamId);
 
         if (!$tournament || !$team) {
             return $this->json(['success' => false, 'message' => 'Ressource non trouvée.'], 404);
@@ -215,6 +227,7 @@ class TournamentController extends AbstractController
             return $this->json(['success' => false, 'message' => 'Inscriptions fermées.'], 400);
         }
 
+        // ✅ use count(getTeams()) — safe here, no stats access needed
         if (count($tournament->getTeams()) >= $tournament->getMaxTeams()) {
             return $this->json(['success' => false, 'message' => 'Tournoi complet.'], 400);
         }
@@ -245,12 +258,13 @@ class TournamentController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        if (!$this->isCsrfTokenValid('leave_tournament_' . $tournament->getId(), $request->request->get('_token'))) {
+        $token = (string) $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('leave_tournament_' . $tournament->getId(), $token)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_tournament_view', ['id' => $tournament->getId()]);
         }
 
-        $user = $this->getUser();
+        $user    = $this->getUser();
         $removed = false;
         foreach ($tournament->getTeams() as $team) {
             if ($team->getCaptain() === $user) {

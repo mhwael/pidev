@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert; // ✨ This enables the validation rules
+use Symfony\Component\Validator\Constraints as Assert; 
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -62,7 +62,6 @@ class Game
     public function __construct()
     {
         $this->guides = new ArrayCollection();
-        // ✨ Set defaults here to prevent "null" errors
         $this->createdAt = new \DateTimeImmutable();
         $this->hasRanking = false; 
     }
@@ -165,7 +164,6 @@ class Game
     public function removeGuide(Guide $guide): static
     {
         if ($this->guides->removeElement($guide)) {
-            // set the owning side to null (unless already changed)
             if ($guide->getGame() === $this) {
                 $guide->setGame(null);
             }
@@ -175,8 +173,7 @@ class Game
     }
 
     public function __toString(): string
-    {
-        // This tells Symfony to use the Game's name in dropdown menus
-        return $this->name; 
-    }
+{
+    return (string) $this->getName(); // Cast to string to avoid null
+}
 }

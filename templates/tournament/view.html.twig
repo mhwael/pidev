@@ -76,7 +76,7 @@
                         <div class="col-md-6 col-lg-4">
                             <div class="stat-box p-2" style="background: rgba(255,255,255,0.05); border-left: 3px solid #17a2b8; border-radius: 8px;">
                                 <small class="text-muted d-block">Teams</small>
-                                <span class="text-info fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }}</span>
+                                <span class="text-info fw-bold">{{ teams|length }} / {{ tournament.maxTeams }}</span>
                             </div>
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                         {% endif %}
 
                         {# NEW: AI Matchmaking Button #}
-                        {% if tournament.teams|length >= 2 %}
+                        {% if teams|length >= 2 %}
                             <a href="{{ path('app_tournament_matchmaking', {'id': tournament.id}) }}" 
                                class="btn btn-info fw-bold position-relative">
                                 <i class="fas fa-robot me-2"></i>AI Matchmaking
@@ -234,8 +234,8 @@
                                         <small class="text-muted d-block mb-2">
                                             <i class="fas fa-users me-2"></i>Teams Capacity
                                         </small>
-                                        <h6 class="text-light fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }}</h6>
-                                        {% set fillPercentage = (tournament.teams|length / tournament.maxTeams * 100) %}
+                                        <h6 class="text-light fw-bold">{{ teams|length }} / {{ tournament.maxTeams }}</h6>
+                                        {% set fillPercentage = (teams|length / tournament.maxTeams * 100) %}
                                         <div class="progress mt-2" style="height: 6px;">
                                             <div class="progress-bar bg-success" style="width: {{ fillPercentage > 100 ? 100 : fillPercentage }}%;"></div>
                                         </div>
@@ -280,12 +280,12 @@
 <div class="card shadow-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
     <div class="card-body p-4">
         <h3 class="text-white fw-bold mb-4">
-            <i class="fas fa-users text-success me-2"></i>Registered Teams ({{ tournament.teams|length }})
+            <i class="fas fa-users text-success me-2"></i>Registered Teams ({{ teams|length }})
         </h3>
 
-        {% if tournament.teams|length > 0 %}
+        {% if teams|length > 0 %}
             <div class="row g-3">
-                {% for team in tournament.teams %}
+                {% for team in teams %}
                     <div class="col-md-6">
                         <div class="team-card p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;">
                             <div class="d-flex align-items-center mb-2">
@@ -365,7 +365,7 @@
                                 <small class="text-muted d-block mb-2">
                                     <i class="fas fa-users text-info me-2"></i>Capacity
                                 </small>
-                                <h6 class="text-info fw-bold">{{ tournament.teams|length }} / {{ tournament.maxTeams }} Teams</h6>
+                                <h6 class="text-info fw-bold">{{ teams|length }} / {{ tournament.maxTeams }} Teams</h6>
                             </div>
 
 

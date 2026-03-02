@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Guide;
 use App\Entity\Game;
+use App\Entity\User; // ✨ Added this to fix the PHPStan type error
 use App\Entity\GuideRating;
 use App\Form\FrontGuideRatingType;
 use App\Repository\GuideRepository;
@@ -23,7 +24,7 @@ class GuideFrontController extends AbstractController
     public function index(GuideRepository $guideRepository): Response
     {
         return $this->render('guide_front/index.html.twig', [
-            'guides' => $guideRepository->findAll(),
+            'guides' => $guideRepository->findAllOptimized(), // Use the optimized method with joins
         ]);
     }
 
@@ -38,7 +39,11 @@ class GuideFrontController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             
             $user = $this->getUser();
-            if (!$user) {
+            
+            /** * PHPStan FIX: Explicitly check that $user is an instance of our User entity.
+             * This satisfies the "expects App\Entity\User|null, UserInterface given" error.
+             */
+            if (!$user instanceof User) {
                 $this->addFlash('error', 'You must be logged in to rate a guide.');
                 return $this->redirectToRoute('app_login');
             }
@@ -72,7 +77,7 @@ class GuideFrontController extends AbstractController
             }
 
             // Save everything to the database
-            $rating->setUser($user);
+            $rating->setUser($user); // Now PHPStan is happy because $user is confirmed as User
             $rating->setGuide($guide);
             $rating->setCreatedAt(new \DateTimeImmutable());
 
@@ -132,4 +137,4 @@ class GuideFrontController extends AbstractController
             'generatedText' => $generatedText,
         ]);
     }
-    }
+}

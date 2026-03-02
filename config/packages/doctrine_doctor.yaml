@@ -2,8 +2,8 @@
 # Full documentation: https://github.com/ahmed-bhs/doctrine-doctor/blob/main/docs/CONFIGURATION.md
 
 doctrine_doctor:
-    # Disable by default (prod). We'll enable it only in dev.
-    enabled: false
+    # Enable Doctrine Doctor (automatically enabled in dev/test environments)
+    enabled: true
 
 #    # Web Profiler integration
 #    profiler:

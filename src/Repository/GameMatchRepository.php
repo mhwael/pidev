@@ -20,6 +20,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find all matches in a tournament
+     *
+     * @return array<int, GameMatch>
      */
     public function findByTournament(Tournament $tournament): array
     {
@@ -34,6 +36,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find completed matches in a tournament
+     *
+     * @return array<int, GameMatch>
      */
     public function findCompletedByTournament(Tournament $tournament): array
     {
@@ -48,6 +52,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find pending matches in a tournament
+     *
+     * @return array<int, GameMatch>
      */
     public function findPendingByTournament(Tournament $tournament): array
     {
@@ -62,6 +68,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find matches for a specific team in a tournament
+     *
+     * @return array<int, GameMatch>
      */
     public function findByTeamAndTournament(Team $team, Tournament $tournament): array
     {
@@ -77,6 +85,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find all matches involving a team
+     *
+     * @return array<int, GameMatch>
      */
     public function findByTeam(Team $team, int $limit = 10): array
     {
@@ -91,6 +101,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find matches between two teams
+     *
+     * @return array<int, GameMatch>
      */
     public function findMatchesBetweenTeams(Team $team1, Team $team2): array
     {
@@ -104,10 +116,12 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Find match count by round in tournament
+     *
+     * ✅ Fix :110 — getSingleScalarResult() returns mixed, cast to int
      */
     public function countByRound(Tournament $tournament, int $round): int
     {
-        return $this->createQueryBuilder('m')
+        return (int) $this->createQueryBuilder('m')
             ->select('COUNT(m.id)')
             ->where('m.tournament = :tournament')
             ->andWhere('m.round = :round')
@@ -119,6 +133,8 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Get latest matches
+     *
+     * @return array<int, GameMatch>
      */
     public function findLatestMatches(int $limit = 10): array
     {
@@ -131,10 +147,12 @@ class GameMatchRepository extends ServiceEntityRepository
 
     /**
      * Get completed matches count
+     *
+     * ✅ Fix :137 — getSingleScalarResult() returns mixed, cast to int
      */
     public function countCompleted(): int
     {
-        return $this->createQueryBuilder('m')
+        return (int) $this->createQueryBuilder('m')
             ->select('COUNT(m.id)')
             ->where('m.status = :status')
             ->setParameter('status', 'completed')

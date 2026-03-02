@@ -1,27 +1,7 @@
 parameters:
     level: 8
     paths:
-        - src/Controller/ShopController.php
-        - src/Controller/ProductController.php
-        - src/Controller/Api/ChatController.php
-        - src/Service
-        - src/Repository
-        - src/Form
-
-    excludePaths:
-        - src/Controller/GameController.php
-        - src/Controller/Guide*
-        - src/Controller/MessagesForumController.php
-        - src/Controller/TeamController.php
-        - src/Controller/TournamentController.php
-        - src/Entity
-        - src/Repository/Game*
-        - src/Repository/MessagesForumRepository.php
-        - src/Repository/TeamstatsRepository.php
-        - src/Service/DiscordService.php
-        - src/Service/ELOService.php
-        - src/Service/MatchmakingAI.php
-        - src/Service/YoutubeApiService.php
-        - src/Command
-
-    reportUnmatchedIgnoredErrors: false
+        - src
+    ignoreErrors:
+        - '#Property .*::\$id \(int\|null\) is never assigned int#'
+        
