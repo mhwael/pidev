@@ -17,7 +17,6 @@ use Doctrine\ORM\EntityManagerInterface;
 class ELOService
 {
     private const K_FACTOR = 32; // Standard in chess, controls rating volatility
-    private const BASE_ELO = 1200; // Starting rating for new teams
 
     public function __construct(private EntityManagerInterface $em) {}
 

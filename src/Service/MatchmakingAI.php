@@ -32,8 +32,8 @@ class MatchmakingAI
         // WEIGHTS (these are "learned" from tournament data)
         // Higher weight = more important factor
         $weights = [
-            'elo' => 0.50,      // 50% - ELO is most important (best predictor)
-            'win_rate' => 0.30, // 30% - Win rate shows consistency
+            'elo' => 0.50,        // 50% - ELO is most important (best predictor)
+            'win_rate' => 0.30,   // 30% - Win rate shows consistency
             'experience' => 0.20, // 20% - More matches = more reliable prediction
         ];
 
@@ -64,7 +64,7 @@ class MatchmakingAI
      * - Results: Teams of similar strength play each other = FAIR MATCHES!
      * 
      * @param Team[] $teams Array of teams to match
-     * @return array Array of matchups with predictions
+     * @return array<int, array{team1: Team, team2: Team, strength1: float, strength2: float, balance: float, prediction: array<string, mixed>}> Array of matchups with predictions
      */
     public function generateMatchups(array $teams): array
     {
@@ -124,12 +124,12 @@ class MatchmakingAI
     {
         // Calculate strength difference
         $difference = abs($strength1 - $strength2);
-        
+
         // Convert difference to balance score
         // 0 difference = 100% balance
         // 30+ difference = 0% balance (very one-sided)
         $balance = max(0, 100 - ($difference * 3.33));
-        
+
         return round($balance, 2);
     }
 
@@ -139,22 +139,22 @@ class MatchmakingAI
      * Uses SIGMOID FUNCTION (logistic function) - real ML math!
      * Converts strength difference into win probability
      * 
-     * @return array ['team1_percentage' => float, 'team2_percentage' => float, 'favorite' => string]
+     * @return array<string, mixed> ['team1_percentage' => float, 'team2_percentage' => float, 'favorite' => string, 'favorite_name' => string, 'confidence' => float]
      */
     private function predictWinner(float $strength1, float $strength2, Team $team1, Team $team2): array
     {
         // Calculate strength difference
         $strengthDiff = $strength1 - $strength2;
-        
+
         // Logistic function: converts strength difference to probability (0-1)
         // The sigmoid curve: f(x) = 1 / (1 + e^(-x))
         // Higher strength difference = higher confidence in prediction
         $probability = 1 / (1 + exp(-$strengthDiff / 10));
-        
+
         // Convert to percentages
         $team1Chance = round($probability * 100, 1);
         $team2Chance = round((1 - $probability) * 100, 1);
-        
+
         // Determine favorite
         $favorite = $team1Chance > 50 ? 'team1' : 'team2';
         $favoriteName = $favorite === 'team1' ? $team1->getName() : $team2->getName();
@@ -171,7 +171,8 @@ class MatchmakingAI
     /**
      * Get average balance score for all matchups
      * Shows overall fairness of the tournament
-     * 
+     *
+     * @param array<int, array<string, mixed>> $matchups
      * @return float Average balance (0-100)
      */
     public function getAverageBalance(array $matchups): float
@@ -206,6 +207,9 @@ class MatchmakingAI
 
     /**
      * Rank matchups by balance (most balanced first)
+     *
+     * @param array<int, array<string, mixed>> $matchups
+     * @return array<int, array<string, mixed>>
      */
     public function rankMatchupsByBalance(array $matchups): array
     {
@@ -217,6 +221,9 @@ class MatchmakingAI
 
     /**
      * Get matchup quality details
+     *
+     * @param array<string, mixed> $matchup
+     * @return array<string, mixed>
      */
     public function getMatchupQuality(array $matchup): array
     {

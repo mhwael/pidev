@@ -16,7 +16,7 @@ class GameMatch
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Tournament::class, inversedBy: 'matches')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false , onDelete: 'CASCADE')]
     private ?Tournament $tournament = null;
 
     #[ORM\ManyToOne(targetEntity: Team::class)]
@@ -185,7 +185,8 @@ class GameMatch
      */
     public function hasTeam(Team $team): bool
     {
-        return $this->team1->getId() === $team->getId() || $this->team2->getId() === $team->getId();
+        return $this->team1?->getId() === $team->getId()
+            || $this->team2?->getId() === $team->getId();
     }
 
     /**
@@ -193,10 +194,10 @@ class GameMatch
      */
     public function getOpponent(Team $team): ?Team
     {
-        if ($this->team1->getId() === $team->getId()) {
+        if ($this->team1?->getId() === $team->getId()) {
             return $this->team2;
         }
-        if ($this->team2->getId() === $team->getId()) {
+        if ($this->team2?->getId() === $team->getId()) {
             return $this->team1;
         }
         return null;
