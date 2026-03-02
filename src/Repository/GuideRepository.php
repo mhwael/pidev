@@ -16,28 +16,16 @@ class GuideRepository extends ServiceEntityRepository
         parent::__construct($registry, Guide::class);
     }
 
-    //    /**
-    //     * @return Guide[] Returns an array of Guide objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('g')
-    //            ->andWhere('g.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('g.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Guide
-    //    {
-    //        return $this->createQueryBuilder('g')
-    //            ->andWhere('g.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * @return Guide[]
+     */
+    public function findAllOptimized(): array
+    {
+        return $this->createQueryBuilder('g')
+            ->addSelect('a', 'gm') 
+            ->leftJoin('g.author', 'a') 
+            ->leftJoin('g.game', 'gm')
+            ->getQuery()
+            ->getResult();
+    }
 }

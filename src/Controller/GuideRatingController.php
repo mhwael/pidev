@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\GuideRating;
+use App\Entity\User; // Added this use statement for the type check
 use App\Form\GuideRatingType;
 use App\Repository\GuideRatingRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -38,7 +39,11 @@ final class GuideRatingController extends AbstractController
             // 2. Set the currently logged-in User
             // ⚠️ NOTE: You must be logged in for this to work!
             $user = $this->getUser();
-            if ($user) {
+
+            /** * PHPStan FIX: Explicitly check that $user is an instance of our User entity.
+             * This satisfies the "Parameter #1 $user expects App\Entity\User, UserInterface given" error.
+             */
+            if ($user instanceof User) {
                 $guideRating->setUser($user);
             } else {
                 // Optional: Redirect to login if not logged in

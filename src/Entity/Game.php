@@ -175,8 +175,7 @@ class Game
     }
 
     public function __toString(): string
-    {
-        // This tells Symfony to use the Game's name in dropdown menus
-        return $this->name; 
-    }
+{
+    return (string) $this->getName(); // Cast to string to avoid null
+}
 }

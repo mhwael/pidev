@@ -2,26 +2,32 @@
 
 namespace App\Service;
 
-use App\Entity\Guide; // ✨ Required to pass the whole Guide
+use App\Entity\Guide;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class DiscordService
 {
-    private $httpClient;
-    // Replace with your actual Discord Webhook URL
-    private $webhookUrl = 'https://discord.com/api/webhooks/1472769054153637970/My16tinKswmdJW_2u-kcNDM8JCmgPfqv6a-UU4SFHCwqcuPB0AI7Ufp4UCdL7A1CTG-2';
+    // PHPStan Level 8: Always specify the type for properties
+    private HttpClientInterface $httpClient;
+    
+    // PHPStan Level 8: Specify string type
+    private string $webhookUrl = 'https://discord.com/api/webhooks/1472769054153637970/My16tinKswmdJW_2u-kcNDM8JCmgPfqv6a-UU4SFHCwqcuPB0AI7Ufp4UCdL7A1CTG-2';
 
     public function __construct(HttpClientInterface $httpClient)
     {
         $this->httpClient = $httpClient;
     }
 
-    // ✨ This must match the name used in your Controller
     public function sendGuideNotification(Guide $guide): void
     {
+        // PHPStan Level 8: Handle potential null values
+        $game = $guide->getGame();
+        $gameName = ($game !== null) ? $game->getName() : 'Unknown Game';
+
         // Determine the image to show in Discord
-        $imageUrl = $guide->getCoverImage() 
-            ? 'https://your-domain.com/uploads/guide/' . $guide->getCoverImage() 
+        $coverImage = $guide->getCoverImage();
+        $imageUrl = ($coverImage !== null) 
+            ? 'https://your-domain.com/uploads/guide/' . $coverImage 
             : 'https://your-domain.com/default-preview.jpg';
 
         $this->httpClient->request('POST', $this->webhookUrl, [
@@ -32,7 +38,7 @@ class DiscordService
                         'description' => $guide->getDescription(),
                         'color' => 16711772, // Pink (#ff005c)
                         'fields' => [
-                            ['name' => 'Game', 'value' => $guide->getGame()->getName(), 'inline' => true],
+                            ['name' => 'Game', 'value' => $gameName, 'inline' => true],
                             ['name' => 'Difficulty', 'value' => $guide->getDifficulty(), 'inline' => true],
                         ],
                         'image' => ['url' => $imageUrl],
