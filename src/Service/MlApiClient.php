@@ -11,15 +11,23 @@ class MlApiClient
         private string $baseUrl
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function health(): array
     {
         $res = $this->http->request('GET', rtrim($this->baseUrl, '/') . "/health", [
             'timeout' => 5,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getRecommendations(int $productId, int $k = 6): array
     {
         $res = $this->http->request('GET', rtrim($this->baseUrl, '/') . "/recommend/$productId", [
@@ -27,9 +35,14 @@ class MlApiClient
             'timeout' => 10,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getForecast(int $productId, int $days = 7): array
     {
         $res = $this->http->request('GET', rtrim($this->baseUrl, '/') . "/forecast/$productId", [
@@ -37,9 +50,14 @@ class MlApiClient
             'timeout' => 10,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function refreshRecommendations(int $k = 6): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/refresh/recommendations", [
@@ -47,9 +65,14 @@ class MlApiClient
             'timeout' => 60,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function refreshForecasts(int $forecastDays = 7): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/refresh/forecasts", [
@@ -57,9 +80,14 @@ class MlApiClient
             'timeout' => 120,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function trainForecastModel(int $lookbackDays = 365, int $holdoutDays = 30): array
     {
         $res = $this->http->request('POST', rtrim($this->baseUrl, '/') . "/train/forecast", [
@@ -70,6 +98,8 @@ class MlApiClient
             'timeout' => 300,
         ]);
 
-        return $res->toArray(false);
+        /** @var array<string, mixed> $out */
+        $out = $res->toArray(false);
+        return $out;
     }
 }

@@ -20,7 +20,7 @@ class Product
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Name is required.")]
     #[Assert\Length(min: 3, max: 255, minMessage: "Name must be at least 3 characters.")]
-    private ?string $name = null;
+    private string $name = '';
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: "Description is required.")]
@@ -30,15 +30,13 @@ class Product
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Assert\NotBlank(message: "Price is required and musts be a valid number (exp : 10 /10.5 ..).")]
     #[Assert\Positive(message: "Price must be greater than 0.")]
-    #[Assert\Regex(
-        pattern: "/^\d+(\.\d{1,2})?$/"
-    )]
-    private ?string $price = null;
+    #[Assert\Regex(pattern: "/^\d+(\.\d{1,2})?$/")]
+    private string $price = '0.00';
 
     #[ORM\Column]
     #[Assert\NotNull(message: "Stock is required.")]
     #[Assert\PositiveOrZero(message: "Stock must be 0 or more.")]
-    private ?int $stock = null;
+    private int $stock = 0;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
@@ -69,21 +67,21 @@ class Product
 
     public function getId(): ?int { return $this->id; }
 
-    public function getName(): ?string { return $this->name; }
+    public function getName(): string { return $this->name; }
     public function setName(string $name): static { $this->name = $name; return $this; }
 
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(?string $description): static { $this->description = $description; return $this; }
 
-    public function getPrice(): ?string { return $this->price; }
+    public function getPrice(): string { return $this->price; }
     public function setPrice(string $price): static { $this->price = $price; return $this; }
 
-    public function getStock(): ?int { return $this->stock; }
+    public function getStock(): int { return $this->stock; }
     public function setStock(int $stock): static { $this->stock = $stock; return $this; }
 
     public function decreaseStock(int $qty = 1): self
     {
-        $current = (int) ($this->stock ?? 0);
+        $current = (int) $this->stock;
         if ($qty < 1) return $this;
 
         if ($current < $qty) {

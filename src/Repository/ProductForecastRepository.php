@@ -14,16 +14,13 @@ class ProductForecastRepository extends ServiceEntityRepository
     }
 
     /**
-     * Returns the latest forecast per product for a given forecastDays (ex: 7).
-     * Output: [ productId => ProductForecast ]
+     * @param list<int> $productIds
+     * @return array<int, ProductForecast>
      */
     public function findLatestByProductIds(array $productIds, int $forecastDays = 7): array
     {
-        if (!$productIds) {
-            return [];
-        }
+        if ($productIds === []) return [];
 
-        // latest generatedAt per product
         $rows = $this->createQueryBuilder('pf')
             ->select('IDENTITY(pf.product) AS pid, MAX(pf.generatedAt) AS maxGen')
             ->andWhere('pf.product IN (:ids)')
@@ -34,21 +31,24 @@ class ProductForecastRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        if (!$rows) {
-            return [];
-        }
+        if ($rows === []) return [];
 
-        // Build OR conditions to fetch those exact rows
         $orX = [];
         $params = ['days' => $forecastDays];
         $i = 0;
 
         foreach ($rows as $r) {
+            $pid = (int)($r['pid'] ?? 0);
+            $maxGen = (string)($r['maxGen'] ?? '');
+            if ($pid <= 0 || $maxGen === '') continue;
+
             $i++;
             $orX[] = "(IDENTITY(pf2.product) = :p$i AND pf2.generatedAt = :g$i)";
-            $params["p$i"] = (int)$r['pid'];
-            $params["g$i"] = new \DateTimeImmutable($r['maxGen']);
+            $params["p$i"] = $pid;
+            $params["g$i"] = new \DateTimeImmutable($maxGen);
         }
+
+        if ($orX === []) return [];
 
         $qb2 = $this->createQueryBuilder('pf2')
             ->andWhere('pf2.forecastDays = :days')
@@ -63,7 +63,13 @@ class ProductForecastRepository extends ServiceEntityRepository
         $out = [];
         foreach ($list as $pf) {
             /** @var ProductForecast $pf */
-            $out[$pf->getProduct()->getId()] = $pf;
+            $prod = $pf->getProduct();
+            if ($prod === null) continue;
+
+            $id = $prod->getId();
+            if ($id === null) continue;
+
+            $out[(int)$id] = $pf;
         }
 
         return $out;

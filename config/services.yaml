@@ -1,16 +1,17 @@
-# This file is the entry point to configure your own services.
-
 parameters:
     product_images_dir: '%kernel.project_dir%/public/uploads/products'
     app.mail_from: '%env(APP_MAIL_FROM)%'
     ml_api_base_url: '%env(resolve:ML_API_BASE_URL)%'
+
+    gemini_default_model: 'gemini-2.0-flash'
+    gemini_api_key: '%env(GEMINI_API_KEY)%'
+    gemini_model: '%env(default:gemini_default_model:GEMINI_MODEL)%'
 
 services:
     _defaults:
         autowire: true
         autoconfigure: true
 
-    # Auto-register everything in src/
     App\:
         resource: '../src/'
         exclude:
@@ -18,15 +19,17 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # ✅ Explicit override: inject baseUrl into ML API client
     App\Service\MlApiClient:
         arguments:
             $baseUrl: '%ml_api_base_url%'
 
-    # Explicit mailer service with FROM email
+    App\Service\GeminiClient:
+        arguments:
+            $apiKey: '%gemini_api_key%'
+            $model: '%gemini_model%'
+
     App\Service\OrderMailer:
         arguments:
             $fromEmail: '%app.mail_from%'
 
-    # Explicit PDF generator (force register)
     App\Service\InvoicePdfGenerator: ~

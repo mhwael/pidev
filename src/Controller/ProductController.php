@@ -53,11 +53,15 @@ class ProductController extends AbstractController
             ];
         }
 
+        // ✅ Collect product IDs safely (no nulls)
         $productIds = [];
         foreach ($productsWithCounts as $row) {
             /** @var Product $p */
             $p = $row[0];
-            $productIds[] = $p->getId();
+            $id = $p->getId();
+            if ($id !== null) {
+                $productIds[] = (int)$id;
+            }
         }
 
         $forecastMap = $forecastRepo->findLatestByProductIds($productIds, 7);
@@ -75,11 +79,9 @@ class ProductController extends AbstractController
         ]);
     }
 
-    // ✅ NEW: System Health page (nice UI)
     #[Route('/system-health', name: 'product_system_health', methods: ['GET'])]
     public function systemHealth(EntityManagerInterface $em, MlApiClient $ml): Response
     {
-        // DB + counts
         $dbOk = true;
         $productsCount = 0;
         $ordersCount = 0;
@@ -91,7 +93,6 @@ class ProductController extends AbstractController
             $dbOk = false;
         }
 
-        // last refresh times
         $lastForecastAt = null;
         $lastRecoAt = null;
 
@@ -111,7 +112,6 @@ class ProductController extends AbstractController
             // ignore
         }
 
-        // ML API health
         $mlOk = false;
         $mlTime = null;
         $mlError = null;
@@ -202,6 +202,7 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             /** @var UploadedFile|null $imageFile */
             $imageFile = $form->get('imageFile')->getData();
             $imageUrl  = trim((string) $product->getImage());
@@ -225,7 +226,7 @@ class ProductController extends AbstractController
                 }
 
                 $newName = uniqid('p_', true) . '.' . $ext;
-                $imageFile->move($this->getParameter('product_images_dir'), $newName);
+                $imageFile->move((string) $this->getParameter('product_images_dir'), $newName);
                 $product->setImage($newName);
             }
 
@@ -249,6 +250,7 @@ class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             /** @var UploadedFile|null $imageFile */
             $imageFile = $form->get('imageFile')->getData();
             $imageUrl  = trim((string) $product->getImage());
@@ -272,7 +274,7 @@ class ProductController extends AbstractController
                 }
 
                 $newName = uniqid('p_', true) . '.' . $ext;
-                $imageFile->move($this->getParameter('product_images_dir'), $newName);
+                $imageFile->move((string) $this->getParameter('product_images_dir'), $newName);
                 $product->setImage($newName);
             }
 
@@ -290,13 +292,13 @@ class ProductController extends AbstractController
     #[Route('/{id}', name: 'product_delete', methods: ['POST'])]
     public function delete(Request $request, Product $product, EntityManagerInterface $entityManager): Response
     {
-        if (!$this->isCsrfTokenValid('delete_product_' . $product->getId(), (string)$request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('delete_product_' . (int)$product->getId(), (string)$request->request->get('_token'))) {
             $this->addFlash('error', 'Invalid CSRF token.');
             return $this->redirectToRoute('product_index');
         }
 
         $conn = $entityManager->getConnection();
-        $count = (int) $conn->fetchOne('SELECT COUNT(*) FROM order_item WHERE product_id = ?', [$product->getId()]);
+        $count = (int) $conn->fetchOne('SELECT COUNT(*) FROM order_item WHERE product_id = ?', [(int)$product->getId()]);
         if ($count > 0) {
             $this->addFlash('error', "Can't delete: used in $count order item(s). Set stock=0 instead.");
             return $this->redirectToRoute('product_index');

@@ -1,0 +1,363 @@
+{# templates/Shop/_chatbot_widget.html.twig #}
+
+<style>
+  .bot-bubble {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    font-family: inherit;
+  }
+
+  .bot-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    box-shadow: 0 14px 30px rgba(0,0,0,.25);
+    background: rgba(13,110,253,.95);
+    color: #fff;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .bot-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255,193,7,.25);
+    display: none;
+  }
+
+  .bot-panel {
+    width: 360px;
+    max-width: calc(100vw - 36px);
+    height: 480px;
+    max-height: calc(100vh - 120px);
+    background: rgba(255,255,255,.96);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.28);
+    border: 1px solid rgba(0,0,0,.08);
+    display: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .bot-head {
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(13,110,253,.18), rgba(13,110,253,.05));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .bot-title { font-weight: 900; color: #111; margin: 0; font-size: 15px; }
+  .bot-sub { color: #6c757d; font-size: 12px; margin: 0; }
+  .bot-close {
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: #111;
+    opacity: .75;
+  }
+  .bot-close:hover { opacity: 1; }
+
+  .bot-body {
+    padding: 12px;
+    height: calc(480px - 56px - 66px);
+    overflow: auto;
+    background: linear-gradient(180deg, #ffffff, #fbfbfb);
+  }
+
+  .bot-msg { display: flex; margin-bottom: 10px; gap: 10px; }
+  .bot-msg.user { justify-content: flex-end; }
+  .bot-bubble-msg {
+    max-width: 78%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: pre-line;
+  }
+  .bot-msg.bot .bot-bubble-msg {
+    background: rgba(0,0,0,.05);
+    color: #111;
+    border-top-left-radius: 6px;
+  }
+  .bot-msg.user .bot-bubble-msg {
+    background: rgba(13,110,253,.92);
+    color: #fff;
+    border-top-right-radius: 6px;
+  }
+
+  .bot-cards { display: grid; gap: 10px; margin: 8px 0 12px; }
+  .bot-card {
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform .12s ease;
+  }
+  .bot-card:hover { transform: translateY(-1px); }
+  .bot-card-title { font-weight: 900; margin: 0 0 2px; color: #111; font-size: 13px; }
+  .bot-card-sub { margin: 0; color: #6c757d; font-size: 12px; }
+  .bot-card-meta { margin: 6px 0 0; color: #111; font-size: 12px; font-weight: 700; }
+
+  .bot-suggestions { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+  .bot-chip {
+    border: 1px solid rgba(13,110,253,.18);
+    background: rgba(13,110,253,.08);
+    color: #0d6efd;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .bot-chip:hover { background: rgba(13,110,253,.12); }
+
+  .bot-foot {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(0,0,0,.08);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255,255,255,.9);
+  }
+
+  .bot-input {
+    flex: 1;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.12);
+    padding: 0 12px;
+    outline: none;
+  }
+  .bot-send {
+    height: 44px;
+    border-radius: 12px;
+    border: 0;
+    background: #111;
+    color: #fff;
+    font-weight: 900;
+    padding: 0 14px;
+    cursor: pointer;
+  }
+  .bot-send:disabled { opacity: .55; cursor: not-allowed; }
+</style>
+
+<div class="bot-bubble" id="botWidget">
+  <div class="bot-panel" id="botPanel" aria-hidden="true">
+    <div class="bot-head">
+      <div>
+        <p class="bot-title">LevelUp Assistant</p>
+        <p class="bot-sub">Popular • Forecast • Low stock • Reco</p>
+      </div>
+      <button class="bot-close" type="button" id="botClose">×</button>
+    </div>
+
+    <div class="bot-body" id="botBody"></div>
+
+    <div class="bot-foot">
+      <input class="bot-input" id="botInput" placeholder="Ask: what's popular? forecast? low stock? recommend for product 1..." />
+      <button class="bot-send" id="botSend" type="button">Send</button>
+    </div>
+  </div>
+
+  <button class="bot-btn" id="botOpen" type="button" aria-label="Open chat">
+    💬
+    <span class="bot-dot" id="botDot"></span>
+  </button>
+</div>
+
+<script>
+(function() {
+  const panel = document.getElementById('botPanel');
+  const openBtn = document.getElementById('botOpen');
+  const closeBtn = document.getElementById('botClose');
+  const body = document.getElementById('botBody');
+  const input = document.getElementById('botInput');
+  const sendBtn = document.getElementById('botSend');
+  const dot = document.getElementById('botDot');
+
+  const API_URL = '/api/chat';
+  const LS_OPEN = 'bot_open_v1';
+  const LS_HISTORY = 'bot_history_v1';
+
+  function setOpen(isOpen) {
+    panel.style.display = isOpen ? 'block' : 'none';
+    panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    localStorage.setItem(LS_OPEN, isOpen ? '1' : '0');
+    if (isOpen) dot.style.display = 'none';
+  }
+
+  function scrollBottom() { body.scrollTop = body.scrollHeight; }
+
+  function addMsg(text, who) {
+    const wrap = document.createElement('div');
+    wrap.className = 'bot-msg ' + (who === 'user' ? 'user' : 'bot');
+    const bubble = document.createElement('div');
+    bubble.className = 'bot-bubble-msg';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    body.appendChild(wrap);
+    scrollBottom();
+  }
+
+  function addCards(cards) {
+    if (!cards || !cards.length) return;
+    const cardsWrap = document.createElement('div');
+    cardsWrap.className = 'bot-cards';
+
+    cards.slice(0, 8).forEach(c => {
+      const a = document.createElement('a');
+      a.className = 'bot-card';
+      a.href = c.url || '#';
+      a.target = '_blank';
+
+      const t = document.createElement('p');
+      t.className = 'bot-card-title';
+      t.textContent = c.title || '';
+
+      const s = document.createElement('p');
+      s.className = 'bot-card-sub';
+      s.textContent = c.subtitle || '';
+
+      const m = document.createElement('p');
+      m.className = 'bot-card-meta';
+      m.textContent = c.meta || '';
+
+      a.appendChild(t); a.appendChild(s); a.appendChild(m);
+      cardsWrap.appendChild(a);
+    });
+
+    body.appendChild(cardsWrap);
+    scrollBottom();
+  }
+
+  function addSuggestions(suggestions) {
+    if (!suggestions || !suggestions.length) return;
+
+    const sugWrap = document.createElement('div');
+    sugWrap.className = 'bot-suggestions';
+
+    suggestions.slice(0, 6).forEach(s => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'bot-chip';
+      chip.textContent = s;
+      chip.addEventListener('click', () => {
+        input.value = s;
+        send();
+      });
+      sugWrap.appendChild(chip);
+    });
+
+    body.appendChild(sugWrap);
+    scrollBottom();
+  }
+
+  function saveHistory() {
+    const msgs = [];
+    body.querySelectorAll('.bot-msg').forEach(el => {
+      const who = el.classList.contains('user') ? 'user' : 'bot';
+      const text = (el.querySelector('.bot-bubble-msg')?.textContent || '').trim();
+      if (text) msgs.push({ who, text });
+    });
+    localStorage.setItem(LS_HISTORY, JSON.stringify(msgs).slice(0, 20000));
+  }
+
+  function loadHistory() {
+    const raw = localStorage.getItem(LS_HISTORY);
+    if (!raw) return false;
+    try {
+      const msgs = JSON.parse(raw);
+      if (!Array.isArray(msgs)) return false;
+      msgs.slice(-12).forEach(m => addMsg(m.text, m.who));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function send() {
+    const text = (input.value || '').trim();
+    if (!text) return;
+
+    addMsg(text, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        addMsg(data.reply || 'Error', 'bot');
+        addSuggestions(data.suggestions || []);
+        saveHistory();
+        return;
+      }
+
+      addMsg(data.reply || 'OK', 'bot');
+      addCards(data.cards || []);
+      addSuggestions(data.suggestions || []);
+      saveHistory();
+
+    } catch (e) {
+      addMsg('Sorry, I cannot reach the server right now.', 'bot');
+      saveHistory();
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  openBtn.addEventListener('click', () => setOpen(true));
+  closeBtn.addEventListener('click', () => setOpen(false));
+  sendBtn.addEventListener('click', send);
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') send();
+  });
+
+  // initial
+  const wasOpen = localStorage.getItem(LS_OPEN) === '1';
+  if (wasOpen) setOpen(true);
+
+  const hasHistory = loadHistory();
+  if (!hasHistory) {
+    addMsg("Hi! I can help you with popular products, forecasts, low stock, and recommendations.\nTry: “what's popular?” or “top predicted next 7 days”.", 'bot');
+    addSuggestions([
+      "What's popular right now?",
+      "Top predicted next 7 days",
+      "Low stock products",
+      "Recommend for product 1",
+      "Games under 100"
+    ]);
+    dot.style.display = 'inline-block';
+  }
+})();
+</script>

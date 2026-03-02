@@ -5,8 +5,8 @@ namespace App\Controller;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Form\OrderType;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +38,6 @@ class OrderController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // IMPORTANT: your Order entity requires at least 1 product
             if ($order->getProducts()->count() < 1) {
                 $this->addFlash('danger', 'You must select at least 1 product.');
                 return $this->render('orders/new.html.twig', [
@@ -51,12 +50,14 @@ class OrderController extends AbstractController
             $conn->beginTransaction();
 
             try {
-                // For each product in the order: lock + check stock + decrement
                 foreach ($order->getProducts() as $p) {
                     /** @var Product $p */
+                    $pid = $p->getId();
+                    if ($pid === null) {
+                        throw new \RuntimeException('Product id missing.');
+                    }
 
-                    // Re-fetch with a DB lock (prevents race conditions)
-                    $lockedProduct = $em->find(Product::class, $p->getId(), LockMode::PESSIMISTIC_WRITE);
+                    $lockedProduct = $em->find(Product::class, $pid, LockMode::PESSIMISTIC_WRITE);
                     if (!$lockedProduct) {
                         throw new \RuntimeException('Product not found.');
                     }
@@ -95,7 +96,6 @@ class OrderController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // NOTE: we do NOT change stock on edit (otherwise it gets complicated)
             $em->flush();
             return $this->redirectToRoute('orders_index');
         }
@@ -109,8 +109,9 @@ class OrderController extends AbstractController
     #[Route('/orders/{id}', name: 'orders_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function delete(Order $order, Request $request, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete_order_' . $order->getId(), $request->request->get('_token'))) {
-            // NOTE: deleting order does NOT restore stock (tell me if you want that behavior)
+        $token = (string) $request->request->get('_token', '');
+
+        if ($this->isCsrfTokenValid('delete_order_' . $order->getId(), $token)) {
             $em->remove($order);
             $em->flush();
         }

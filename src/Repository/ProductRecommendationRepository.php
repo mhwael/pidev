@@ -7,6 +7,9 @@ use App\Entity\ProductRecommendation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<ProductRecommendation>
+ */
 class ProductRecommendationRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -16,11 +19,11 @@ class ProductRecommendationRepository extends ServiceEntityRepository
 
     /**
      * Latest recommendations for one product.
-     * Returns: [ ['product' => Product, 'score' => float], ... ]
+     *
+     * @return list<array{product: Product, score: float}>
      */
     public function getForProduct(Product $product, int $limit = 6): array
     {
-        // latest generated_at for this product
         $latest = $this->createQueryBuilder('r')
             ->select('MAX(r.generatedAt)')
             ->andWhere('r.product = :p')
@@ -47,13 +50,15 @@ class ProductRecommendationRepository extends ServiceEntityRepository
         $out = [];
         foreach ($list as $rec) {
             /** @var ProductRecommendation $rec */
-            if ($rec->getRecommendedProduct()) {
+            $rp = $rec->getRecommendedProduct();
+            if ($rp) {
                 $out[] = [
-                    'product' => $rec->getRecommendedProduct(),
+                    'product' => $rp,
                     'score' => (float) $rec->getScore(),
                 ];
             }
         }
+
         return $out;
     }
 }

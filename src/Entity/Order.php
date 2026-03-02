@@ -21,7 +21,7 @@ class Order
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "Reference is required.")]
     #[Assert\Length(max: 50)]
-    private ?string $reference = null;
+    private string $reference = '';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Assert\NotBlank(message: "Total amount is required.")]
@@ -30,16 +30,16 @@ class Order
         pattern: "/^\d+(\.\d{1,2})?$/",
         message: "Total amount must be a valid number (example: 10 or 10.50)."
     )]
-    private ?string $totalAmount = null;
+    private string $totalAmount = '0.00';
 
     #[ORM\Column(length: 30)]
     #[Assert\NotBlank(message: "Status is required.")]
     #[Assert\Choice(choices: ['NEW','PAID','CANCELLED','DELIVERED'], message: "Invalid status.")]
-    private ?string $status = null;
+    private string $status = 'NEW';
 
     #[ORM\Column]
     #[Assert\NotNull(message: "Created at is required.")]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\NotBlank(message: "First name is required.")]
@@ -80,7 +80,6 @@ class Order
 
     /**
      * (Optional) Keep your old relation for admin compatibility.
-     * If you don't need it anymore, you can remove it later + migration.
      *
      * @var Collection<int, Product>
      */
@@ -89,22 +88,23 @@ class Order
 
     public function __construct()
     {
+        $this->createdAt = new \DateTimeImmutable();
         $this->items = new ArrayCollection();
         $this->products = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
 
-    public function getReference(): ?string { return $this->reference; }
+    public function getReference(): string { return $this->reference; }
     public function setReference(string $reference): static { $this->reference = $reference; return $this; }
 
-    public function getTotalAmount(): ?string { return $this->totalAmount; }
+    public function getTotalAmount(): string { return $this->totalAmount; }
     public function setTotalAmount(string $totalAmount): static { $this->totalAmount = $totalAmount; return $this; }
 
-    public function getStatus(): ?string { return $this->status; }
+    public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): static { $this->status = $status; return $this; }
 
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
+    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function setCreatedAt(\DateTimeImmutable $createdAt): static { $this->createdAt = $createdAt; return $this; }
 
     public function getCustomerFirstName(): ?string { return $this->customerFirstName; }

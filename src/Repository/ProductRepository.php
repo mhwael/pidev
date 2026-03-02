@@ -17,30 +17,30 @@ class ProductRepository extends ServiceEntityRepository
     }
 
     /**
-     * ✅ Used in Shop search (name + real category) + ONLY active products
+     * @return list<Product>
      */
-    public function search(?string $q, ?string $category): array
+    public function search(?string $q, ?string $category, int $limit = 24): array
     {
         $qb = $this->createQueryBuilder('p')
-            ->andWhere('p.isActive = true');
+            ->andWhere('p.isActive = true')
+            ->orderBy('p.id', 'DESC')
+            ->setMaxResults($limit); // ✅ LIMIT added
 
-        if ($q) {
+        if ($q !== null && trim($q) !== '') {
             $qb->andWhere('LOWER(p.name) LIKE :q')
-               ->setParameter('q', '%' . mb_strtolower($q) . '%');
+               ->setParameter('q', '%' . mb_strtolower(trim($q)) . '%');
         }
 
-        if ($category) {
+        if ($category !== null && trim($category) !== '') {
             $qb->andWhere('p.category = :cat')
-               ->setParameter('cat', $category);
+               ->setParameter('cat', trim($category));
         }
 
-        return $qb->orderBy('p.id', 'DESC')
-            ->getQuery()
-            ->getResult();
+        return $qb->getQuery()->getResult();
     }
 
     /**
-     * ✅ Shop dropdown categories (CLEAN fixed list)
+     * @return list<string>
      */
     public function getDistinctCategories(): array
     {
@@ -56,9 +56,7 @@ class ProductRepository extends ServiceEntityRepository
     }
 
     /**
-     * ✅ Products + orders count + sorting (Dashboard)
-     * NOTE: we keep showing all products including disabled ones.
-     * If you want to hide disabled in dashboard too, tell me.
+     * @return list<array{0: Product, ordersCount: string|int}>
      */
     public function findProductsWithOrdersCount(int $limit = 200, string $sort = 'default', string $dir = 'desc'): array
     {
@@ -84,6 +82,9 @@ class ProductRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @return array{totalProducts:int,totalStock:int,outOfStock:int,lowStock:int,lowStockThreshold:int}
+     */
     public function getStockStats(int $lowStockThreshold = 5): array
     {
         $totalProducts = (int) $this->createQueryBuilder('p')
@@ -119,6 +120,9 @@ class ProductRepository extends ServiceEntityRepository
         ];
     }
 
+    /**
+     * @return list<array{category:string, productCount:int}>
+     */
     public function getCategoryCounts(): array
     {
         $rows = $this->createQueryBuilder('p')
@@ -131,11 +135,11 @@ class ProductRepository extends ServiceEntityRepository
         $out = [];
         foreach ($rows as $r) {
             $cat = $r['category'];
-            if ($cat === null || trim((string)$cat) === '') {
+            if ($cat === null || trim((string) $cat) === '') {
                 $cat = 'Uncategorized';
             }
             $out[] = [
-                'category' => $cat,
+                'category' => (string) $cat,
                 'productCount' => (int) $r['productCount'],
             ];
         }

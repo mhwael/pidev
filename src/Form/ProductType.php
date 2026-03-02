@@ -60,7 +60,7 @@ class ProductType extends AbstractType
             $product = $event->getData();
             $form = $event->getForm();
 
-            $url = trim((string) $product?->getImage());
+            $url = trim((string) $product->getImage());
             $file = $form->get('imageFile')->getData();
 
             if ($url === '' && !$file) {

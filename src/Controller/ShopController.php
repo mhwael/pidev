@@ -55,7 +55,16 @@ class ShopController extends AbstractController
         $recommendations = [];
 
         try {
-            $data = $ml->getRecommendations($product->getId(), 6);
+            $productId = $product->getId();
+            if ($productId === null) {
+                // safety for phpstan (should not happen with Doctrine param converter)
+                return $this->render('Shop/product_show.html.twig', [
+                    'product' => $product,
+                    'recommendations' => [],
+                ]);
+            }
+
+            $data = $ml->getRecommendations((int)$productId, 6);
 
             $items = $data['items'] ?? [];
             $ids = [];
@@ -78,9 +87,14 @@ class ShopController extends AbstractController
 
                 foreach ($products as $p) {
                     /** @var Product $p */
+                    $pid = $p->getId();
+                    if ($pid === null) {
+                        continue;
+                    }
+
                     $recommendations[] = [
                         'product' => $p,
-                        'score' => $scoreMap[$p->getId()] ?? 0.0,
+                        'score' => $scoreMap[(int)$pid] ?? 0.0,
                     ];
                 }
 
@@ -103,13 +117,14 @@ class ShopController extends AbstractController
         $qty = max(1, min(20, $qty));
 
         $cart = $session->get(self::CART_KEY, []);
-        $pid = $product->getId();
+        $pid = (int) ($product->getId() ?? 0);
 
-        $cart[$pid] = ($cart[$pid] ?? 0) + $qty;
+        if ($pid > 0) {
+            $cart[$pid] = ($cart[$pid] ?? 0) + $qty;
+            $session->set(self::CART_KEY, $cart);
+        }
 
-        $session->set(self::CART_KEY, $cart);
         $this->addFlash('success', 'Product added to cart.');
-
         return $this->redirectToRoute('shop_cart');
     }
 
@@ -128,7 +143,10 @@ class ShopController extends AbstractController
 
         foreach ($products as $p) {
             /** @var Product $p */
-            $qty = (int) ($cart[$p->getId()] ?? 0);
+            $pid = $p->getId();
+            if ($pid === null) continue;
+
+            $qty = (int) ($cart[(int)$pid] ?? 0);
             if ($qty < 1) continue;
 
             $lineTotal = (float)$p->getPrice() * $qty;
@@ -154,15 +172,17 @@ class ShopController extends AbstractController
         $qty = max(0, min(20, $qty));
 
         $cart = $session->get(self::CART_KEY, []);
-        $pid = $product->getId();
+        $pid = (int) ($product->getId() ?? 0);
 
-        if ($qty === 0) {
-            unset($cart[$pid]);
-        } else {
-            $cart[$pid] = $qty;
+        if ($pid > 0) {
+            if ($qty === 0) {
+                unset($cart[$pid]);
+            } else {
+                $cart[$pid] = $qty;
+            }
+            $session->set(self::CART_KEY, $cart);
         }
 
-        $session->set(self::CART_KEY, $cart);
         return $this->redirectToRoute('shop_cart');
     }
 
@@ -170,8 +190,12 @@ class ShopController extends AbstractController
     public function removeFromCart(Product $product, SessionInterface $session): Response
     {
         $cart = $session->get(self::CART_KEY, []);
-        unset($cart[$product->getId()]);
-        $session->set(self::CART_KEY, $cart);
+        $pid = (int) ($product->getId() ?? 0);
+
+        if ($pid > 0) {
+            unset($cart[$pid]);
+            $session->set(self::CART_KEY, $cart);
+        }
 
         return $this->redirectToRoute('shop_cart');
     }
@@ -204,7 +228,11 @@ class ShopController extends AbstractController
 
         $total = 0.0;
         foreach ($products as $p) {
-            $qty = (int) ($cart[$p->getId()] ?? 0);
+            /** @var Product $p */
+            $pid = $p->getId();
+            if ($pid === null) continue;
+
+            $qty = (int) ($cart[(int)$pid] ?? 0);
             if ($qty > 0) {
                 $total += (float)$p->getPrice() * $qty;
             }
@@ -224,21 +252,24 @@ class ShopController extends AbstractController
                 $order->setStatus('NEW');
                 $order->setCreatedAt(new \DateTimeImmutable());
 
-                $order->setCustomerFirstName(trim((string)$data['firstName']));
-                $order->setCustomerLastName(trim((string)$data['lastName']));
-                $order->setCustomerPhone(trim((string)$data['phone']));
-                $order->setCustomerEmail(trim((string)$data['email']));
+                $order->setCustomerFirstName(trim((string)($data['firstName'] ?? '')));
+                $order->setCustomerLastName(trim((string)($data['lastName'] ?? '')));
+                $order->setCustomerPhone(trim((string)($data['phone'] ?? '')));
+                $order->setCustomerEmail(trim((string)($data['email'] ?? '')));
 
-                $order->setPaymentMethod($data['paymentMethod'] ?? 'COD');
+                $order->setPaymentMethod((string)($data['paymentMethod'] ?? 'COD'));
                 $order->setPaymentStatus('PENDING');
                 $order->setTotalAmount(number_format($total, 2, '.', ''));
 
                 foreach ($products as $p) {
                     /** @var Product $p */
-                    $qty = (int) ($cart[$p->getId()] ?? 0);
+                    $pid = $p->getId();
+                    if ($pid === null) continue;
+
+                    $qty = (int) ($cart[(int)$pid] ?? 0);
                     if ($qty < 1) continue;
 
-                    $locked = $em->find(Product::class, $p->getId(), LockMode::PESSIMISTIC_WRITE);
+                    $locked = $em->find(Product::class, $pid, LockMode::PESSIMISTIC_WRITE);
                     if (!$locked) throw new \RuntimeException('Product not found.');
 
                     if ((int)$locked->getStock() < $qty) {
@@ -267,7 +298,6 @@ class ShopController extends AbstractController
                 $em->flush();
                 $conn->commit();
 
-                // ✅ Send confirmation email (do NOT block order if email fails)
                 try {
                     $orderMailer->sendOrderConfirmation($order);
                 } catch (\Throwable $mailErr) {
